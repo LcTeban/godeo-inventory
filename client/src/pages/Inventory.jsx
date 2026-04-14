@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { PlusIcon, PencilIcon, TrashIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, MinusIcon, TrashIcon, AdjustmentsHorizontalIcon } from '@heroicons/react/24/outline';
 
 const Inventory = () => {
   const [products, setProducts] = useState([]);
-  const [showModal, setShowModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
   const [showMovementModal, setShowMovementModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterCategory, setFilterCategory] = useState('all');
   const [formData, setFormData] = useState({
-    name: '', category: '', stock: '', unit: 'unidad', price: '', minStock: '10'
+    name: '', category: '', stock: '', unit: 'unidad', min_stock: '10', expiry_date: ''
   });
   const [movementData, setMovementData] = useState({
     type: 'entrada', quantity: '', reason: ''
@@ -23,37 +25,21 @@ const Inventory = () => {
   const fetchProducts = async () => {
     try {
       const response = await axios.get(`/api/${currentRestaurant}/products`);
-      setProducts(response.data);
+      setProducts(response.data || []);
     } catch (error) {
       console.error('Error:', error);
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleAddProduct = async (e) => {
     e.preventDefault();
     try {
-      if (selectedProduct) {
-        await axios.put(`/api/${currentRestaurant}/products/${selectedProduct.id}`, formData);
-      } else {
-        await axios.post(`/api/${currentRestaurant}/products`, formData);
-      }
+      await axios.post(`/api/${currentRestaurant}/products`, formData);
       fetchProducts();
-      setShowModal(false);
-      setFormData({ name: '', category: '', stock: '', unit: 'unidad', price: '', minStock: '10' });
-      setSelectedProduct(null);
+      setShowAddModal(false);
+      setFormData({ name: '', category: '', stock: '', unit: 'unidad', min_stock: '10', expiry_date: '' });
     } catch (error) {
       alert('Error al guardar');
-    }
-  };
-
-  const handleDelete = async (id) => {
-    if (window.confirm('¿Eliminar este producto?')) {
-      try {
-        await axios.delete(`/api/${currentRestaurant}/products/${id}`);
-        fetchProducts();
-      } catch (error) {
-        alert('Error al eliminar');
-      }
     }
   };
 
@@ -72,109 +58,164 @@ const Inventory = () => {
     }
   };
 
+  const handleDelete = async (id) => {
+    if (window.confirm('¿Eliminar este producto?')) {
+      try {
+        await axios.delete(`/api/${currentRestaurant}/products/${id}`);
+        fetchProducts();
+      } catch (error) {
+        alert('Error al eliminar');
+      }
+    }
+  };
+
+  const getStockStatus = (product) => {
+    if (product.stock === 0) return { color: 'bg-red-100 text-red-800', text: 'Agotado' };
+    if (product.stock <= product.min_stock) return { color: 'bg-orange-100 text-orange-800', text: 'Bajo' };
+    return { color: 'bg-green-100 text-green-800', text: 'OK' };
+  };
+
+  const categories = [...new Set(products.map(p => p.category).filter(Boolean))];
+  const filteredProducts = products.filter(p => {
+    const matchesSearch = p.name?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = filterCategory === 'all' || p.category === filterCategory;
+    return matchesSearch && matchesCategory;
+  });
+
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Inventario</h1>
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-bold">Inventario</h1>
         {isAdmin && (
           <button
-            onClick={() => {
-              setSelectedProduct(null);
-              setFormData({ name: '', category: '', stock: '', unit: 'unidad', price: '', minStock: '10' });
-              setShowModal(true);
-            }}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center"
+            onClick={() => setShowAddModal(true)}
+            className="bg-blue-600 text-white p-3 rounded-full shadow-lg"
           >
-            <PlusIcon className="h-5 w-5 mr-2" />
-            Nuevo
+            <PlusIcon className="h-6 w-6" />
           </button>
         )}
       </div>
 
-      <div className="bg-white rounded-xl shadow overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Producto</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stock</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Precio</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {products.map((product) => (
-                <tr key={product.id} className={product.stock <= product.minStock ? 'bg-yellow-50' : ''}>
-                  <td className="px-4 py-3">
-                    <p className="font-medium">{product.name}</p>
-                    <p className="text-xs text-gray-500">{product.category}</p>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={product.stock <= product.minStock ? 'text-red-600 font-bold' : ''}>
-                      {product.stock} {product.unit}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">€{product.price}</td>
-                  <td className="px-4 py-3">
-                    <button
-                      onClick={() => {
-                        setSelectedProduct(product);
-                        setShowMovementModal(true);
-                      }}
-                      className="text-green-600 hover:text-green-900 mr-3"
-                      title="Movimiento"
-                    >
-                      <ArrowPathIcon className="h-5 w-5" />
-                    </button>
-                    {isAdmin && (
-                      <>
-                        <button
-                          onClick={() => {
-                            setSelectedProduct(product);
-                            setFormData(product);
-                            setShowModal(true);
-                          }}
-                          className="text-blue-600 hover:text-blue-900 mr-3"
-                        >
-                          <PencilIcon className="h-5 w-5" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(product.id)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          <TrashIcon className="h-5 w-5" />
-                        </button>
-                      </>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      {/* Buscador */}
+      <div className="flex gap-2">
+        <input
+          type="text"
+          placeholder="🔍 Buscar producto..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="flex-1 p-3 border rounded-xl"
+        />
+        <select
+          value={filterCategory}
+          onChange={(e) => setFilterCategory(e.target.value)}
+          className="p-3 border rounded-xl bg-white"
+        >
+          <option value="all">Todas</option>
+          {categories.map(cat => (
+            <option key={cat} value={cat}>{cat}</option>
+          ))}
+        </select>
       </div>
 
-      {/* Modal Producto */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full">
-            <h2 className="text-xl font-bold mb-4">{selectedProduct ? 'Editar' : 'Nuevo'} Producto</h2>
-            <form onSubmit={handleSubmit}>
-              <input type="text" placeholder="Nombre" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full px-3 py-2 border rounded mb-3" required />
-              <input type="text" placeholder="Categoría" value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})} className="w-full px-3 py-2 border rounded mb-3" required />
-              <div className="grid grid-cols-2 gap-3">
-                <input type="number" placeholder="Stock" value={formData.stock} onChange={(e) => setFormData({...formData, stock: e.target.value})} className="w-full px-3 py-2 border rounded" required />
-                <select value={formData.unit} onChange={(e) => setFormData({...formData, unit: e.target.value})} className="w-full px-3 py-2 border rounded">
-                  <option value="unidad">Unidad</option><option value="kg">Kg</option><option value="L">Litro</option>
+      {/* Lista de productos */}
+      <div className="space-y-2">
+        {filteredProducts.map(product => {
+          const status = getStockStatus(product);
+          const isExpiring = product.expiry_date && 
+            (new Date(product.expiry_date) - new Date()) / (1000 * 60 * 60 * 24) <= 7;
+          
+          return (
+            <div key={product.id} className="bg-white rounded-xl p-4 shadow-sm">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-semibold">{product.name}</h3>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${status.color}`}>
+                      {status.text}
+                    </span>
+                    {isExpiring && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800">
+                        ⏰ Próximo
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-500">{product.category}</p>
+                  <div className="flex items-center gap-4 mt-2">
+                    <div>
+                      <span className="text-2xl font-bold">{product.stock}</span>
+                      <span className="text-sm text-gray-500 ml-1">{product.unit}</span>
+                    </div>
+                    {product.expiry_date && (
+                      <div className="text-xs text-gray-500">
+                        Caduca: {new Date(product.expiry_date).toLocaleDateString('es')}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => {
+                      setSelectedProduct(product);
+                      setMovementData({ ...movementData, type: 'entrada' });
+                      setShowMovementModal(true);
+                    }}
+                    className="p-2 bg-green-100 text-green-700 rounded-lg"
+                  >
+                    <PlusIcon className="h-5 w-5" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSelectedProduct(product);
+                      setMovementData({ ...movementData, type: 'salida' });
+                      setShowMovementModal(true);
+                    }}
+                    className="p-2 bg-red-100 text-red-700 rounded-lg"
+                    disabled={product.stock === 0}
+                  >
+                    <MinusIcon className="h-5 w-5" />
+                  </button>
+                  {isAdmin && (
+                    <button
+                      onClick={() => handleDelete(product.id)}
+                      className="p-2 bg-gray-100 text-gray-700 rounded-lg"
+                    >
+                      <TrashIcon className="h-5 w-5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {filteredProducts.length === 0 && (
+        <div className="text-center py-8 text-gray-500">
+          No hay productos
+        </div>
+      )}
+
+      {/* Modal Agregar Producto */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4">Nuevo Producto</h2>
+            <form onSubmit={handleAddProduct} className="space-y-3">
+              <input type="text" placeholder="Nombre" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full p-3 border rounded-xl" required />
+              <input type="text" placeholder="Categoría" value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})} className="w-full p-3 border rounded-xl" required />
+              <div className="flex gap-2">
+                <input type="number" placeholder="Stock inicial" value={formData.stock} onChange={(e) => setFormData({...formData, stock: e.target.value})} className="flex-1 p-3 border rounded-xl" required />
+                <select value={formData.unit} onChange={(e) => setFormData({...formData, unit: e.target.value})} className="w-24 p-3 border rounded-xl">
+                  <option value="unidad">ud</option><option value="kg">kg</option><option value="L">L</option><option value="caja">caja</option>
                 </select>
               </div>
-              <div className="grid grid-cols-2 gap-3 mt-3">
-                <input type="number" placeholder="Precio" value={formData.price} onChange={(e) => setFormData({...formData, price: e.target.value})} className="w-full px-3 py-2 border rounded" required />
-                <input type="number" placeholder="Stock Mínimo" value={formData.minStock} onChange={(e) => setFormData({...formData, minStock: e.target.value})} className="w-full px-3 py-2 border rounded" />
-              </div>
-              <div className="flex justify-end gap-3 mt-4">
-                <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 text-gray-600">Cancelar</button>
-                <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Guardar</button>
+              <input type="number" placeholder="Stock mínimo" value={formData.min_stock} onChange={(e) => setFormData({...formData, min_stock: e.target.value})} className="w-full p-3 border rounded-xl" />
+              <input type="date" placeholder="Fecha caducidad" value={formData.expiry_date} onChange={(e) => setFormData({...formData, expiry_date: e.target.value})} className="w-full p-3 border rounded-xl" />
+              <div className="flex gap-2 pt-2">
+                <button type="button" onClick={() => setShowAddModal(false)} className="flex-1 p-3 text-gray-600 border rounded-xl">Cancelar</button>
+                <button type="submit" className="flex-1 p-3 bg-blue-600 text-white rounded-xl">Guardar</button>
               </div>
             </form>
           </div>
@@ -183,18 +224,24 @@ const Inventory = () => {
 
       {/* Modal Movimiento */}
       {showMovementModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full">
-            <h2 className="text-xl font-bold mb-4">Movimiento - {selectedProduct?.name}</h2>
-            <form onSubmit={handleMovement}>
-              <select value={movementData.type} onChange={(e) => setMovementData({...movementData, type: e.target.value})} className="w-full px-3 py-2 border rounded mb-3">
-                <option value="entrada">Entrada</option><option value="salida">Salida</option>
-              </select>
-              <input type="number" placeholder="Cantidad" value={movementData.quantity} onChange={(e) => setMovementData({...movementData, quantity: e.target.value})} className="w-full px-3 py-2 border rounded mb-3" required />
-              <input type="text" placeholder="Motivo (opcional)" value={movementData.reason} onChange={(e) => setMovementData({...movementData, reason: e.target.value})} className="w-full px-3 py-2 border rounded mb-3" />
-              <div className="flex justify-end gap-3">
-                <button type="button" onClick={() => setShowMovementModal(false)} className="px-4 py-2 text-gray-600">Cancelar</button>
-                <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Registrar</button>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4">
+              {movementData.type === 'entrada' ? '📥 Entrada' : '📤 Salida'} - {selectedProduct?.name}
+            </h2>
+            <form onSubmit={handleMovement} className="space-y-3">
+              <div className="text-center p-4 bg-gray-100 rounded-xl">
+                <span className="text-3xl font-bold">{selectedProduct?.stock}</span>
+                <span className="text-gray-600 ml-1">{selectedProduct?.unit}</span>
+                <p className="text-sm text-gray-500">Stock actual</p>
+              </div>
+              <input type="number" placeholder="Cantidad" value={movementData.quantity} onChange={(e) => setMovementData({...movementData, quantity: e.target.value})} className="w-full p-3 border rounded-xl text-lg text-center" required autoFocus />
+              <input type="text" placeholder="Motivo (opcional)" value={movementData.reason} onChange={(e) => setMovementData({...movementData, reason: e.target.value})} className="w-full p-3 border rounded-xl" />
+              <div className="flex gap-2 pt-2">
+                <button type="button" onClick={() => setShowMovementModal(false)} className="flex-1 p-3 text-gray-600 border rounded-xl">Cancelar</button>
+                <button type="submit" className={`flex-1 p-3 text-white rounded-xl ${movementData.type === 'entrada' ? 'bg-green-600' : 'bg-red-600'}`}>
+                  Confirmar
+                </button>
               </div>
             </form>
           </div>
