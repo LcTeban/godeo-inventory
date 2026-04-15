@@ -1,47 +1,42 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
-import { CheckCircleIcon } from '@heroicons/react/24/outline';
+import { CheckCircleIcon, TruckIcon } from '@heroicons/react/24/outline';
 
 const Transfers = () => {
   const [transfers, setTransfers] = useState([]);
   const [products, setProducts] = useState([]);
   const [showModal, setShowModal] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     productId: '', quantity: '', toRestaurant: '', reason: ''
   });
   const { currentRestaurant, isAdmin } = useAuth();
 
   const restaurants = [
-    { id: 'POZOBLANCO', name: 'Pozoblanco' },
-    { id: 'FUERTEVENTURA', name: 'Fuerteventura' },
-    { id: 'GRAN_CAPITAN', name: 'Gran Capitán' }
+    { id: 'POZOBLANCO', name: 'Pozoblanco', icon: '🍽️' },
+    { id: 'FUERTEVENTURA', name: 'Fuerteventura', icon: '🏖️' },
+    { id: 'GRAN_CAPITAN', name: 'Gran Capitán', icon: '🏛️' }
   ];
 
   const availableDestinations = restaurants.filter(r => r.id !== currentRestaurant);
 
   useEffect(() => {
-    fetchTransfers();
-    fetchProducts();
+    fetchData();
   }, [currentRestaurant]);
 
-  const fetchTransfers = async () => {
+  const fetchData = async () => {
     try {
-      const response = await axios.get('/api/transfers');
-      setTransfers(response.data);
+      const [transRes, prodRes] = await Promise.all([
+        axios.get('/api/transfers'),
+        axios.get(`/api/${currentRestaurant}/products`)
+      ]);
+      setTransfers(transRes.data || []);
+      setProducts((prodRes.data || []).filter(p => p.stock > 0));
     } catch (error) {
       console.error('Error:', error);
-    }
-  };
-
-  const fetchProducts = async () => {
-    try {
-      const response = await axios.get(`/api/${currentRestaurant}/products`);
-      setProducts(response.data.filter(p => p.stock > 0));
-    } catch (error) {
-      console.error('Error:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -51,9 +46,7 @@ const Transfers = () => {
       await axios.post('/api/transfers', formData);
       setShowModal(false);
       setFormData({ productId: '', quantity: '', toRestaurant: '', reason: '' });
-      fetchTransfers();
-      fetchProducts();
-      alert('Transferencia creada');
+      fetchData();
     } catch (error) {
       alert(error.response?.data?.error || 'Error');
     }
@@ -62,95 +55,92 @@ const Transfers = () => {
   const handleComplete = async (transferId) => {
     try {
       await axios.post(`/api/transfers/${transferId}/complete`);
-      fetchTransfers();
-      alert('Transferencia completada');
+      fetchData();
     } catch (error) {
       alert('Error al completar');
     }
   };
 
-  const getStatusBadge = (status) => {
-    return status === 'pendiente' 
-      ? 'bg-yellow-100 text-yellow-800'
-      : 'bg-green-100 text-green-800';
-  };
+  if (loading) {
+    return <div className="text-center py-8 text-gray-500">Cargando...</div>;
+  }
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Transferencias</h1>
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h1 className="text-xl font-bold">Transferencias</h1>
         <button
           onClick={() => setShowModal(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          className="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm"
         >
-          + Nueva Transferencia
+          + Nueva
         </button>
       </div>
 
-      <div className="bg-white rounded-xl shadow overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Producto</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cantidad</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Origen</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Destino</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acción</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {transfers.map((transfer) => (
-                <tr key={transfer.id}>
-                  <td className="px-4 py-3 text-sm">
-                    {format(new Date(transfer.createdAt), 'dd/MM HH:mm', { locale: es })}
-                  </td>
-                  <td className="px-4 py-3 text-sm">{transfer.product?.name}</td>
-                  <td className="px-4 py-3 text-sm">{transfer.quantity}</td>
-                  <td className="px-4 py-3 text-sm">{transfer.fromRestaurant}</td>
-                  <td className="px-4 py-3 text-sm">{transfer.toRestaurant}</td>
-                  <td className="px-4 py-3 text-sm">
-                    <span className={`px-2 py-1 text-xs font-semibold rounded ${getStatusBadge(transfer.status)}`}>
-                      {transfer.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-sm">
-                    {transfer.status === 'pendiente' && 
-                     (isAdmin || currentRestaurant === transfer.toRestaurant) && (
-                      <button
-                        onClick={() => handleComplete(transfer.id)}
-                        className="text-green-600 hover:text-green-900"
-                        title="Completar"
-                      >
-                        <CheckCircleIcon className="h-5 w-5" />
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      <div className="space-y-2">
+        {transfers.map(transfer => (
+          <div key={transfer.id} className="bg-white rounded-xl p-4 shadow-sm">
+            <div className="flex items-start justify-between">
+              <div className="flex gap-3">
+                <span className="text-2xl">📦</span>
+                <div>
+                  <p className="font-semibold">{transfer.product_name}</p>
+                  <p className="text-sm text-gray-600">
+                    {transfer.quantity} • {transfer.from_restaurant} → {transfer.to_restaurant}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {new Date(transfer.created_at).toLocaleString('es', {
+                      day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+                    })}
+                  </p>
+                </div>
+              </div>
+              <div>
+                {transfer.status === 'pendiente' ? (
+                  <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">
+                    Pendiente
+                  </span>
+                ) : (
+                  <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                    Completado ✓
+                  </span>
+                )}
+              </div>
+            </div>
+            {transfer.status === 'pendiente' && (isAdmin || currentRestaurant === transfer.to_restaurant) && (
+              <button
+                onClick={() => handleComplete(transfer.id)}
+                className="mt-3 w-full bg-green-600 text-white py-2 rounded-lg text-sm"
+              >
+                Confirmar Recepción
+              </button>
+            )}
+          </div>
+        ))}
       </div>
+
+      {transfers.length === 0 && (
+        <div className="text-center py-8 text-gray-500">
+          No hay transferencias
+        </div>
+      )}
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md">
             <h2 className="text-xl font-bold mb-4">Nueva Transferencia</h2>
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} className="space-y-3">
               <select
                 value={formData.productId}
                 onChange={(e) => setFormData({...formData, productId: e.target.value})}
-                className="w-full px-3 py-2 border rounded mb-3"
+                className="w-full p-3 border rounded-xl"
                 required
               >
                 <option value="">Seleccionar producto</option>
                 {products.map(p => (
                   <option key={p.id} value={p.id}>
-                    {p.name} (Stock: {p.stock})
+                    {p.name} (Stock: {p.stock} {p.unit})
                   </option>
                 ))}
               </select>
@@ -160,33 +150,33 @@ const Transfers = () => {
                 placeholder="Cantidad"
                 value={formData.quantity}
                 onChange={(e) => setFormData({...formData, quantity: e.target.value})}
-                className="w-full px-3 py-2 border rounded mb-3"
+                className="w-full p-3 border rounded-xl"
                 required
               />
               
               <select
                 value={formData.toRestaurant}
                 onChange={(e) => setFormData({...formData, toRestaurant: e.target.value})}
-                className="w-full px-3 py-2 border rounded mb-3"
+                className="w-full p-3 border rounded-xl"
                 required
               >
-                <option value="">Seleccionar destino</option>
+                <option value="">Destino</option>
                 {availableDestinations.map(r => (
-                  <option key={r.id} value={r.id}>{r.name}</option>
+                  <option key={r.id} value={r.id}>{r.icon} {r.name}</option>
                 ))}
               </select>
               
               <input
                 type="text"
-                placeholder="Motivo (opcional)"
+                placeholder="Nota (opcional)"
                 value={formData.reason}
                 onChange={(e) => setFormData({...formData, reason: e.target.value})}
-                className="w-full px-3 py-2 border rounded mb-4"
+                className="w-full p-3 border rounded-xl"
               />
               
-              <div className="flex justify-end gap-3">
-                <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 text-gray-600">Cancelar</button>
-                <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Crear</button>
+              <div className="flex gap-2 pt-2">
+                <button type="button" onClick={() => setShowModal(false)} className="flex-1 p-3 border rounded-xl">Cancelar</button>
+                <button type="submit" className="flex-1 p-3 bg-blue-600 text-white rounded-xl">Enviar</button>
               </div>
             </form>
           </div>
