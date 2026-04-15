@@ -1,17 +1,19 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { PlusIcon, MinusIcon, TrashIcon, AdjustmentsHorizontalIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, MinusIcon, TrashIcon, CameraIcon, QrCodeIcon } from '@heroicons/react/24/outline';
 
 const Inventory = () => {
   const [products, setProducts] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showMovementModal, setShowMovementModal] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
   const [formData, setFormData] = useState({
-    name: '', category: '', stock: '', unit: 'unidad', min_stock: '10', expiry_date: ''
+    name: '', category: '', stock: '', unit: 'unidad', min_stock: '10', 
+    expiry_date: '', image: '', barcode: ''
   });
   const [movementData, setMovementData] = useState({
     type: 'entrada', quantity: '', reason: ''
@@ -37,7 +39,7 @@ const Inventory = () => {
       await axios.post(`/api/${currentRestaurant}/products`, formData);
       fetchProducts();
       setShowAddModal(false);
-      setFormData({ name: '', category: '', stock: '', unit: 'unidad', min_stock: '10', expiry_date: '' });
+      setFormData({ name: '', category: '', stock: '', unit: 'unidad', min_stock: '10', expiry_date: '', image: '', barcode: '' });
     } catch (error) {
       alert('Error al guardar');
     }
@@ -75,9 +77,29 @@ const Inventory = () => {
     return { color: 'bg-green-100 text-green-800', text: 'OK' };
   };
 
+  const handleScanBarcode = () => {
+    // Usar API de escáner si está disponible en el navegador
+    if ('BarcodeDetector' in window) {
+      // Implementar con Barcode Detection API
+      alert('Apunta al código de barras');
+    } else {
+      // Fallback: abrir input de cámara
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.capture = 'environment';
+      input.onchange = (e) => {
+        alert('Código escaneado: ' + e.target.files[0]?.name);
+        // Aquí iría la lógica de decodificación
+      };
+      input.click();
+    }
+  };
+
   const categories = [...new Set(products.map(p => p.category).filter(Boolean))];
   const filteredProducts = products.filter(p => {
-    const matchesSearch = p.name?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          p.barcode?.includes(searchTerm);
     const matchesCategory = filterCategory === 'all' || p.category === filterCategory;
     return matchesSearch && matchesCategory;
   });
@@ -99,13 +121,16 @@ const Inventory = () => {
 
       {/* Buscador */}
       <div className="flex gap-2">
-        <input
-          type="text"
-          placeholder="🔍 Buscar producto..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="flex-1 p-3 border rounded-xl"
-        />
+        <div className="flex-1 relative">
+          <input
+            type="text"
+            placeholder="🔍 Buscar por nombre o código..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full p-3 border rounded-xl pl-10"
+          />
+          <QrCodeIcon className="h-5 w-5 absolute left-3 top-3.5 text-gray-400" />
+        </div>
         <select
           value={filterCategory}
           onChange={(e) => setFilterCategory(e.target.value)}
@@ -127,7 +152,20 @@ const Inventory = () => {
           
           return (
             <div key={product.id} className="bg-white rounded-xl p-4 shadow-sm">
-              <div className="flex items-start justify-between">
+              <div className="flex items-start gap-3">
+                {/* Imagen del producto */}
+                {product.image ? (
+                  <img 
+                    src={product.image} 
+                    alt={product.name}
+                    className="w-16 h-16 object-cover rounded-lg"
+                  />
+                ) : (
+                  <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <CameraIcon className="h-6 w-6 text-gray-400" />
+                  </div>
+                )}
+                
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className="font-semibold">{product.name}</h3>
@@ -141,7 +179,10 @@ const Inventory = () => {
                     )}
                   </div>
                   <p className="text-sm text-gray-500">{product.category}</p>
-                  <div className="flex items-center gap-4 mt-2">
+                  {product.barcode && (
+                    <p className="text-xs text-gray-400">🏷️ {product.barcode}</p>
+                  )}
+                  <div className="flex items-center justify-between mt-2">
                     <div>
                       <span className="text-2xl font-bold">{product.stock}</span>
                       <span className="text-sm text-gray-500 ml-1">{product.unit}</span>
@@ -154,7 +195,7 @@ const Inventory = () => {
                   </div>
                 </div>
                 
-                <div className="flex gap-1">
+                <div className="flex flex-col gap-1">
                   <button
                     onClick={() => {
                       setSelectedProduct(product);
@@ -200,19 +241,64 @@ const Inventory = () => {
       {/* Modal Agregar Producto */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50">
-          <div className="bg-white rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-4">Nuevo Producto</h2>
             <form onSubmit={handleAddProduct} className="space-y-3">
-              <input type="text" placeholder="Nombre" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full p-3 border rounded-xl" required />
-              <input type="text" placeholder="Categoría" value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})} className="w-full p-3 border rounded-xl" required />
+              {/* Foto */}
+              <div>
+                <label className="block text-sm font-medium mb-1">📸 Foto</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = (event) => {
+                        setFormData({...formData, image: event.target.result});
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                  className="w-full p-2 border rounded-xl text-sm"
+                />
+                {formData.image && (
+                  <img src={formData.image} alt="Preview" className="mt-2 w-20 h-20 object-cover rounded-lg" />
+                )}
+              </div>
+
+              <input type="text" placeholder="Nombre*" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full p-3 border rounded-xl" required />
+              <input type="text" placeholder="Categoría*" value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})} className="w-full p-3 border rounded-xl" required />
+              
+              {/* Código de barras */}
               <div className="flex gap-2">
-                <input type="number" placeholder="Stock inicial" value={formData.stock} onChange={(e) => setFormData({...formData, stock: e.target.value})} className="flex-1 p-3 border rounded-xl" required />
+                <input
+                  type="text"
+                  placeholder="Código de barras"
+                  value={formData.barcode || ''}
+                  onChange={(e) => setFormData({...formData, barcode: e.target.value})}
+                  className="flex-1 p-3 border rounded-xl"
+                />
+                <button
+                  type="button"
+                  onClick={handleScanBarcode}
+                  className="px-4 bg-gray-100 text-gray-700 rounded-xl flex items-center gap-1"
+                >
+                  <QrCodeIcon className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="flex gap-2">
+                <input type="number" step="0.01" placeholder="Stock inicial*" value={formData.stock} onChange={(e) => setFormData({...formData, stock: e.target.value})} className="flex-1 p-3 border rounded-xl" required />
                 <select value={formData.unit} onChange={(e) => setFormData({...formData, unit: e.target.value})} className="w-24 p-3 border rounded-xl">
                   <option value="unidad">ud</option><option value="kg">kg</option><option value="L">L</option><option value="caja">caja</option>
                 </select>
               </div>
+              
               <input type="number" placeholder="Stock mínimo" value={formData.min_stock} onChange={(e) => setFormData({...formData, min_stock: e.target.value})} className="w-full p-3 border rounded-xl" />
               <input type="date" placeholder="Fecha caducidad" value={formData.expiry_date} onChange={(e) => setFormData({...formData, expiry_date: e.target.value})} className="w-full p-3 border rounded-xl" />
+              
               <div className="flex gap-2 pt-2">
                 <button type="button" onClick={() => setShowAddModal(false)} className="flex-1 p-3 text-gray-600 border rounded-xl">Cancelar</button>
                 <button type="submit" className="flex-1 p-3 bg-blue-600 text-white rounded-xl">Guardar</button>
@@ -235,7 +321,7 @@ const Inventory = () => {
                 <span className="text-gray-600 ml-1">{selectedProduct?.unit}</span>
                 <p className="text-sm text-gray-500">Stock actual</p>
               </div>
-              <input type="number" placeholder="Cantidad" value={movementData.quantity} onChange={(e) => setMovementData({...movementData, quantity: e.target.value})} className="w-full p-3 border rounded-xl text-lg text-center" required autoFocus />
+              <input type="number" step="0.01" placeholder="Cantidad" value={movementData.quantity} onChange={(e) => setMovementData({...movementData, quantity: e.target.value})} className="w-full p-3 border rounded-xl text-lg text-center" required autoFocus />
               <input type="text" placeholder="Motivo (opcional)" value={movementData.reason} onChange={(e) => setMovementData({...movementData, reason: e.target.value})} className="w-full p-3 border rounded-xl" />
               <div className="flex gap-2 pt-2">
                 <button type="button" onClick={() => setShowMovementModal(false)} className="flex-1 p-3 text-gray-600 border rounded-xl">Cancelar</button>
