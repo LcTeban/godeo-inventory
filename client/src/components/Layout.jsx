@@ -4,7 +4,6 @@ import {
   HomeIcon, 
   CubeIcon, 
   ArrowPathIcon, 
-  TruckIcon,
   ArrowsRightLeftIcon,
   Bars3Icon,
   XMarkIcon
@@ -32,7 +31,6 @@ const Layout = () => {
     { name: 'Inventario', href: '/inventory', icon: CubeIcon },
     { name: 'Movimientos', href: '/movements', icon: ArrowPathIcon },
     { name: 'Transferencias', href: '/transfers', icon: ArrowsRightLeftIcon },
-    { name: 'Proveedores', href: '/suppliers', icon: TruckIcon },
   ];
 
   const currentRest = restaurants.find(r => r.id === currentRestaurant);
