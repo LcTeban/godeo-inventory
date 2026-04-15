@@ -21,13 +21,18 @@ const Layout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
+  // ============================================
+  // VERIFICAR PERMISO DE NOTIFICACIONES AL CARGAR
+  // ============================================
   useEffect(() => {
-    // Verificar si ya hay permiso de notificaciones
     if ('Notification' in window) {
       setNotificationsEnabled(Notification.permission === 'granted');
     }
   }, []);
 
+  // ============================================
+  // SOLICITAR PERMISO PARA NOTIFICACIONES PUSH
+  // ============================================
   const requestNotificationPermission = async () => {
     try {
       const permission = await Notification.requestPermission();
@@ -35,7 +40,8 @@ const Layout = () => {
         const registration = await navigator.serviceWorker.ready;
         const subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: 'BEl62i4G6m0H6kN7rX8vL8mP4kQ9sT2vR5wX7yZ1aB3cD4eF5gH6iJ7kL8mN9oP0'
+          // CLAVE PÚBLICA VAPID ACTUALIZADA
+          applicationServerKey: 'BOkLnLmIYBSxJlq-0fgFJ8lPvFZqXkE2QxwWp5HvJ9sT8uR1wV3yA4bC5dE6fG7hI8'
         });
         
         await axios.post('/api/push/subscribe', { subscription });
@@ -72,7 +78,9 @@ const Layout = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header Mobile */}
+      {/* ============================================ */}
+      {/* HEADER MOBILE */}
+      {/* ============================================ */}
       <div className="lg:hidden bg-white shadow-sm p-4 flex items-center justify-between">
         <button onClick={() => setSidebarOpen(true)} className="p-2">
           <Bars3Icon className="h-6 w-6" />
@@ -81,6 +89,7 @@ const Layout = () => {
           <span className="text-xl">{currentRest?.icon}</span>
           <span className="font-semibold">{currentRest?.name}</span>
         </div>
+        {/* BOTÓN DE NOTIFICACIONES EN MÓVIL */}
         <button onClick={requestNotificationPermission} className="p-2">
           {notificationsEnabled ? 
             <BellAlertIcon className="h-6 w-6 text-green-600" /> : 
@@ -89,7 +98,9 @@ const Layout = () => {
         </button>
       </div>
 
-      {/* Sidebar Mobile */}
+      {/* ============================================ */}
+      {/* SIDEBAR MOBILE */}
+      {/* ============================================ */}
       {sidebarOpen && (
         <div className="lg:hidden fixed inset-0 z-50 bg-black bg-opacity-50" onClick={() => setSidebarOpen(false)}>
           <div className="bg-white w-64 h-full p-4" onClick={e => e.stopPropagation()}>
@@ -142,12 +153,15 @@ const Layout = () => {
         </div>
       )}
 
-      {/* Sidebar Desktop */}
+      {/* ============================================ */}
+      {/* SIDEBAR DESKTOP */}
+      {/* ============================================ */}
       <div className="hidden lg:flex lg:w-64 lg:fixed lg:inset-y-0">
         <div className="w-64 bg-white shadow-lg flex flex-col">
           <div className="p-6">
             <div className="flex justify-between items-center">
               <h1 className="text-2xl font-bold">🍴 Godeo</h1>
+              {/* BOTÓN DE NOTIFICACIONES EN DESKTOP */}
               <button onClick={requestNotificationPermission} className="p-2">
                 {notificationsEnabled ? 
                   <BellAlertIcon className="h-5 w-5 text-green-600" /> : 
@@ -198,7 +212,9 @@ const Layout = () => {
         </div>
       </div>
 
-      {/* Main content */}
+      {/* ============================================ */}
+      {/* CONTENIDO PRINCIPAL */}
+      {/* ============================================ */}
       <div className="lg:pl-64">
         <div className="p-4 lg:p-6">
           <Outlet />
