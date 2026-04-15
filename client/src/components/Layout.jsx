@@ -6,15 +6,47 @@ import {
   ArrowPathIcon, 
   ArrowsRightLeftIcon,
   ClipboardDocumentListIcon,
+  ChartBarIcon,
   Bars3Icon,
-  XMarkIcon
+  XMarkIcon,
+  BellIcon,
+  BellAlertIcon
 } from '@heroicons/react/24/outline';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 
 const Layout = () => {
   const { user, logout, currentRestaurant, switchRestaurant, isAdmin, restaurantName } = useAuth();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+
+  useEffect(() => {
+    // Verificar si ya hay permiso de notificaciones
+    if ('Notification' in window) {
+      setNotificationsEnabled(Notification.permission === 'granted');
+    }
+  }, []);
+
+  const requestNotificationPermission = async () => {
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: 'BEl62i4G6m0H6kN7rX8vL8mP4kQ9sT2vR5wX7yZ1aB3cD4eF5gH6iJ7kL8mN9oP0'
+        });
+        
+        await axios.post('/api/push/subscribe', { subscription });
+        setNotificationsEnabled(true);
+        alert('✅ Notificaciones activadas');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('❌ No se pudieron activar las notificaciones');
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -33,6 +65,7 @@ const Layout = () => {
     { name: 'Movimientos', href: '/movements', icon: ArrowPathIcon },
     { name: 'Transferencias', href: '/transfers', icon: ArrowsRightLeftIcon },
     { name: 'Pedidos', href: '/requests', icon: ClipboardDocumentListIcon },
+    { name: 'Reportes', href: '/reports', icon: ChartBarIcon },
   ];
 
   const currentRest = restaurants.find(r => r.id === currentRestaurant);
@@ -48,7 +81,12 @@ const Layout = () => {
           <span className="text-xl">{currentRest?.icon}</span>
           <span className="font-semibold">{currentRest?.name}</span>
         </div>
-        <div className="w-10"></div>
+        <button onClick={requestNotificationPermission} className="p-2">
+          {notificationsEnabled ? 
+            <BellAlertIcon className="h-6 w-6 text-green-600" /> : 
+            <BellIcon className="h-6 w-6 text-gray-600" />
+          }
+        </button>
       </div>
 
       {/* Sidebar Mobile */}
@@ -108,7 +146,15 @@ const Layout = () => {
       <div className="hidden lg:flex lg:w-64 lg:fixed lg:inset-y-0">
         <div className="w-64 bg-white shadow-lg flex flex-col">
           <div className="p-6">
-            <h1 className="text-2xl font-bold">🍴 Godeo</h1>
+            <div className="flex justify-between items-center">
+              <h1 className="text-2xl font-bold">🍴 Godeo</h1>
+              <button onClick={requestNotificationPermission} className="p-2">
+                {notificationsEnabled ? 
+                  <BellAlertIcon className="h-5 w-5 text-green-600" /> : 
+                  <BellIcon className="h-5 w-5 text-gray-600" />
+                }
+              </button>
+            </div>
             <p className="text-sm text-gray-600 mt-1">{user?.name}</p>
             <span className="inline-block mt-1 px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded">
               {user?.role}
