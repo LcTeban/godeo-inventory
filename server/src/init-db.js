@@ -25,7 +25,6 @@ db.serialize(() => {
     category TEXT,
     stock REAL,
     unit TEXT,
-    price REAL,
     min_stock REAL DEFAULT 10,
     expiry_date TEXT,
     restaurant TEXT,
@@ -43,7 +42,6 @@ db.serialize(() => {
     reason TEXT,
     product_id INTEGER,
     user_id INTEGER,
-    supplier_id INTEGER,
     restaurant TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`);
@@ -62,7 +60,7 @@ db.serialize(() => {
     completed_at DATETIME
   )`);
 
-  // Solicitudes/Pedidos
+  // Solicitudes
   db.run(`CREATE TABLE IF NOT EXISTS requests (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     product_name TEXT,
@@ -75,12 +73,19 @@ db.serialize(() => {
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`);
 
-  // Crear admin
+  // Suscripciones Push
+  db.run(`CREATE TABLE IF NOT EXISTS push_subscriptions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER UNIQUE,
+    subscription TEXT,
+    restaurant TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`);
+
+  // Crear admin y empleados
   const hash = bcrypt.hashSync('Godeo2024', 10);
   db.run(`INSERT OR IGNORE INTO users (email, password, name, role, restaurant) 
            VALUES ('admin@godeo.com', ?, 'Administrador', 'ADMIN', 'POZOBLANCO')`, [hash]);
-  
-  // Crear empleados de prueba
   db.run(`INSERT OR IGNORE INTO users (email, password, name, role, restaurant) 
            VALUES ('empleado1@godeo.com', ?, 'Carlos Pérez', 'EMPLEADO', 'POZOBLANCO')`, [hash]);
   db.run(`INSERT OR IGNORE INTO users (email, password, name, role, restaurant) 
