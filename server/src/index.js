@@ -13,7 +13,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const db = new sqlite3.Database(join(__dirname, '../../godeo.db'));
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 app.use(express.static(join(__dirname, '../../client/dist')));
 
 // Middleware
@@ -55,10 +55,10 @@ app.get('/api/:restaurant/products', authenticateToken, (req, res) => {
 });
 
 app.post('/api/:restaurant/products', authenticateToken, (req, res) => {
-  const { name, category, stock, unit, price, minStock } = req.body;
+  const { name, category, stock, unit, min_stock, expiry_date, image, barcode } = req.body;
   db.run(
-    'INSERT INTO products (name, category, stock, unit, price, min_stock, restaurant) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    [name, category, stock || 0, unit || 'unidad', price || 0, minStock || 10, req.params.restaurant],
+    'INSERT INTO products (name, category, stock, unit, min_stock, expiry_date, restaurant, image, barcode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    [name, category, stock || 0, unit || 'unidad', min_stock || 10, expiry_date, req.params.restaurant, image, barcode],
     function(err) {
       if (err) return res.status(500).json({ error: err.message });
       res.json({ id: this.lastID, ...req.body });
@@ -67,10 +67,10 @@ app.post('/api/:restaurant/products', authenticateToken, (req, res) => {
 });
 
 app.put('/api/:restaurant/products/:id', authenticateToken, (req, res) => {
-  const { name, category, stock, unit, price, minStock } = req.body;
+  const { name, category, stock, unit, min_stock, expiry_date, image, barcode } = req.body;
   db.run(
-    'UPDATE products SET name=?, category=?, stock=?, unit=?, price=?, min_stock=? WHERE id=?',
-    [name, category, stock, unit, price, minStock, req.params.id],
+    'UPDATE products SET name=?, category=?, stock=?, unit=?, min_stock=?, expiry_date=?, image=?, barcode=? WHERE id=?',
+    [name, category, stock, unit, min_stock, expiry_date, image, barcode, req.params.id],
     (err) => {
       if (err) return res.status(500).json({ error: err.message });
       res.json({ id: req.params.id, ...req.body });
@@ -93,7 +93,7 @@ app.get('/api/:restaurant/movements', authenticateToken, (req, res) => {
      LEFT JOIN products p ON m.product_id = p.id 
      LEFT JOIN users u ON m.user_id = u.id 
      WHERE m.restaurant = ? 
-     ORDER BY m.created_at DESC LIMIT 50`,
+     ORDER BY m.created_at DESC LIMIT 100`,
     [req.params.restaurant],
     (err, rows) => res.json(rows || [])
   );
@@ -128,12 +128,13 @@ app.post('/api/:restaurant/movements', authenticateToken, (req, res) => {
 app.get('/api/dashboard/overview', authenticateToken, (req, res) => {
   const restaurants = ['POZOBLANCO', 'FUERTEVENTURA', 'GRAN_CAPITAN'];
   const stats = {};
-  let pending = 0;
+  let completed = 0;
   
   restaurants.forEach(rest => {
     db.get('SELECT COUNT(*) as count FROM products WHERE restaurant = ?', [rest], (err, row) => {
       stats[rest] = { totalProducts: row?.count || 0, inventoryValue: 0, lowStock: 0 };
-      if (Object.keys(stats).length === 3) {
+      completed++;
+      if (completed === 3) {
         db.get('SELECT COUNT(*) as count FROM transfers WHERE status = "pendiente"', (e, r) => {
           res.json({ restaurants: stats, pendingTransfers: r?.count || 0 });
         });
@@ -166,21 +167,31 @@ app.post('/api/transfers', authenticateToken, (req, res) => {
   );
 });
 
-// PROVEEDORES
-app.get('/api/suppliers', authenticateToken, (req, res) => {
-  db.all('SELECT * FROM suppliers ORDER BY name', (err, rows) => res.json(rows || []));
-});
-
-app.post('/api/suppliers', authenticateToken, (req, res) => {
-  const { name, contact, phone, email, address } = req.body;
-  db.run(
-    'INSERT INTO suppliers (name, contact, phone, email, address) VALUES (?, ?, ?, ?, ?)',
-    [name, contact, phone, email, address],
-    function(err) {
-      if (err) return res.status(500).json({ error: err.message });
-      res.json({ id: this.lastID });
-    }
-  );
+app.post('/api/transfers/:id/complete', authenticateToken, (req, res) => {
+  const transferId = req.params.id;
+  
+  db.get('SELECT * FROM transfers WHERE id = ?', [transferId], (err, transfer) => {
+    if (err || !transfer) return res.status(404).json({ error: 'Transferencia no encontrada' });
+    
+    db.get('SELECT * FROM products WHERE id = ?', [transfer.product_id], (err, product) => {
+      if (!product) return res.status(404).json({ error: 'Producto no encontrado' });
+      
+      // Buscar o crear producto en destino
+      db.get('SELECT * FROM products WHERE name = ? AND restaurant = ?', [product.name, transfer.to_restaurant], (err, destProduct) => {
+        if (destProduct) {
+          db.run('UPDATE products SET stock = stock + ? WHERE id = ?', [transfer.quantity, destProduct.id]);
+        } else {
+          db.run(
+            'INSERT INTO products (name, category, stock, unit, min_stock, restaurant) VALUES (?, ?, ?, ?, ?, ?)',
+            [product.name, product.category, transfer.quantity, product.unit, product.min_stock, transfer.to_restaurant]
+          );
+        }
+        
+        db.run('UPDATE transfers SET status = "completado", completed_at = datetime("now") WHERE id = ?', [transferId]);
+        res.json({ success: true });
+      });
+    });
+  });
 });
 
 // SOLICITUDES
@@ -195,10 +206,10 @@ app.get('/api/requests', authenticateToken, (req, res) => {
 });
 
 app.post('/api/requests', authenticateToken, (req, res) => {
-  const { productName, quantity, unit, notes, restaurant } = req.body;
+  const { productName, quantity, unit, notes } = req.body;
   db.run(
     'INSERT INTO requests (product_name, quantity, unit, notes, user_id, restaurant) VALUES (?, ?, ?, ?, ?, ?)',
-    [productName, quantity, unit, notes, req.user.id, restaurant || req.user.restaurant],
+    [productName, quantity, unit, notes, req.user.id, req.user.restaurant],
     function(err) {
       if (err) return res.status(500).json({ error: err.message });
       res.json({ id: this.lastID });
@@ -208,14 +219,10 @@ app.post('/api/requests', authenticateToken, (req, res) => {
 
 app.put('/api/requests/:id', authenticateToken, (req, res) => {
   const { status } = req.body;
-  db.run(
-    'UPDATE requests SET status = ? WHERE id = ?',
-    [status, req.params.id],
-    (err) => {
-      if (err) return res.status(500).json({ error: err.message });
-      res.json({ success: true });
-    }
-  );
+  db.run('UPDATE requests SET status = ? WHERE id = ?', [status, req.params.id], (err) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ success: true });
+  });
 });
 
 app.get('*', (req, res) => {
