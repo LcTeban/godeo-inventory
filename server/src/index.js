@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import sqlite3 from 'sqlite3';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import webpush from 'web-push';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
@@ -11,6 +12,18 @@ dotenv.config();
 const app = express();
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const db = new sqlite3.Database(join(__dirname, '../../godeo.db'));
+
+// Configurar VAPID para notificaciones
+const vapidKeys = {
+  publicKey: 'BEl62i4G6m0H6kN7rX8vL8mP4kQ9sT2vR5wX7yZ1aB3cD4eF5gH6iJ7kL8mN9oP0',
+  privateKey: 'aB1cD2eF3gH4iJ5kL6mN7oP8qR9sT0uV1wX2yZ3'
+};
+
+webpush.setVapidDetails(
+  'mailto:admin@godeo.com',
+  vapidKeys.publicKey,
+  vapidKeys.privateKey
+);
 
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
@@ -132,7 +145,7 @@ app.get('/api/dashboard/overview', authenticateToken, (req, res) => {
   
   restaurants.forEach(rest => {
     db.get('SELECT COUNT(*) as count FROM products WHERE restaurant = ?', [rest], (err, row) => {
-      stats[rest] = { totalProducts: row?.count || 0, inventoryValue: 0, lowStock: 0 };
+      stats[rest] = { totalProducts: row?.count || 0, lowStock: 0 };
       completed++;
       if (completed === 3) {
         db.get('SELECT COUNT(*) as count FROM transfers WHERE status = "pendiente"', (e, r) => {
@@ -176,7 +189,6 @@ app.post('/api/transfers/:id/complete', authenticateToken, (req, res) => {
     db.get('SELECT * FROM products WHERE id = ?', [transfer.product_id], (err, product) => {
       if (!product) return res.status(404).json({ error: 'Producto no encontrado' });
       
-      // Buscar o crear producto en destino
       db.get('SELECT * FROM products WHERE name = ? AND restaurant = ?', [product.name, transfer.to_restaurant], (err, destProduct) => {
         if (destProduct) {
           db.run('UPDATE products SET stock = stock + ? WHERE id = ?', [transfer.quantity, destProduct.id]);
@@ -224,6 +236,78 @@ app.put('/api/requests/:id', authenticateToken, (req, res) => {
     res.json({ success: true });
   });
 });
+
+// REPORTES DE CONSUMO
+app.get('/api/reports/consumption/:restaurant', authenticateToken, (req, res) => {
+  const { restaurant } = req.params;
+  const { range } = req.query;
+  
+  let dateFilter = '';
+  if (range === 'week') dateFilter = "AND m.created_at >= date('now', '-7 days')";
+  else if (range === 'month') dateFilter = "AND m.created_at >= date('now', '-30 days')";
+  else if (range === 'year') dateFilter = "AND m.created_at >= date('now', '-365 days')";
+  
+  db.all(
+    `SELECT 
+       p.name, 
+       p.category,
+       SUM(CASE WHEN m.type = 'salida' THEN m.quantity ELSE 0 END) as consumed
+     FROM movements m
+     JOIN products p ON m.product_id = p.id
+     WHERE m.restaurant = ? AND m.type = 'salida' ${dateFilter}
+     GROUP BY p.id
+     ORDER BY consumed DESC`,
+    [restaurant],
+    (err, rows) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json(rows || []);
+    }
+  );
+});
+
+// NOTIFICACIONES PUSH
+app.post('/api/push/subscribe', authenticateToken, (req, res) => {
+  const { subscription } = req.body;
+  const userId = req.user.id;
+  
+  db.run(
+    'INSERT OR REPLACE INTO push_subscriptions (user_id, subscription, restaurant) VALUES (?, ?, ?)',
+    [userId, JSON.stringify(subscription), req.user.restaurant],
+    (err) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ success: true });
+    }
+  );
+});
+
+// Verificar stock bajo y notificar (cada 30 min)
+const checkLowStockAndNotify = () => {
+  db.all(
+    `SELECT p.*, ps.subscription, ps.user_id 
+     FROM products p
+     JOIN push_subscriptions ps ON p.restaurant = ps.restaurant
+     WHERE p.stock <= p.min_stock`,
+    async (err, rows) => {
+      if (err || !rows.length) return;
+      
+      for (const row of rows) {
+        try {
+          const subscription = JSON.parse(row.subscription);
+          await webpush.sendNotification(subscription, JSON.stringify({
+            title: '⚠️ Stock Bajo',
+            body: `${row.name} tiene solo ${row.stock} ${row.unit}`,
+            icon: '/icon-192.png',
+            data: { url: '/inventory' }
+          }));
+        } catch (e) {
+          console.error('Error sending notification:', e);
+        }
+      }
+    }
+  );
+};
+
+setInterval(checkLowStockAndNotify, 30 * 60 * 1000);
 
 app.get('*', (req, res) => {
   res.sendFile(join(__dirname, '../../client/dist/index.html'));
