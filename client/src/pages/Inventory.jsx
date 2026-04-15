@@ -138,7 +138,6 @@ const Inventory = () => {
           return (
             <div key={product.id} className="bg-white rounded-xl p-4 shadow-sm">
               <div className="flex items-start gap-3">
-                {/* Imagen del producto */}
                 {product.image ? (
                   <img 
                     src={product.image} 
@@ -225,31 +224,75 @@ const Inventory = () => {
 
       {/* Modal Agregar Producto */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 overflow-y-auto">
           <div className="bg-white rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-4">Nuevo Producto</h2>
             <form onSubmit={handleAddProduct} className="space-y-3">
-              {/* Foto */}
+              {/* Foto - Selector Cámara/Galería */}
               <div>
                 <label className="block text-sm font-medium mb-1">📸 Foto</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  onChange={(e) => {
-                    const file = e.target.files[0];
-                    if (file) {
-                      const reader = new FileReader();
-                      reader.onload = (event) => {
-                        setFormData({...formData, image: event.target.result});
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const input = document.createElement('input');
+                      input.type = 'file';
+                      input.accept = 'image/*';
+                      input.capture = 'environment';
+                      input.onchange = (e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = (event) => {
+                            setFormData({...formData, image: event.target.result});
+                          };
+                          reader.readAsDataURL(file);
+                        }
                       };
-                      reader.readAsDataURL(file);
-                    }
-                  }}
-                  className="w-full p-2 border rounded-xl text-sm"
-                />
+                      input.click();
+                    }}
+                    className="flex-1 p-3 bg-blue-100 text-blue-700 rounded-xl text-sm flex items-center justify-center gap-2"
+                  >
+                    <CameraIcon className="h-5 w-5" /> Cámara
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const input = document.createElement('input');
+                      input.type = 'file';
+                      input.accept = 'image/*';
+                      input.onchange = (e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = (event) => {
+                            setFormData({...formData, image: event.target.result});
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      };
+                      input.click();
+                    }}
+                    className="flex-1 p-3 bg-gray-100 text-gray-700 rounded-xl text-sm flex items-center justify-center gap-2"
+                  >
+                    🖼️ Galería
+                  </button>
+                </div>
                 {formData.image && (
-                  <img src={formData.image} alt="Preview" className="mt-2 w-20 h-20 object-cover rounded-lg" />
+                  <div className="mt-2 relative inline-block">
+                    <img 
+                      src={formData.image} 
+                      alt="Preview" 
+                      className="w-20 h-20 object-cover rounded-lg" 
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setFormData({...formData, image: ''})}
+                      className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
+                    >
+                      ✕
+                    </button>
+                  </div>
                 )}
               </div>
 
