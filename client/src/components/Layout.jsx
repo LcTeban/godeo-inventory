@@ -5,9 +5,9 @@ import {
   CubeIcon, 
   ArrowPathIcon, 
   ArrowsRightLeftIcon,
+  ClipboardDocumentListIcon,
   Bars3Icon,
-  XMarkIcon,
-  ClipboardDocumentListIcon
+  XMarkIcon
 } from '@heroicons/react/24/outline';
 import { useState } from 'react';
 
