@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { PlusIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
+import { PlusIcon } from '@heroicons/react/24/outline';
 
 const Requests = () => {
   const [requests, setRequests] = useState([]);
@@ -11,7 +11,7 @@ const Requests = () => {
 
   useEffect(() => {
     fetchRequests();
-  }, [currentRestaurant]);
+  }, []);
 
   const fetchRequests = async () => {
     try {
@@ -25,10 +25,7 @@ const Requests = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('/api/requests', {
-        ...formData,
-        restaurant: currentRestaurant
-      });
+      await axios.post('/api/requests', { ...formData });
       setShowModal(false);
       setFormData({ productName: '', quantity: '', unit: 'unidad', notes: '' });
       fetchRequests();
@@ -46,9 +43,7 @@ const Requests = () => {
     }
   };
 
-  const pendingRequests = requests.filter(r => r.status === 'pendiente' && 
-    (isAdmin || r.restaurant === currentRestaurant));
-  
+  const pendingRequests = requests.filter(r => r.status === 'pendiente');
   const myRequests = requests.filter(r => r.user_id === user?.id);
 
   return (
@@ -82,6 +77,9 @@ const Requests = () => {
               </div>
               <p className="text-sm text-gray-600">{req.quantity} {req.unit}</p>
               {req.notes && <p className="text-xs text-gray-500 mt-1">{req.notes}</p>}
+              <p className="text-xs text-gray-400 mt-1">
+                {new Date(req.created_at).toLocaleDateString('es')}
+              </p>
             </div>
           ))}
           {myRequests.length === 0 && (
@@ -90,10 +88,10 @@ const Requests = () => {
         </div>
       </div>
 
-      {/* Panel Admin - Solicitudes pendientes */}
+      {/* Panel Admin */}
       {isAdmin && (
         <div className="bg-white rounded-xl p-4 shadow-sm">
-          <h2 className="font-semibold mb-3">⏳ Pendientes de aprobar</h2>
+          <h2 className="font-semibold mb-3">⏳ Pendientes de aprobar ({pendingRequests.length})</h2>
           <div className="space-y-2">
             {pendingRequests.map(req => (
               <div key={req.id} className="border rounded-lg p-3">
@@ -107,15 +105,15 @@ const Requests = () => {
                 <div className="flex gap-2 mt-3">
                   <button
                     onClick={() => handleStatus(req.id, 'aprobado')}
-                    className="flex-1 bg-green-600 text-white py-1 rounded text-sm"
+                    className="flex-1 bg-green-600 text-white py-2 rounded-lg text-sm"
                   >
-                    Aprobar
+                    ✓ Aprobar
                   </button>
                   <button
                     onClick={() => handleStatus(req.id, 'rechazado')}
-                    className="flex-1 bg-red-600 text-white py-1 rounded text-sm"
+                    className="flex-1 bg-red-600 text-white py-2 rounded-lg text-sm"
                   >
-                    Rechazar
+                    ✗ Rechazar
                   </button>
                 </div>
               </div>
@@ -144,6 +142,7 @@ const Requests = () => {
               <div className="flex gap-2">
                 <input
                   type="number"
+                  step="0.01"
                   placeholder="Cantidad"
                   value={formData.quantity}
                   onChange={(e) => setFormData({...formData, quantity: e.target.value})}
