@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import sqlite3 from 'sqlite3';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import webpush from 'web-push';
+// import webpush from 'web-push'; // DESACTIVADO TEMPORALMENTE
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
@@ -14,8 +14,9 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const db = new sqlite3.Database(join(__dirname, '../../godeo.db'));
 
 // ============================================
-// CONFIGURACIÓN VAPID PARA NOTIFICACIONES PUSH
+// CONFIGURACIÓN VAPID DESACTIVADA TEMPORALMENTE
 // ============================================
+/*
 const vapidKeys = {
   publicKey: 'BOkLnLmIYBSxJlq-0fgFJ8lPvFZqXkE2QxwWp5HvJ9sT8uR1wV3yA4bC5dE6fG7hI8',
   privateKey: 'jVkL9mN0oP1qR2sT3uV4wX5yZ6aB7cD8eF9gH0iJ1'
@@ -26,6 +27,7 @@ webpush.setVapidDetails(
   vapidKeys.publicKey,
   vapidKeys.privateKey
 );
+*/
 // ============================================
 
 app.use(cors());
@@ -283,8 +285,9 @@ app.get('/api/reports/consumption/:restaurant', authenticateToken, (req, res) =>
 });
 
 // ============================================
-// NOTIFICACIONES PUSH
+// NOTIFICACIONES PUSH - DESACTIVADO TEMPORALMENTE
 // ============================================
+/*
 app.post('/api/push/subscribe', authenticateToken, (req, res) => {
   const { subscription } = req.body;
   const userId = req.user.id;
@@ -299,7 +302,6 @@ app.post('/api/push/subscribe', authenticateToken, (req, res) => {
   );
 });
 
-// Verificar stock bajo y enviar notificaciones (cada 30 minutos)
 const checkLowStockAndNotify = () => {
   db.all(
     `SELECT p.*, ps.subscription, ps.user_id 
@@ -326,8 +328,9 @@ const checkLowStockAndNotify = () => {
   );
 };
 
-// Ejecutar verificación cada 30 minutos
 setInterval(checkLowStockAndNotify, 30 * 60 * 1000);
+*/
+// ============================================
 
 // ============================================
 // SERVIR FRONTEND
