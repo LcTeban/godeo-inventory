@@ -6,7 +6,8 @@ import {
   ArrowPathIcon, 
   ArrowsRightLeftIcon,
   Bars3Icon,
-  XMarkIcon
+  XMarkIcon,
+  ClipboardDocumentListIcon
 } from '@heroicons/react/24/outline';
 import { useState } from 'react';
 
@@ -31,6 +32,7 @@ const Layout = () => {
     { name: 'Inventario', href: '/inventory', icon: CubeIcon },
     { name: 'Movimientos', href: '/movements', icon: ArrowPathIcon },
     { name: 'Transferencias', href: '/transfers', icon: ArrowsRightLeftIcon },
+    { name: 'Pedidos', href: '/requests', icon: ClipboardDocumentListIcon },
   ];
 
   const currentRest = restaurants.find(r => r.id === currentRestaurant);
