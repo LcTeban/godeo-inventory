@@ -168,13 +168,12 @@ app.get('/api/dashboard/overview', authenticateToken, (req, res) => {
     });
   });
 });
-
 // ============================================
 // TRANSFERENCIAS
 // ============================================
 app.get('/api/transfers', authenticateToken, (req, res) => {
   db.all(
-    `SELECT t.*, p.name as product_name, u.name as user_name 
+    `SELECT t.*, p.name as product_name, p.unit as product_unit, u.name as user_name 
      FROM transfers t 
      LEFT JOIN products p ON t.product_id = p.id 
      LEFT JOIN users u ON t.user_id = u.id 
@@ -185,12 +184,68 @@ app.get('/api/transfers', authenticateToken, (req, res) => {
 
 app.post('/api/transfers', authenticateToken, (req, res) => {
   const { productId, quantity, toRestaurant, reason } = req.body;
-  db.run(
-    'INSERT INTO transfers (product_id, quantity, from_restaurant, to_restaurant, user_id, reason) VALUES (?, ?, ?, ?, ?, ?)',
-    [productId, quantity, req.user.restaurant, toRestaurant, req.user.id, reason],
-    function(err) {
-      if (err) return res.status(500).json({ error: err.message });
-      res.json({ id: this.lastID });
+  const fromRestaurant = req.user.restaurant;
+  
+  // Verificar que el producto existe y tiene stock suficiente
+  db.get(
+    'SELECT * FROM products WHERE id = ? AND restaurant = ?',
+    [productId, fromRestaurant],
+    (err, product) => {
+      if (err || !product) {
+        return res.status(404).json({ error: 'Producto no encontrado' });
+      }
+      
+      if (product.stock < quantity) {
+        return res.status(400).json({ error: 'Stock insuficiente' });
+      }
+      
+      // Crear transferencia Y RESTAR STOCK DEL ORIGEN
+      db.serialize(() => {
+        db.run('BEGIN TRANSACTION');
+        
+        // 1. Restar stock del producto en origen
+        const newStock = product.stock - parseFloat(quantity);
+        db.run(
+          'UPDATE products SET stock = ? WHERE id = ?',
+          [newStock, productId],
+          function(err) {
+            if (err) {
+              db.run('ROLLBACK');
+              return res.status(500).json({ error: err.message });
+            }
+            
+            // 2. Registrar movimiento de salida
+            db.run(
+              'INSERT INTO movements (type, quantity, reason, product_id, user_id, restaurant) VALUES (?, ?, ?, ?, ?, ?)',
+              ['salida', quantity, `Transferencia a ${toRestaurant}${reason ? ': ' + reason : ''}`, productId, req.user.id, fromRestaurant],
+              function(err) {
+                if (err) {
+                  db.run('ROLLBACK');
+                  return res.status(500).json({ error: err.message });
+                }
+                
+                // 3. Crear la transferencia
+                db.run(
+                  'INSERT INTO transfers (product_id, quantity, from_restaurant, to_restaurant, user_id, reason) VALUES (?, ?, ?, ?, ?, ?)',
+                  [productId, quantity, fromRestaurant, toRestaurant, req.user.id, reason],
+                  function(err) {
+                    if (err) {
+                      db.run('ROLLBACK');
+                      return res.status(500).json({ error: err.message });
+                    }
+                    
+                    db.run('COMMIT');
+                    res.json({ 
+                      id: this.lastID,
+                      message: 'Transferencia creada. Stock actualizado en origen.' 
+                    });
+                  }
+                );
+              }
+            );
+          }
+        );
+      });
     }
   );
 });
@@ -201,21 +256,73 @@ app.post('/api/transfers/:id/complete', authenticateToken, (req, res) => {
   db.get('SELECT * FROM transfers WHERE id = ?', [transferId], (err, transfer) => {
     if (err || !transfer) return res.status(404).json({ error: 'Transferencia no encontrada' });
     
+    // Verificar que el usuario puede completar (es admin o es el destino)
+    if (req.user.role !== 'ADMIN' && req.user.restaurant !== transfer.to_restaurant) {
+      return res.status(403).json({ error: 'No autorizado para completar esta transferencia' });
+    }
+    
+    if (transfer.status === 'completado') {
+      return res.status(400).json({ error: 'Transferencia ya completada' });
+    }
+    
     db.get('SELECT * FROM products WHERE id = ?', [transfer.product_id], (err, product) => {
       if (!product) return res.status(404).json({ error: 'Producto no encontrado' });
       
-      db.get('SELECT * FROM products WHERE name = ? AND restaurant = ?', [product.name, transfer.to_restaurant], (err, destProduct) => {
-        if (destProduct) {
-          db.run('UPDATE products SET stock = stock + ? WHERE id = ?', [transfer.quantity, destProduct.id]);
-        } else {
-          db.run(
-            'INSERT INTO products (name, category, stock, unit, min_stock, restaurant) VALUES (?, ?, ?, ?, ?, ?)',
-            [product.name, product.category, transfer.quantity, product.unit, product.min_stock, transfer.to_restaurant]
-          );
-        }
+      db.serialize(() => {
+        db.run('BEGIN TRANSACTION');
         
-        db.run('UPDATE transfers SET status = "completado", completed_at = datetime("now") WHERE id = ?', [transferId]);
-        res.json({ success: true });
+        // Buscar si el producto ya existe en el destino
+        db.get(
+          'SELECT * FROM products WHERE name = ? AND restaurant = ?',
+          [product.name, transfer.to_restaurant],
+          (err, destProduct) => {
+            if (err) {
+              db.run('ROLLBACK');
+              return res.status(500).json({ error: err.message });
+            }
+            
+            if (destProduct) {
+              // Actualizar stock en destino
+              db.run(
+                'UPDATE products SET stock = stock + ? WHERE id = ?',
+                [transfer.quantity, destProduct.id]
+              );
+            } else {
+              // Crear producto en destino
+              db.run(
+                'INSERT INTO products (name, category, stock, unit, min_stock, expiry_date, restaurant, image, barcode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                [product.name, product.category, transfer.quantity, product.unit, product.min_stock, product.expiry_date, transfer.to_restaurant, product.image, product.barcode]
+              );
+            }
+            
+            // Registrar movimiento de entrada en destino
+            db.run(
+              'INSERT INTO movements (type, quantity, reason, product_id, user_id, restaurant) VALUES (?, ?, ?, ?, ?, ?)',
+              ['entrada', transfer.quantity, `Transferencia desde ${transfer.from_restaurant}`, product.id, req.user.id, transfer.to_restaurant],
+              function(err) {
+                if (err) {
+                  db.run('ROLLBACK');
+                  return res.status(500).json({ error: err.message });
+                }
+                
+                // Marcar transferencia como completada
+                db.run(
+                  'UPDATE transfers SET status = "completado", completed_at = datetime("now") WHERE id = ?',
+                  [transferId],
+                  function(err) {
+                    if (err) {
+                      db.run('ROLLBACK');
+                      return res.status(500).json({ error: err.message });
+                    }
+                    
+                    db.run('COMMIT');
+                    res.json({ success: true, message: 'Transferencia completada' });
+                  }
+                );
+              }
+            );
+          }
+        );
       });
     });
   });
