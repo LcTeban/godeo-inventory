@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 
 const Movements = () => {
   const [movements, setMovements] = useState([]);
@@ -16,7 +14,7 @@ const Movements = () => {
   const fetchMovements = async () => {
     try {
       const response = await axios.get(`/api/${currentRestaurant}/movements`);
-      setMovements(response.data);
+      setMovements(response.data || []);
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -24,46 +22,54 @@ const Movements = () => {
     }
   };
 
-  if (loading) return <div className="text-center py-8">Cargando...</div>;
+  const getTypeColor = (type) => {
+    return type === 'entrada' ? 'text-green-600' : 'text-red-600';
+  };
+
+  const getTypeIcon = (type) => {
+    return type === 'entrada' ? '📥' : '📤';
+  };
+
+  if (loading) {
+    return <div className="text-center py-8 text-gray-500">Cargando...</div>;
+  }
 
   return (
-    <div>
-      <h1 className="text-3xl font-bold text-gray-800 mb-6">Historial de Movimientos</h1>
+    <div className="space-y-4">
+      <h1 className="text-xl font-bold">Historial de Movimientos</h1>
       
-      <div className="bg-white rounded-xl shadow overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Producto</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cantidad</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Usuario</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {movements.map((mov) => (
-                <tr key={mov.id}>
-                  <td className="px-4 py-3 text-sm">
-                    {format(new Date(mov.createdAt), 'dd/MM HH:mm', { locale: es })}
-                  </td>
-                  <td className="px-4 py-3 text-sm">{mov.product?.name}</td>
-                  <td className="px-4 py-3 text-sm">
-                    <span className={`px-2 py-1 text-xs font-semibold rounded ${
-                      mov.type === 'entrada' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                    }`}>
-                      {mov.type}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-sm">{mov.quantity}</td>
-                  <td className="px-4 py-3 text-sm">{mov.user?.name}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      <div className="space-y-2">
+        {movements.map(mov => (
+          <div key={mov.id} className="bg-white rounded-xl p-4 shadow-sm">
+            <div className="flex items-start justify-between">
+              <div className="flex gap-3">
+                <span className="text-2xl">{getTypeIcon(mov.type)}</span>
+                <div>
+                  <p className="font-semibold">{mov.product_name}</p>
+                  <p className="text-sm text-gray-500">{mov.reason || 'Sin motivo'}</p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {new Date(mov.created_at).toLocaleString('es', {
+                      day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+                    })}
+                  </p>
+                </div>
+              </div>
+              <div className="text-right">
+                <span className={`text-xl font-bold ${getTypeColor(mov.type)}`}>
+                  {mov.type === 'entrada' ? '+' : '-'}{mov.quantity}
+                </span>
+                <p className="text-xs text-gray-500">{mov.user_name}</p>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
+
+      {movements.length === 0 && (
+        <div className="text-center py-8 text-gray-500">
+          No hay movimientos registrados
+        </div>
+      )}
     </div>
   );
 };
