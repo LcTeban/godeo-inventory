@@ -12,7 +12,8 @@
     "react-router-dom": "6.20.1",
     "axios": "1.6.2",
     "date-fns": "3.0.6",
-    "@heroicons/react": "2.0.18"
+    "@heroicons/react": "2.0.18",
+    "html5-qrcode": "2.3.8"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "4.2.1",
