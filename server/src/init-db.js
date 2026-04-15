@@ -84,6 +84,8 @@ db.run(`CREATE TABLE IF NOT EXISTS requests (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 )`);
   
+  db.run(`ALTER TABLE products ADD COLUMN image TEXT`);
+  
   // Crear admin
   const hash = bcrypt.hashSync('Godeo2024', 10);
   db.run(`INSERT OR IGNORE INTO users (email, password, name, role, restaurant) 
