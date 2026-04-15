@@ -7,7 +7,6 @@ import Dashboard from './pages/Dashboard';
 import Inventory from './pages/Inventory';
 import Movements from './pages/Movements';
 import Transfers from './pages/Transfers';
-import Suppliers from './pages/Suppliers';
 
 function App() {
   return (
@@ -21,7 +20,6 @@ function App() {
             <Route path="inventory" element={<Inventory />} />
             <Route path="movements" element={<Movements />} />
             <Route path="transfers" element={<Transfers />} />
-            <Route path="suppliers" element={<Suppliers />} />
           </Route>
         </Routes>
       </BrowserRouter>
