@@ -8,6 +8,7 @@ import Inventory from './pages/Inventory';
 import Movements from './pages/Movements';
 import Transfers from './pages/Transfers';
 import Requests from './pages/Requests';
+import Reports from './pages/Reports';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
             <Route path="movements" element={<Movements />} />
             <Route path="transfers" element={<Transfers />} />
             <Route path="requests" element={<Requests />} />
+            <Route path="reports" element={<Reports />} />
           </Route>
         </Routes>
       </BrowserRouter>
