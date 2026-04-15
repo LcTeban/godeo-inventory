@@ -183,6 +183,41 @@ app.post('/api/suppliers', authenticateToken, (req, res) => {
   );
 });
 
+// SOLICITUDES
+app.get('/api/requests', authenticateToken, (req, res) => {
+  db.all(
+    `SELECT r.*, u.name as user_name 
+     FROM requests r 
+     LEFT JOIN users u ON r.user_id = u.id 
+     ORDER BY r.created_at DESC`,
+    (err, rows) => res.json(rows || [])
+  );
+});
+
+app.post('/api/requests', authenticateToken, (req, res) => {
+  const { productName, quantity, unit, notes, restaurant } = req.body;
+  db.run(
+    'INSERT INTO requests (product_name, quantity, unit, notes, user_id, restaurant) VALUES (?, ?, ?, ?, ?, ?)',
+    [productName, quantity, unit, notes, req.user.id, restaurant || req.user.restaurant],
+    function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ id: this.lastID });
+    }
+  );
+});
+
+app.put('/api/requests/:id', authenticateToken, (req, res) => {
+  const { status } = req.body;
+  db.run(
+    'UPDATE requests SET status = ? WHERE id = ?',
+    [status, req.params.id],
+    (err) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ success: true });
+    }
+  );
+});
+
 app.get('*', (req, res) => {
   res.sendFile(join(__dirname, '../../client/dist/index.html'));
 });
