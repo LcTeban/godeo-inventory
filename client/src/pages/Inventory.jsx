@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { PlusIcon, MinusIcon, TrashIcon, CameraIcon, QrCodeIcon } from '@heroicons/react/24/outline';
+import BarcodeScanner from '../components/BarcodeScanner';
 
 const Inventory = () => {
   const [products, setProducts] = useState([]);
@@ -39,7 +40,10 @@ const Inventory = () => {
       await axios.post(`/api/${currentRestaurant}/products`, formData);
       fetchProducts();
       setShowAddModal(false);
-      setFormData({ name: '', category: '', stock: '', unit: 'unidad', min_stock: '10', expiry_date: '', image: '', barcode: '' });
+      setFormData({ 
+        name: '', category: '', stock: '', unit: 'unidad', min_stock: '10', 
+        expiry_date: '', image: '', barcode: '' 
+      });
     } catch (error) {
       alert('Error al guardar');
     }
@@ -75,25 +79,6 @@ const Inventory = () => {
     if (product.stock === 0) return { color: 'bg-red-100 text-red-800', text: 'Agotado' };
     if (product.stock <= product.min_stock) return { color: 'bg-orange-100 text-orange-800', text: 'Bajo' };
     return { color: 'bg-green-100 text-green-800', text: 'OK' };
-  };
-
-  const handleScanBarcode = () => {
-    // Usar API de escáner si está disponible en el navegador
-    if ('BarcodeDetector' in window) {
-      // Implementar con Barcode Detection API
-      alert('Apunta al código de barras');
-    } else {
-      // Fallback: abrir input de cámara
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = 'image/*';
-      input.capture = 'environment';
-      input.onchange = (e) => {
-        alert('Código escaneado: ' + e.target.files[0]?.name);
-        // Aquí iría la lógica de decodificación
-      };
-      input.click();
-    }
   };
 
   const categories = [...new Set(products.map(p => p.category).filter(Boolean))];
@@ -167,7 +152,7 @@ const Inventory = () => {
                 )}
                 
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <h3 className="font-semibold">{product.name}</h3>
                     <span className={`text-xs px-2 py-0.5 rounded-full ${status.color}`}>
                       {status.text}
@@ -268,40 +253,97 @@ const Inventory = () => {
                 )}
               </div>
 
-              <input type="text" placeholder="Nombre*" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full p-3 border rounded-xl" required />
-              <input type="text" placeholder="Categoría*" value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})} className="w-full p-3 border rounded-xl" required />
+              <input 
+                type="text" 
+                placeholder="Nombre*" 
+                value={formData.name} 
+                onChange={(e) => setFormData({...formData, name: e.target.value})} 
+                className="w-full p-3 border rounded-xl" 
+                required 
+              />
               
-              {/* Código de barras */}
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Código de barras"
-                  value={formData.barcode || ''}
-                  onChange={(e) => setFormData({...formData, barcode: e.target.value})}
-                  className="flex-1 p-3 border rounded-xl"
-                />
-                <button
-                  type="button"
-                  onClick={handleScanBarcode}
-                  className="px-4 bg-gray-100 text-gray-700 rounded-xl flex items-center gap-1"
-                >
-                  <QrCodeIcon className="h-5 w-5" />
-                </button>
+              <input 
+                type="text" 
+                placeholder="Categoría*" 
+                value={formData.category} 
+                onChange={(e) => setFormData({...formData, category: e.target.value})} 
+                className="w-full p-3 border rounded-xl" 
+                required 
+              />
+              
+              {/* Código de barras con escáner */}
+              <div>
+                <label className="block text-sm font-medium mb-1">🏷️ Código de barras</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Escanear o escribir código"
+                    value={formData.barcode || ''}
+                    onChange={(e) => setFormData({...formData, barcode: e.target.value})}
+                    className="flex-1 p-3 border rounded-xl"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowScanner(true)}
+                    className="px-4 bg-blue-100 text-blue-700 rounded-xl flex items-center gap-1"
+                  >
+                    <QrCodeIcon className="h-5 w-5" />
+                  </button>
+                </div>
               </div>
 
               <div className="flex gap-2">
-                <input type="number" step="0.01" placeholder="Stock inicial*" value={formData.stock} onChange={(e) => setFormData({...formData, stock: e.target.value})} className="flex-1 p-3 border rounded-xl" required />
-                <select value={formData.unit} onChange={(e) => setFormData({...formData, unit: e.target.value})} className="w-24 p-3 border rounded-xl">
-                  <option value="unidad">ud</option><option value="kg">kg</option><option value="L">L</option><option value="caja">caja</option>
+                <input 
+                  type="number" 
+                  step="0.01" 
+                  placeholder="Stock inicial*" 
+                  value={formData.stock} 
+                  onChange={(e) => setFormData({...formData, stock: e.target.value})} 
+                  className="flex-1 p-3 border rounded-xl" 
+                  required 
+                />
+                <select 
+                  value={formData.unit} 
+                  onChange={(e) => setFormData({...formData, unit: e.target.value})} 
+                  className="w-24 p-3 border rounded-xl"
+                >
+                  <option value="unidad">ud</option>
+                  <option value="kg">kg</option>
+                  <option value="L">L</option>
+                  <option value="caja">caja</option>
                 </select>
               </div>
               
-              <input type="number" placeholder="Stock mínimo" value={formData.min_stock} onChange={(e) => setFormData({...formData, min_stock: e.target.value})} className="w-full p-3 border rounded-xl" />
-              <input type="date" placeholder="Fecha caducidad" value={formData.expiry_date} onChange={(e) => setFormData({...formData, expiry_date: e.target.value})} className="w-full p-3 border rounded-xl" />
+              <input 
+                type="number" 
+                placeholder="Stock mínimo" 
+                value={formData.min_stock} 
+                onChange={(e) => setFormData({...formData, min_stock: e.target.value})} 
+                className="w-full p-3 border rounded-xl" 
+              />
+              
+              <input 
+                type="date" 
+                placeholder="Fecha caducidad" 
+                value={formData.expiry_date} 
+                onChange={(e) => setFormData({...formData, expiry_date: e.target.value})} 
+                className="w-full p-3 border rounded-xl" 
+              />
               
               <div className="flex gap-2 pt-2">
-                <button type="button" onClick={() => setShowAddModal(false)} className="flex-1 p-3 text-gray-600 border rounded-xl">Cancelar</button>
-                <button type="submit" className="flex-1 p-3 bg-blue-600 text-white rounded-xl">Guardar</button>
+                <button 
+                  type="button" 
+                  onClick={() => setShowAddModal(false)} 
+                  className="flex-1 p-3 text-gray-600 border rounded-xl"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="submit" 
+                  className="flex-1 p-3 bg-blue-600 text-white rounded-xl"
+                >
+                  Guardar
+                </button>
               </div>
             </form>
           </div>
@@ -321,17 +363,56 @@ const Inventory = () => {
                 <span className="text-gray-600 ml-1">{selectedProduct?.unit}</span>
                 <p className="text-sm text-gray-500">Stock actual</p>
               </div>
-              <input type="number" step="0.01" placeholder="Cantidad" value={movementData.quantity} onChange={(e) => setMovementData({...movementData, quantity: e.target.value})} className="w-full p-3 border rounded-xl text-lg text-center" required autoFocus />
-              <input type="text" placeholder="Motivo (opcional)" value={movementData.reason} onChange={(e) => setMovementData({...movementData, reason: e.target.value})} className="w-full p-3 border rounded-xl" />
+              <input 
+                type="number" 
+                step="0.01" 
+                placeholder="Cantidad" 
+                value={movementData.quantity} 
+                onChange={(e) => setMovementData({...movementData, quantity: e.target.value})} 
+                className="w-full p-3 border rounded-xl text-lg text-center" 
+                required 
+                autoFocus 
+              />
+              <input 
+                type="text" 
+                placeholder="Motivo (opcional)" 
+                value={movementData.reason} 
+                onChange={(e) => setMovementData({...movementData, reason: e.target.value})} 
+                className="w-full p-3 border rounded-xl" 
+              />
               <div className="flex gap-2 pt-2">
-                <button type="button" onClick={() => setShowMovementModal(false)} className="flex-1 p-3 text-gray-600 border rounded-xl">Cancelar</button>
-                <button type="submit" className={`flex-1 p-3 text-white rounded-xl ${movementData.type === 'entrada' ? 'bg-green-600' : 'bg-red-600'}`}>
+                <button 
+                  type="button" 
+                  onClick={() => setShowMovementModal(false)} 
+                  className="flex-1 p-3 text-gray-600 border rounded-xl"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="submit" 
+                  className={`flex-1 p-3 text-white rounded-xl ${movementData.type === 'entrada' ? 'bg-green-600' : 'bg-red-600'}`}
+                >
                   Confirmar
                 </button>
               </div>
             </form>
           </div>
         </div>
+      )}
+
+      {/* Modal Escáner */}
+      {showScanner && (
+        <BarcodeScanner
+          onScan={(code) => {
+            setFormData({...formData, barcode: code});
+            setShowScanner(false);
+          }}
+          onClose={() => setShowScanner(false)}
+          onError={(err) => {
+            alert('Error al acceder a la cámara: ' + err.message);
+            setShowScanner(false);
+          }}
+        />
       )}
     </div>
   );
