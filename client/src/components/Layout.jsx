@@ -8,51 +8,14 @@ import {
   ClipboardDocumentListIcon,
   ChartBarIcon,
   Bars3Icon,
-  XMarkIcon,
-  BellIcon,
-  BellAlertIcon
+  XMarkIcon
 } from '@heroicons/react/24/outline';
-import { useState, useEffect } from 'react';
-import axios from 'axios';
+import { useState } from 'react';
 
 const Layout = () => {
-  const { user, logout, currentRestaurant, switchRestaurant, isAdmin, restaurantName } = useAuth();
+  const { user, logout, currentRestaurant, switchRestaurant, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
-
-  // ============================================
-  // VERIFICAR PERMISO DE NOTIFICACIONES AL CARGAR
-  // ============================================
-  useEffect(() => {
-    if ('Notification' in window) {
-      setNotificationsEnabled(Notification.permission === 'granted');
-    }
-  }, []);
-
-  // ============================================
-  // SOLICITAR PERMISO PARA NOTIFICACIONES PUSH
-  // ============================================
-  const requestNotificationPermission = async () => {
-    try {
-      const permission = await Notification.requestPermission();
-      if (permission === 'granted') {
-        const registration = await navigator.serviceWorker.ready;
-        const subscription = await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          // CLAVE PÚBLICA VAPID ACTUALIZADA
-          applicationServerKey: 'BOkLnLmIYBSxJlq-0fgFJ8lPvFZqXkE2QxwWp5HvJ9sT8uR1wV3yA4bC5dE6fG7hI8'
-        });
-        
-        await axios.post('/api/push/subscribe', { subscription });
-        setNotificationsEnabled(true);
-        alert('✅ Notificaciones activadas');
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      alert('❌ No se pudieron activar las notificaciones');
-    }
-  };
 
   const handleLogout = () => {
     logout();
@@ -78,9 +41,7 @@ const Layout = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* ============================================ */}
       {/* HEADER MOBILE */}
-      {/* ============================================ */}
       <div className="lg:hidden bg-white shadow-sm p-4 flex items-center justify-between">
         <button onClick={() => setSidebarOpen(true)} className="p-2">
           <Bars3Icon className="h-6 w-6" />
@@ -89,18 +50,10 @@ const Layout = () => {
           <span className="text-xl">{currentRest?.icon}</span>
           <span className="font-semibold">{currentRest?.name}</span>
         </div>
-        {/* BOTÓN DE NOTIFICACIONES EN MÓVIL */}
-        <button onClick={requestNotificationPermission} className="p-2">
-          {notificationsEnabled ? 
-            <BellAlertIcon className="h-6 w-6 text-green-600" /> : 
-            <BellIcon className="h-6 w-6 text-gray-600" />
-          }
-        </button>
+        <div className="w-10"></div>
       </div>
 
-      {/* ============================================ */}
       {/* SIDEBAR MOBILE */}
-      {/* ============================================ */}
       {sidebarOpen && (
         <div className="lg:hidden fixed inset-0 z-50 bg-black bg-opacity-50" onClick={() => setSidebarOpen(false)}>
           <div className="bg-white w-64 h-full p-4" onClick={e => e.stopPropagation()}>
@@ -153,22 +106,11 @@ const Layout = () => {
         </div>
       )}
 
-      {/* ============================================ */}
       {/* SIDEBAR DESKTOP */}
-      {/* ============================================ */}
       <div className="hidden lg:flex lg:w-64 lg:fixed lg:inset-y-0">
         <div className="w-64 bg-white shadow-lg flex flex-col">
           <div className="p-6">
-            <div className="flex justify-between items-center">
-              <h1 className="text-2xl font-bold">🍴 Godeo</h1>
-              {/* BOTÓN DE NOTIFICACIONES EN DESKTOP */}
-              <button onClick={requestNotificationPermission} className="p-2">
-                {notificationsEnabled ? 
-                  <BellAlertIcon className="h-5 w-5 text-green-600" /> : 
-                  <BellIcon className="h-5 w-5 text-gray-600" />
-                }
-              </button>
-            </div>
+            <h1 className="text-2xl font-bold">🍴 Godeo</h1>
             <p className="text-sm text-gray-600 mt-1">{user?.name}</p>
             <span className="inline-block mt-1 px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded">
               {user?.role}
@@ -212,9 +154,7 @@ const Layout = () => {
         </div>
       </div>
 
-      {/* ============================================ */}
       {/* CONTENIDO PRINCIPAL */}
-      {/* ============================================ */}
       <div className="lg:pl-64">
         <div className="p-4 lg:p-6">
           <Outlet />
