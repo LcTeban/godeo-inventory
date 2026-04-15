@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { CheckCircleIcon, TruckIcon } from '@heroicons/react/24/outline';
 
 const Transfers = () => {
   const [transfers, setTransfers] = useState([]);
@@ -31,7 +30,17 @@ const Transfers = () => {
         axios.get('/api/transfers'),
         axios.get(`/api/${currentRestaurant}/products`)
       ]);
-      setTransfers(transRes.data || []);
+      
+      let filteredTransfers = transRes.data || [];
+      
+      if (!isAdmin) {
+        filteredTransfers = filteredTransfers.filter(t => 
+          t.from_restaurant === currentRestaurant || 
+          t.to_restaurant === currentRestaurant
+        );
+      }
+      
+      setTransfers(filteredTransfers);
       setProducts((prodRes.data || []).filter(p => p.stock > 0));
     } catch (error) {
       console.error('Error:', error);
@@ -61,6 +70,12 @@ const Transfers = () => {
     }
   };
 
+  const canComplete = (transfer) => {
+    if (transfer.status !== 'pendiente') return false;
+    if (isAdmin) return true;
+    return currentRestaurant === transfer.to_restaurant;
+  };
+
   if (loading) {
     return <div className="text-center py-8 text-gray-500">Cargando...</div>;
   }
@@ -88,6 +103,9 @@ const Transfers = () => {
                   <p className="text-sm text-gray-600">
                     {transfer.quantity} • {transfer.from_restaurant} → {transfer.to_restaurant}
                   </p>
+                  {transfer.reason && (
+                    <p className="text-xs text-gray-500 mt-1">{transfer.reason}</p>
+                  )}
                   <p className="text-xs text-gray-400 mt-1">
                     {new Date(transfer.created_at).toLocaleString('es', {
                       day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
@@ -107,12 +125,13 @@ const Transfers = () => {
                 )}
               </div>
             </div>
-            {transfer.status === 'pendiente' && (isAdmin || currentRestaurant === transfer.to_restaurant) && (
+            
+            {canComplete(transfer) && (
               <button
                 onClick={() => handleComplete(transfer.id)}
-                className="mt-3 w-full bg-green-600 text-white py-2 rounded-lg text-sm"
+                className="mt-3 w-full bg-green-600 text-white py-2 rounded-lg text-sm font-medium"
               >
-                Confirmar Recepción
+                ✓ Confirmar Recepción
               </button>
             )}
           </div>
@@ -147,6 +166,7 @@ const Transfers = () => {
               
               <input
                 type="number"
+                step="0.01"
                 placeholder="Cantidad"
                 value={formData.quantity}
                 onChange={(e) => setFormData({...formData, quantity: e.target.value})}
