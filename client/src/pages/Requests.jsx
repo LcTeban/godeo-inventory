@@ -7,7 +7,7 @@ const Requests = () => {
   const [requests, setRequests] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({ productName: '', quantity: '', unit: 'unidad', notes: '' });
-  const { currentRestaurant, isAdmin, user } = useAuth();
+  const { isAdmin, user } = useAuth();
 
   useEffect(() => {
     fetchRequests();
@@ -43,8 +43,9 @@ const Requests = () => {
     }
   };
 
-  const pendingRequests = requests.filter(r => r.status === 'pendiente');
+  // FILTRADO POR PRIVACIDAD
   const myRequests = requests.filter(r => r.user_id === user?.id);
+  const pendingRequests = isAdmin ? requests.filter(r => r.status === 'pendiente') : [];
 
   return (
     <div className="space-y-4">
@@ -89,7 +90,7 @@ const Requests = () => {
       </div>
 
       {/* Panel Admin */}
-      {isAdmin && (
+      {isAdmin && pendingRequests.length > 0 && (
         <div className="bg-white rounded-xl p-4 shadow-sm">
           <h2 className="font-semibold mb-3">⏳ Pendientes de aprobar ({pendingRequests.length})</h2>
           <div className="space-y-2">
@@ -97,7 +98,9 @@ const Requests = () => {
               <div key={req.id} className="border rounded-lg p-3">
                 <div className="flex justify-between mb-1">
                   <span className="font-medium">{req.product_name}</span>
-                  <span className="text-xs text-gray-500">{req.restaurant}</span>
+                  <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                    {req.restaurant}
+                  </span>
                 </div>
                 <p className="text-sm">{req.quantity} {req.unit}</p>
                 <p className="text-xs text-gray-500">Solicitado por: {req.user_name}</p>
@@ -118,9 +121,6 @@ const Requests = () => {
                 </div>
               </div>
             ))}
-            {pendingRequests.length === 0 && (
-              <p className="text-gray-500 text-sm text-center py-4">No hay solicitudes pendientes</p>
-            )}
           </div>
         </div>
       )}
