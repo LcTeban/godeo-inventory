@@ -13,10 +13,12 @@ const app = express();
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const db = new sqlite3.Database(join(__dirname, '../../godeo.db'));
 
-// Configurar VAPID para notificaciones
+// ============================================
+// CONFIGURACIÓN VAPID PARA NOTIFICACIONES PUSH
+// ============================================
 const vapidKeys = {
-  publicKey: 'BEl62i4G6m0H6kN7rX8vL8mP4kQ9sT2vR5wX7yZ1aB3cD4eF5gH6iJ7kL8mN9oP0',
-  privateKey: 'aB1cD2eF3gH4iJ5kL6mN7oP8qR9sT0uV1wX2yZ3'
+  publicKey: 'BOkLnLmIYBSxJlq-0fgFJ8lPvFZqXkE2QxwWp5HvJ9sT8uR1wV3yA4bC5dE6fG7hI8',
+  privateKey: 'jVkL9mN0oP1qR2sT3uV4wX5yZ6aB7cD8eF9gH0iJ1'
 };
 
 webpush.setVapidDetails(
@@ -24,12 +26,13 @@ webpush.setVapidDetails(
   vapidKeys.publicKey,
   vapidKeys.privateKey
 );
+// ============================================
 
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static(join(__dirname, '../../client/dist')));
 
-// Middleware
+// Middleware de autenticación
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -42,7 +45,9 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
+// ============================================
 // LOGIN
+// ============================================
 app.post('/api/auth/login', (req, res) => {
   const { email, password } = req.body;
   db.get('SELECT * FROM users WHERE email = ?', [email], async (err, user) => {
@@ -60,7 +65,9 @@ app.post('/api/auth/login', (req, res) => {
   });
 });
 
+// ============================================
 // PRODUCTOS
+// ============================================
 app.get('/api/:restaurant/products', authenticateToken, (req, res) => {
   db.all('SELECT * FROM products WHERE restaurant = ? ORDER BY name', [req.params.restaurant], (err, rows) => {
     res.json(rows || []);
@@ -98,7 +105,9 @@ app.delete('/api/:restaurant/products/:id', authenticateToken, (req, res) => {
   });
 });
 
+// ============================================
 // MOVIMIENTOS
+// ============================================
 app.get('/api/:restaurant/movements', authenticateToken, (req, res) => {
   db.all(
     `SELECT m.*, p.name as product_name, u.name as user_name 
@@ -137,7 +146,9 @@ app.post('/api/:restaurant/movements', authenticateToken, (req, res) => {
   });
 });
 
+// ============================================
 // DASHBOARD
+// ============================================
 app.get('/api/dashboard/overview', authenticateToken, (req, res) => {
   const restaurants = ['POZOBLANCO', 'FUERTEVENTURA', 'GRAN_CAPITAN'];
   const stats = {};
@@ -156,7 +167,9 @@ app.get('/api/dashboard/overview', authenticateToken, (req, res) => {
   });
 });
 
+// ============================================
 // TRANSFERENCIAS
+// ============================================
 app.get('/api/transfers', authenticateToken, (req, res) => {
   db.all(
     `SELECT t.*, p.name as product_name, u.name as user_name 
@@ -206,7 +219,9 @@ app.post('/api/transfers/:id/complete', authenticateToken, (req, res) => {
   });
 });
 
-// SOLICITUDES
+// ============================================
+// SOLICITUDES / PEDIDOS
+// ============================================
 app.get('/api/requests', authenticateToken, (req, res) => {
   db.all(
     `SELECT r.*, u.name as user_name 
@@ -237,7 +252,9 @@ app.put('/api/requests/:id', authenticateToken, (req, res) => {
   });
 });
 
+// ============================================
 // REPORTES DE CONSUMO
+// ============================================
 app.get('/api/reports/consumption/:restaurant', authenticateToken, (req, res) => {
   const { restaurant } = req.params;
   const { range } = req.query;
@@ -265,7 +282,9 @@ app.get('/api/reports/consumption/:restaurant', authenticateToken, (req, res) =>
   );
 });
 
+// ============================================
 // NOTIFICACIONES PUSH
+// ============================================
 app.post('/api/push/subscribe', authenticateToken, (req, res) => {
   const { subscription } = req.body;
   const userId = req.user.id;
@@ -280,7 +299,7 @@ app.post('/api/push/subscribe', authenticateToken, (req, res) => {
   );
 });
 
-// Verificar stock bajo y notificar (cada 30 min)
+// Verificar stock bajo y enviar notificaciones (cada 30 minutos)
 const checkLowStockAndNotify = () => {
   db.all(
     `SELECT p.*, ps.subscription, ps.user_id 
@@ -307,11 +326,18 @@ const checkLowStockAndNotify = () => {
   );
 };
 
+// Ejecutar verificación cada 30 minutos
 setInterval(checkLowStockAndNotify, 30 * 60 * 1000);
 
+// ============================================
+// SERVIR FRONTEND
+// ============================================
 app.get('*', (req, res) => {
   res.sendFile(join(__dirname, '../../client/dist/index.html'));
 });
 
+// ============================================
+// INICIAR SERVIDOR
+// ============================================
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Godeo en puerto ${PORT}`));
