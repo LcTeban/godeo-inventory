@@ -70,7 +70,20 @@ db.serialize(() => {
     address TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`);
-
+  
+// Tabla de solicitudes/pedidos
+db.run(`CREATE TABLE IF NOT EXISTS requests (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  product_name TEXT,
+  quantity REAL,
+  unit TEXT,
+  notes TEXT,
+  status TEXT DEFAULT 'pendiente',
+  user_id INTEGER,
+  restaurant TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+)`);
+  
   // Crear admin
   const hash = bcrypt.hashSync('Godeo2024', 10);
   db.run(`INSERT OR IGNORE INTO users (email, password, name, role, restaurant) 
