@@ -1,40 +1,58 @@
-self.addEventListener('push', (event) => {
-  const data = event.data.json();
-  
-  const options = {
-    body: data.body,
-    icon: data.icon || '/icon-192.png',
-    badge: '/icon-72.png',
-    vibrate: [200, 100, 200],
-    data: data.data,
-    actions: [
-      { action: 'open', title: 'Ver inventario' },
-      { action: 'close', title: 'Cerrar' }
-    ]
-  };
-  
+const CACHE_NAME = 'godeo-v1';
+const urlsToCache = [
+  '/',
+  '/index.html',
+  '/manifest.json',
+  '/icon-192.png',
+  '/icon-512.png'
+];
+
+// Instalar Service Worker
+self.addEventListener('install', (event) => {
   event.waitUntil(
-    self.registration.showNotification(data.title, options)
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.addAll(urlsToCache))
   );
+  self.skipWaiting();
 });
 
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
-  
-  if (event.action === 'open' || !event.action) {
-    const urlToOpen = event.notification.data?.url || '/';
-    
-    event.waitUntil(
-      clients.matchAll({ type: 'window' }).then((clientList) => {
-        for (const client of clientList) {
-          if (client.url.includes(urlToOpen) && 'focus' in client) {
-            return client.focus();
+// Activar Service Worker
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME) {
+            return caches.delete(cacheName);
           }
-        }
-        if (clients.openWindow) {
-          return clients.openWindow(urlToOpen);
-        }
-      })
-    );
+        })
+      );
+    })
+  );
+  self.clients.claim();
+});
+
+// Estrategia: Network first, fallback to cache
+self.addEventListener('fetch', (event) => {
+  // No cachear llamadas a API
+  if (event.request.url.includes('/api/')) {
+    return;
   }
+  
+  event.respondWith(
+    fetch(event.request)
+      .then((response) => {
+        // Cachear solo respuestas exitosas
+        if (response && response.status === 200) {
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseClone);
+          });
+        }
+        return response;
+      })
+      .catch(() => {
+        return caches.match(event.request);
+      })
+  );
 });
