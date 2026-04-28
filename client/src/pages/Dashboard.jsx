@@ -1,42 +1,25 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
 
 const Dashboard = () => {
-  const [products, setProducts] = useState([]);
-  const [movements, setMovements] = useState([]);
+  const [stats, setStats] = useState({ restaurants: {}, pendingTransfers: 0 });
   const [loading, setLoading] = useState(true);
-  const { currentRestaurant, isAdmin } = useAuth();
+  const { currentRestaurant, isAdmin, apiCall } = useAuth();
 
   useEffect(() => {
-    fetchData();
+    fetchDashboard();
   }, [currentRestaurant]);
 
-  const fetchData = async () => {
+  const fetchDashboard = async () => {
     try {
-      const [prodRes, movRes] = await Promise.all([
-        axios.get(`/api/${currentRestaurant}/products`),
-        axios.get(`/api/${currentRestaurant}/movements`)
-      ]);
-      setProducts(prodRes.data || []);
-      setMovements(movRes.data || []);
+      const data = await apiCall('dashboard');
+      setStats(data);
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error dashboard:', error);
     } finally {
       setLoading(false);
     }
-  };
-
-  const stats = {
-    total: products.length,
-    lowStock: products.filter(p => p.stock <= p.min_stock).length,
-    expiring: products.filter(p => {
-      if (!p.expiry_date) return false;
-      const days = (new Date(p.expiry_date) - new Date()) / (1000 * 60 * 60 * 24);
-      return days <= 7 && days >= 0;
-    }).length,
-    recentMovements: movements.slice(0, 5)
   };
 
   const restaurants = [
@@ -48,16 +31,12 @@ const Dashboard = () => {
   const currentRest = restaurants.find(r => r.id === currentRestaurant);
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-gray-500">Cargando...</div>
-      </div>
-    );
+    return <div className="flex justify-center items-center h-64 text-gray-500">Cargando...</div>;
   }
 
   return (
     <div className="space-y-6">
-      {/* Header con restaurante actual */}
+      {/* Header del restaurante actual */}
       <div className={`bg-gradient-to-r ${currentRest?.color} rounded-2xl p-6 text-white`}>
         <div className="flex items-center gap-3 mb-2">
           <span className="text-4xl">{currentRest?.icon}</span>
@@ -66,76 +45,58 @@ const Dashboard = () => {
         <p className="opacity-90">Panel de Control de Inventario</p>
       </div>
 
-      {/* Tarjetas de estadísticas */}
+      {/* Tarjetas de resumen */}
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-white rounded-xl p-4 shadow-sm">
           <div className="text-2xl mb-1">📦</div>
-          <div className="text-2xl font-bold">{stats.total}</div>
+          <div className="text-2xl font-bold">
+            {stats.restaurants[currentRestaurant]?.totalProducts || 0}
+          </div>
           <div className="text-xs text-gray-500">Productos</div>
         </div>
         <div className="bg-white rounded-xl p-4 shadow-sm">
           <div className="text-2xl mb-1">⚠️</div>
-          <div className={`text-2xl font-bold ${stats.lowStock > 0 ? 'text-orange-600' : ''}`}>
-            {stats.lowStock}
+          <div className={`text-2xl font-bold ${(stats.restaurants[currentRestaurant]?.lowStock || 0) > 0 ? 'text-orange-600' : ''}`}>
+            {stats.restaurants[currentRestaurant]?.lowStock || 0}
           </div>
           <div className="text-xs text-gray-500">Stock Bajo</div>
         </div>
         <div className="bg-white rounded-xl p-4 shadow-sm">
-          <div className="text-2xl mb-1">⏰</div>
-          <div className={`text-2xl font-bold ${stats.expiring > 0 ? 'text-red-600' : ''}`}>
-            {stats.expiring}
+          <div className="text-2xl mb-1">🚚</div>
+          <div className={`text-2xl font-bold ${stats.pendingTransfers > 0 ? 'text-blue-600' : ''}`}>
+            {stats.pendingTransfers}
           </div>
-          <div className="text-xs text-gray-500">Por Caducar</div>
+          <div className="text-xs text-gray-500">Pendientes</div>
         </div>
       </div>
 
       {/* Alertas */}
-      {(stats.lowStock > 0 || stats.expiring > 0) && (
+      {isAdmin && stats.pendingTransfers > 0 && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
-          <h3 className="font-semibold text-yellow-800 mb-2">⚠️ Alertas</h3>
-          {stats.lowStock > 0 && (
-            <Link to="/inventory" className="block text-sm text-yellow-700 mb-1">
-              • {stats.lowStock} productos con stock bajo
-            </Link>
-          )}
-          {stats.expiring > 0 && (
-            <Link to="/inventory" className="block text-sm text-yellow-700">
-              • {stats.expiring} productos próximos a caducar
-            </Link>
-          )}
+          <Link to="/transfers" className="text-yellow-800 font-medium">
+            ⚠️ Hay {stats.pendingTransfers} transferencias pendientes por revisar
+          </Link>
         </div>
       )}
 
-      {/* Últimos movimientos */}
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-        <div className="p-4 border-b">
-          <h2 className="font-semibold">Últimos Movimientos</h2>
-        </div>
-        <div className="divide-y">
-          {stats.recentMovements.map(mov => (
-            <div key={mov.id} className="p-4 flex items-center justify-between">
-              <div>
-                <p className="font-medium">{mov.product_name}</p>
-                <p className="text-xs text-gray-500">
-                  {new Date(mov.created_at).toLocaleString('es', { 
-                    hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' 
-                  })}
-                </p>
-              </div>
-              <div className="text-right">
-                <span className={`font-semibold ${mov.type === 'entrada' ? 'text-green-600' : 'text-red-600'}`}>
-                  {mov.type === 'entrada' ? '+' : '-'}{mov.quantity}
-                </span>
-                <p className="text-xs text-gray-500">{mov.user_name}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="p-4 border-t">
-          <Link to="/movements" className="text-blue-600 text-sm font-medium">
-            Ver todos los movimientos →
-          </Link>
-        </div>
+      {/* Accesos rápidos */}
+      <div className="grid grid-cols-2 gap-3">
+        <Link to="/inventory" className="bg-white rounded-xl p-4 shadow-sm text-center hover:bg-gray-50">
+          <span className="text-3xl">📦</span>
+          <p className="font-medium mt-1">Inventario</p>
+        </Link>
+        <Link to="/movements" className="bg-white rounded-xl p-4 shadow-sm text-center hover:bg-gray-50">
+          <span className="text-3xl">🔄</span>
+          <p className="font-medium mt-1">Movimientos</p>
+        </Link>
+        <Link to="/requests" className="bg-white rounded-xl p-4 shadow-sm text-center hover:bg-gray-50">
+          <span className="text-3xl">📋</span>
+          <p className="font-medium mt-1">Pedidos</p>
+        </Link>
+        <Link to="/reports" className="bg-white rounded-xl p-4 shadow-sm text-center hover:bg-gray-50">
+          <span className="text-3xl">📊</span>
+          <p className="font-medium mt-1">Reportes</p>
+        </Link>
       </div>
     </div>
   );
