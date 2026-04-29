@@ -4,7 +4,7 @@ const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
 
 // 🔻 REEMPLAZA ESTA URL POR LA TUYA (la que te dio Apps Script)
-const API_URL = 'https://script.google.com/macros/s/AKfycbyBwwOeydx_ccvrrRHL7rnFNLl8r-bhr-VUwo2qA0Fo5aXa-LIPqwPZ06kZi9ITFzvUQ/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbyrLTPusv3McWjtcygzjr-dEH4vvn3eJQGY56kh2pVoOnEq3x83hwCXodlOaloMg4mc/exec';
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
