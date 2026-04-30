@@ -6,6 +6,7 @@ export const useAuth = () => useContext(AuthContext);
 const SUPABASE_URL = 'https://fshypzqmuyctllmbzdnh.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzaHlwenFtdXljdGxsbWJ6ZG5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0OTQ1NDMsImV4cCI6MjA5MzA3MDU0M30.m4c4A6J7K8JvGI69eHBpfUtGMMdD4jVGvfjz_NmQdHE';
 
+// Compresor de imágenes (se usa en productos, recetas, etc.)
 const compressImage = (base64Str, maxWidth = 800) => {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -44,6 +45,7 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
+  // Función centralizada para llamadas a la API de Supabase
   const apiCall = useCallback(async (table, method, data = null, filters = {}) => {
     const headers = {
       'Content-Type': 'application/json',
@@ -92,10 +94,13 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // Autenticación
+  // ============ AUTENTICACIÓN ============
   const login = async (email, password) => {
     try {
-      const users = await apiCall('users', 'GET', null, { select: '*', email: `eq.${email}` });
+      const users = await apiCall('users', 'GET', null, {
+        select: '*',
+        email: `eq.${email}`
+      });
       const foundUser = Array.isArray(users) ? users[0] : null;
       if (!foundUser || foundUser.password !== password) {
         return { success: false, error: 'Credenciales inválidas' };
@@ -129,7 +134,7 @@ export const AuthProvider = ({ children }) => {
     if (user?.role === 'ADMIN') setCurrentRestaurant(restaurant);
   };
 
-  // Productos
+  // ============ PRODUCTOS ============
   const getProducts = useCallback(() => {
     return apiCall('products', 'GET', null, {
       select: '*,suppliers(name)',
@@ -141,7 +146,11 @@ export const AuthProvider = ({ children }) => {
   const addProduct = useCallback(async (data) => {
     let finalData = { ...data };
     if (finalData.image && finalData.image.startsWith('data:image')) {
-      try { finalData.image = await compressImage(finalData.image); } catch (e) { throw new Error('Error al procesar la imagen'); }
+      try {
+        finalData.image = await compressImage(finalData.image);
+      } catch (e) {
+        throw new Error('Error al procesar la imagen');
+      }
     }
     const supplierId = data.supplier_id ? parseInt(data.supplier_id, 10) : null;
     return apiCall('products', 'POST', {
@@ -153,14 +162,19 @@ export const AuthProvider = ({ children }) => {
     });
   }, [apiCall, currentRestaurant]);
 
+  const updateProduct = useCallback((id, data) => {
+    const supplierId = data.supplier_id ? parseInt(data.supplier_id, 10) : null;
+    return apiCall('products', 'PATCH', { ...data, price: parseFloat(data.price) || 0, supplier_id: supplierId }, { id: `eq.${id}` });
+  }, [apiCall]);
+
   const deleteProduct = useCallback((id) => {
     return apiCall('products', 'DELETE', null, { id: `eq.${id}` });
   }, [apiCall]);
 
-  // Movimientos (funciona correctamente)
+  // ============ MOVIMIENTOS (actualiza stock) ============
   const getMovements = useCallback(() => {
     return apiCall('movements', 'GET', null, {
-      select: '*,products(name),users(name)',
+      select: '*,products(name,price),users(name)',
       restaurant: `eq.${currentRestaurant}`,
       order: 'created_at.desc',
       limit: '100'
@@ -168,6 +182,7 @@ export const AuthProvider = ({ children }) => {
   }, [apiCall, currentRestaurant]);
 
   const addMovement = useCallback(async (data) => {
+    // 1. Obtener producto actual
     const products = await apiCall('products', 'GET', null, {
       select: '*',
       id: `eq.${data.productId}`
@@ -187,31 +202,30 @@ export const AuthProvider = ({ children }) => {
       newStock = quantity;
     }
 
+    // 2. Actualizar stock del producto
     await apiCall('products', 'PATCH', { stock: newStock }, { id: `eq.${data.productId}` });
 
+    // 3. Registrar el movimiento
     return apiCall('movements', 'POST', {
       type: data.type,
       quantity: quantity,
       reason: data.reason || null,
-      product_id: data.productId,
+      product_id: data.productId,   // ← Ajuste importante: product_id en BD
       restaurant: currentRestaurant,
       user_id: user?.id,
       created_at: new Date().toISOString()
     });
   }, [apiCall, currentRestaurant, user]);
 
-  // -----------------------------------------------------------
-  // TRANSFERENCIAS (CORREGIDAS Y FUNCIONALES)
-  // -----------------------------------------------------------
+  // ============ TRANSFERENCIAS ============
   const getTransfers = useCallback(() => {
     return apiCall('transfers', 'GET', null, {
-      select: '*,products(name,unit),users(name)',
+      select: '*,products(name,unit,price),users(name)',
       order: 'created_at.desc'
     });
   }, [apiCall]);
 
   const addTransfer = useCallback(async (data) => {
-    // Obtener producto origen
     const products = await apiCall('products', 'GET', null, {
       select: '*',
       id: `eq.${data.productId}`
@@ -232,7 +246,7 @@ export const AuthProvider = ({ children }) => {
       created_at: new Date().toISOString()
     });
 
-    // 2. Reducir stock del origen
+    // 2. Restar stock del origen
     const newStock = product.stock - parseFloat(data.quantity);
     await apiCall('products', 'PATCH', { stock: newStock }, { id: `eq.${data.productId}` });
 
@@ -251,18 +265,15 @@ export const AuthProvider = ({ children }) => {
   }, [apiCall, currentRestaurant, user]);
 
   const completeTransfer = useCallback(async (id) => {
-    // Obtener la transferencia
     const transfers = await apiCall('transfers', 'GET', null, { select: '*', id: `eq.${id}` });
     const transfer = Array.isArray(transfers) ? transfers[0] : null;
     if (!transfer) throw new Error('Transferencia no encontrada');
     if (transfer.status === 'completado') throw new Error('Ya está completada');
 
-    // Datos del producto original
     const products = await apiCall('products', 'GET', null, { select: '*', id: `eq.${transfer.product_id}` });
     const product = Array.isArray(products) ? products[0] : null;
     if (!product) throw new Error('Producto original no encontrado');
 
-    // Buscar si ya existe el producto en el destino
     const destProducts = await apiCall('products', 'GET', null, {
       select: '*',
       name: `eq.${product.name}`,
@@ -271,22 +282,10 @@ export const AuthProvider = ({ children }) => {
     const destProduct = Array.isArray(destProducts) ? destProducts[0] : null;
 
     if (destProduct) {
-      // Actualizar stock del producto existente
-      const newStock = destProduct.stock + parseFloat(transfer.quantity);
+      const newStock = destProduct.stock + transfer.quantity;
       await apiCall('products', 'PATCH', { stock: newStock }, { id: `eq.${destProduct.id}` });
-      // Registrar movimiento de entrada
-      await apiCall('movements', 'POST', {
-        type: 'entrada',
-        quantity: transfer.quantity,
-        reason: `Transferencia desde ${transfer.from_restaurant}`,
-        product_id: destProduct.id,
-        restaurant: transfer.to_restaurant,
-        user_id: user?.id,
-        created_at: new Date().toISOString()
-      });
     } else {
-      // Crear el producto en el destino con el stock de la transferencia
-      const newProduct = await apiCall('products', 'POST', {
+      await apiCall('products', 'POST', {
         name: product.name,
         category: product.category,
         stock: transfer.quantity,
@@ -300,19 +299,18 @@ export const AuthProvider = ({ children }) => {
         supplier_id: product.supplier_id,
         created_at: new Date().toISOString()
       });
-      // Registrar movimiento de entrada (usando el ID del nuevo producto)
-      await apiCall('movements', 'POST', {
-        type: 'entrada',
-        quantity: transfer.quantity,
-        reason: `Transferencia desde ${transfer.from_restaurant}`,
-        product_id: newProduct.id,
-        restaurant: transfer.to_restaurant,
-        user_id: user?.id,
-        created_at: new Date().toISOString()
-      });
     }
 
-    // Marcar transferencia como completada
+    await apiCall('movements', 'POST', {
+      type: 'entrada',
+      quantity: transfer.quantity,
+      reason: `Transferencia desde ${transfer.from_restaurant}`,
+      product_id: destProduct ? destProduct.id : product.id,
+      restaurant: transfer.to_restaurant,
+      user_id: user?.id,
+      created_at: new Date().toISOString()
+    });
+
     await apiCall('transfers', 'PATCH', {
       status: 'completado',
       completed_at: new Date().toISOString()
@@ -321,11 +319,12 @@ export const AuthProvider = ({ children }) => {
     return { success: true };
   }, [apiCall, user]);
 
-  // -----------------------------------------------------------
-  // RESTO DE FUNCIONES (REQUESTS, DASHBOARD, REPORTS, SUPPLIERS, RECIPES)
-  // -----------------------------------------------------------
+  // ============ SOLICITUDES / PEDIDOS ============
   const getRequests = useCallback(() => {
-    return apiCall('requests', 'GET', null, { select: '*,users(name)', order: 'created_at.desc' });
+    return apiCall('requests', 'GET', null, {
+      select: '*,users(name)',
+      order: 'created_at.desc'
+    });
   }, [apiCall]);
 
   const addRequest = useCallback((data) => {
@@ -342,16 +341,29 @@ export const AuthProvider = ({ children }) => {
     return apiCall('requests', 'PATCH', { status }, { id: `eq.${id}` });
   }, [apiCall]);
 
+  // ============ DASHBOARD ============
   const getDashboard = useCallback(async () => {
     const restaurants = ['POZOBLANCO', 'FUERTEVENTURA', 'GRAN_CAPITAN'];
     const stats = {};
     for (const rest of restaurants) {
-      const products = await apiCall('products', 'GET', null, { select: '*', restaurant: `eq.${rest}` });
+      const products = await apiCall('products', 'GET', null, {
+        select: '*',
+        restaurant: `eq.${rest}`
+      });
       const prods = Array.isArray(products) ? products : [];
-      stats[rest] = { totalProducts: prods.length, lowStock: prods.filter(p => p.stock <= p.min_stock).length };
+      stats[rest] = {
+        totalProducts: prods.length,
+        lowStock: prods.filter(p => p.stock <= p.min_stock).length
+      };
     }
-    const pendingTransfers = await apiCall('transfers', 'GET', null, { select: 'id', status: 'eq.pendiente' });
-    return { restaurants: stats, pendingTransfers: Array.isArray(pendingTransfers) ? pendingTransfers.length : 0 };
+    const pendingTransfers = await apiCall('transfers', 'GET', null, {
+      select: 'id',
+      status: 'eq.pendiente'
+    });
+    return {
+      restaurants: stats,
+      pendingTransfers: Array.isArray(pendingTransfers) ? pendingTransfers.length : 0
+    };
   }, [apiCall]);
 
   const getReports = useCallback((range) => {
@@ -363,13 +375,20 @@ export const AuthProvider = ({ children }) => {
     });
   }, [apiCall, currentRestaurant]);
 
+  // ============ PROVEEDORES ============
   const getSuppliers = useCallback(() => {
-    return apiCall('suppliers', 'GET', null, { select: '*', order: 'name.asc' });
+    return apiCall('suppliers', 'GET', null, {
+      select: '*',
+      order: 'name.asc'
+    });
   }, [apiCall]);
 
   const addSupplier = useCallback((data) => {
     if (user?.role !== 'ADMIN') throw new Error('Solo administradores');
-    return apiCall('suppliers', 'POST', { ...data, created_at: new Date().toISOString() });
+    return apiCall('suppliers', 'POST', {
+      ...data,
+      created_at: new Date().toISOString()
+    });
   }, [apiCall, user]);
 
   const updateSupplier = useCallback((id, data) => {
@@ -382,6 +401,7 @@ export const AuthProvider = ({ children }) => {
     return apiCall('suppliers', 'DELETE', null, { id: `eq.${id}` });
   }, [apiCall, user]);
 
+  // ============ RECETAS (admin edita, todos ven) ============
   const getRecipes = useCallback(() => {
     return apiCall('recipes', 'GET', null, {
       select: '*,recipe_ingredients(*,products(name,unit))',
@@ -394,11 +414,25 @@ export const AuthProvider = ({ children }) => {
     if (user?.role !== 'ADMIN') throw new Error('Solo administradores');
     let finalImage = image;
     if (finalImage && finalImage.startsWith('data:image')) {
-      try { finalImage = await compressImage(finalImage); } catch (e) { throw new Error('Error al procesar la imagen'); }
+      try {
+        finalImage = await compressImage(finalImage);
+      } catch (e) {
+        throw new Error('Error al procesar la imagen');
+      }
     }
-    const recipe = await apiCall('recipes', 'POST', { name, image: finalImage, restaurant: currentRestaurant, created_at: new Date().toISOString() });
+    const recipe = await apiCall('recipes', 'POST', {
+      name,
+      image: finalImage,
+      restaurant: currentRestaurant,
+      created_at: new Date().toISOString()
+    });
     for (const ing of ingredients) {
-      await apiCall('recipe_ingredients', 'POST', { recipe_id: recipe.id, product_id: ing.product_id, quantity: ing.quantity, unit: ing.unit });
+      await apiCall('recipe_ingredients', 'POST', {
+        recipe_id: recipe.id,
+        product_id: ing.product_id,
+        quantity: ing.quantity,
+        unit: ing.unit
+      });
     }
     return recipe;
   }, [apiCall, currentRestaurant, user]);
@@ -407,15 +441,27 @@ export const AuthProvider = ({ children }) => {
     if (user?.role !== 'ADMIN') throw new Error('Solo administradores');
     let finalImage = image;
     if (finalImage && finalImage.startsWith('data:image')) {
-      try { finalImage = await compressImage(finalImage); } catch (e) { throw new Error('Error al procesar la imagen'); }
+      try {
+        finalImage = await compressImage(finalImage);
+      } catch (e) {
+        throw new Error('Error al procesar la imagen');
+      }
     }
-    await apiCall('recipes', 'PATCH', { name, image: finalImage }, { id: `eq.${id}` });
+    const updateData = { name };
+    if (finalImage !== undefined) updateData.image = finalImage;
+    await apiCall('recipes', 'PATCH', updateData, { id: `eq.${id}` });
+    // Reemplazar ingredientes
     const existing = await apiCall('recipe_ingredients', 'GET', null, { select: 'id', recipe_id: `eq.${id}` });
     for (const ing of (Array.isArray(existing) ? existing : [])) {
       await apiCall('recipe_ingredients', 'DELETE', null, { id: `eq.${ing.id}` });
     }
     for (const ing of ingredients) {
-      await apiCall('recipe_ingredients', 'POST', { recipe_id: id, product_id: ing.product_id, quantity: ing.quantity, unit: ing.unit });
+      await apiCall('recipe_ingredients', 'POST', {
+        recipe_id: id,
+        product_id: ing.product_id,
+        quantity: ing.quantity,
+        unit: ing.unit
+      });
     }
   }, [apiCall, user]);
 
@@ -424,6 +470,7 @@ export const AuthProvider = ({ children }) => {
     return apiCall('recipes', 'DELETE', null, { id: `eq.${id}` });
   }, [apiCall, user]);
 
+  // Nombres para la UI
   const restaurantNames = {
     POZOBLANCO: '🍽️ Godeo Pozoblanco',
     FUERTEVENTURA: '🏖️ Godeo Fuerteventura',
@@ -434,7 +481,7 @@ export const AuthProvider = ({ children }) => {
     user, login, logout, switchRestaurant, currentRestaurant,
     isAdmin: user?.role === 'ADMIN',
     restaurantName: restaurantNames[currentRestaurant],
-    getProducts, addProduct, deleteProduct,
+    getProducts, addProduct, updateProduct, deleteProduct,
     getMovements, addMovement,
     getTransfers, addTransfer, completeTransfer,
     getRequests, addRequest, updateRequest,
