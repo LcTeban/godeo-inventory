@@ -92,7 +92,7 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // Autenticación
+  // Autenticación (sin cambios)
   const login = async (email, password) => {
     try {
       const users = await apiCall('users', 'GET', null, {
@@ -150,10 +150,10 @@ export const AuthProvider = ({ children }) => {
         throw new Error('Error al procesar la imagen');
       }
     }
-    // Asegurar que supplier_id sea número o null
     const supplierId = data.supplier_id ? parseInt(data.supplier_id, 10) : null;
     return apiCall('products', 'POST', {
       ...finalData,
+      price: parseFloat(data.price) || 0,
       supplier_id: supplierId,
       restaurant: currentRestaurant,
       created_at: new Date().toISOString()
@@ -162,7 +162,7 @@ export const AuthProvider = ({ children }) => {
 
   const updateProduct = useCallback((id, data) => {
     const supplierId = data.supplier_id ? parseInt(data.supplier_id, 10) : null;
-    return apiCall('products', 'PATCH', { ...data, supplier_id: supplierId }, { id: `eq.${id}` });
+    return apiCall('products', 'PATCH', { ...data, price: parseFloat(data.price) || 0, supplier_id: supplierId }, { id: `eq.${id}` });
   }, [apiCall]);
 
   const deleteProduct = useCallback((id) => {
@@ -269,6 +269,7 @@ export const AuthProvider = ({ children }) => {
         restaurant: transfer.to_restaurant,
         image: product.image,
         barcode: product.barcode,
+        price: product.price,
         supplier_id: product.supplier_id,
         created_at: new Date().toISOString()
       });
@@ -348,7 +349,7 @@ export const AuthProvider = ({ children }) => {
     });
   }, [apiCall, currentRestaurant]);
 
-  // -------------------- PROVEEDORES --------------------
+  // Proveedores
   const getSuppliers = useCallback(() => {
     return apiCall('suppliers', 'GET', null, {
       select: '*',
@@ -373,7 +374,75 @@ export const AuthProvider = ({ children }) => {
     if (user?.role !== 'ADMIN') throw new Error('Solo administradores');
     return apiCall('suppliers', 'DELETE', null, { id: `eq.${id}` });
   }, [apiCall, user]);
-  // ----------------------------------------------------
+
+  // Recetas (con imagen, solo admin puede modificar)
+  const getRecipes = useCallback(() => {
+    return apiCall('recipes', 'GET', null, {
+      select: '*,recipe_ingredients(*,products(name,unit))',
+      restaurant: `eq.${currentRestaurant}`,
+      order: 'name.asc'
+    });
+  }, [apiCall, currentRestaurant]);
+
+  const addRecipe = useCallback(async (name, image, ingredients) => {
+    if (user?.role !== 'ADMIN') throw new Error('Solo administradores');
+    let finalImage = image;
+    if (finalImage && finalImage.startsWith('data:image')) {
+      try {
+        finalImage = await compressImage(finalImage);
+      } catch (e) {
+        throw new Error('Error al procesar la imagen');
+      }
+    }
+    const recipe = await apiCall('recipes', 'POST', {
+      name,
+      image: finalImage,
+      restaurant: currentRestaurant,
+      created_at: new Date().toISOString()
+    });
+    for (const ing of ingredients) {
+      await apiCall('recipe_ingredients', 'POST', {
+        recipe_id: recipe.id,
+        product_id: ing.product_id,
+        quantity: ing.quantity,
+        unit: ing.unit
+      });
+    }
+    return recipe;
+  }, [apiCall, currentRestaurant, user]);
+
+  const updateRecipe = useCallback(async (id, name, image, ingredients) => {
+    if (user?.role !== 'ADMIN') throw new Error('Solo administradores');
+    let finalImage = image;
+    if (finalImage && finalImage.startsWith('data:image')) {
+      try {
+        finalImage = await compressImage(finalImage);
+      } catch (e) {
+        throw new Error('Error al procesar la imagen');
+      }
+    }
+    const updateData = { name };
+    if (finalImage !== undefined) updateData.image = finalImage;
+    await apiCall('recipes', 'PATCH', updateData, { id: `eq.${id}` });
+    // Reemplazar ingredientes
+    const existing = await apiCall('recipe_ingredients', 'GET', null, { select: 'id', recipe_id: `eq.${id}` });
+    for (const ing of (Array.isArray(existing) ? existing : [])) {
+      await apiCall('recipe_ingredients', 'DELETE', null, { id: `eq.${ing.id}` });
+    }
+    for (const ing of ingredients) {
+      await apiCall('recipe_ingredients', 'POST', {
+        recipe_id: id,
+        product_id: ing.product_id,
+        quantity: ing.quantity,
+        unit: ing.unit
+      });
+    }
+  }, [apiCall, user]);
+
+  const deleteRecipe = useCallback((id) => {
+    if (user?.role !== 'ADMIN') throw new Error('Solo administradores');
+    return apiCall('recipes', 'DELETE', null, { id: `eq.${id}` });
+  }, [apiCall, user]);
 
   const restaurantNames = {
     POZOBLANCO: '🍽️ Godeo Pozoblanco',
@@ -390,7 +459,8 @@ export const AuthProvider = ({ children }) => {
     getTransfers, addTransfer, completeTransfer,
     getRequests, addRequest, updateRequest,
     getDashboard, getReports,
-    getSuppliers, addSupplier, updateSupplier, deleteSupplier
+    getSuppliers, addSupplier, updateSupplier, deleteSupplier,
+    getRecipes, addRecipe, updateRecipe, deleteRecipe
   };
 
   return (
