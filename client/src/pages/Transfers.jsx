@@ -39,23 +39,23 @@ const Transfers = () => {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  try {
-    await addTransfer(formData);
-    setShowModal(false);
-    setFormData({ productId: '', quantity: '', toRestaurant: '', reason: '' });
-    fetchData();
-  } catch (error) {
-    alert('Error al crear transferencia: ' + error.message);
-  }
-};
+    e.preventDefault();
+    try {
+      await addTransfer(formData);
+      setShowModal(false);
+      setFormData({ productId: '', quantity: '', toRestaurant: '', reason: '' });
+      fetchData();
+    } catch (error) {
+      alert('Error al crear transferencia: ' + error.message); // 👈 Muestra el mensaje real
+    }
+  };
 
   const handleComplete = async (id) => {
     try {
       await completeTransfer(id);
       fetchData();
     } catch (error) {
-      alert('Error al completar');
+      alert('Error al completar: ' + error.message);
     }
   };
 
