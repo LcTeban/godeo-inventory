@@ -34,15 +34,12 @@ self.addEventListener('activate', (event) => {
 
 // Estrategia: Network first, fallback to cache
 self.addEventListener('fetch', (event) => {
-  // No cachear llamadas a API
   if (event.request.url.includes('/api/')) {
     return;
   }
-  
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Cachear solo respuestas exitosas
         if (response && response.status === 200) {
           const responseClone = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
