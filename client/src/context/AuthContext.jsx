@@ -6,6 +6,7 @@ export const useAuth = () => useContext(AuthContext);
 const SUPABASE_URL = 'https://fshypzqmuyctllmbzdnh.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzaHlwenFtdXljdGxsbWJ6ZG5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0OTQ1NDMsImV4cCI6MjA5MzA3MDU0M30.m4c4A6J7K8JvGI69eHBpfUtGMMdD4jVGvfjz_NmQdHE';
 
+// Compresor de imágenes (sin cambios)
 const compressImage = (base64Str, maxWidth = 800) => {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -54,7 +55,6 @@ export const AuthProvider = ({ children }) => {
     let url = `${SUPABASE_URL}/rest/v1/${table}`;
     const queryParams = new URLSearchParams();
 
-    // Añadir filtros también para PATCH y PUT (evita UPDATE sin WHERE)
     if (method !== 'POST') {
       if (filters.select) queryParams.append('select', filters.select);
       if (filters.id) queryParams.append('id', filters.id);
@@ -185,8 +185,19 @@ export const AuthProvider = ({ children }) => {
     });
   }, [apiCall]);
 
-  const addTransfer = useCallback((data) => {
-    return apiCall('transfers', 'POST', {
+  // ==================== TRANSFERENCIAS CORREGIDAS ====================
+  const addTransfer = useCallback(async (data) => {
+    // 1. Obtener el producto para verificar stock
+    const products = await apiCall('products', 'GET', null, {
+      select: '*',
+      id: `eq.${data.productId}`
+    });
+    const product = Array.isArray(products) ? products[0] : null;
+    if (!product) throw new Error('Producto no encontrado');
+    if (product.stock < data.quantity) throw new Error('Stock insuficiente');
+
+    // 2. Insertar la transferencia
+    const transfer = await apiCall('transfers', 'POST', {
       product_id: data.productId,
       quantity: data.quantity,
       to_restaurant: data.toRestaurant,
@@ -196,15 +207,92 @@ export const AuthProvider = ({ children }) => {
       status: 'pendiente',
       created_at: new Date().toISOString()
     });
+
+    // 3. Descontar stock del origen
+    const newStock = product.stock - data.quantity;
+    await apiCall('products', 'PATCH', { stock: newStock }, { id: `eq.${data.productId}` });
+
+    // 4. Registrar movimiento de salida
+    await apiCall('movements', 'POST', {
+      type: 'salida',
+      quantity: data.quantity,
+      reason: `Transferencia a ${data.toRestaurant}${data.reason ? ': ' + data.reason : ''}`,
+      product_id: data.productId,
+      user_id: user?.id,
+      restaurant: currentRestaurant,
+      created_at: new Date().toISOString()
+    });
+
+    return transfer;
   }, [apiCall, currentRestaurant, user]);
 
-  // 👉 completeTransfer corregida: incluye filtro id correcto
-  const completeTransfer = useCallback((id) => {
-    return apiCall('transfers', 'PATCH', {
+  const completeTransfer = useCallback(async (id) => {
+    // 1. Obtener la transferencia
+    const transfers = await apiCall('transfers', 'GET', null, {
+      select: '*',
+      id: `eq.${id}`
+    });
+    const transfer = Array.isArray(transfers) ? transfers[0] : null;
+    if (!transfer) throw new Error('Transferencia no encontrada');
+    if (transfer.status === 'completado') throw new Error('Ya está completada');
+
+    // 2. Obtener producto original (solo necesitamos sus datos)
+    const products = await apiCall('products', 'GET', null, {
+      select: '*',
+      id: `eq.${transfer.product_id}`
+    });
+    const product = Array.isArray(products) ? products[0] : null;
+    if (!product) throw new Error('Producto original no encontrado');
+
+    // 3. Buscar si el producto ya existe en el destino
+    const destProducts = await apiCall('products', 'GET', null, {
+      select: '*',
+      name: `eq.${product.name}`,
+      restaurant: `eq.${transfer.to_restaurant}`
+    });
+    const destProduct = Array.isArray(destProducts) ? destProducts[0] : null;
+
+    if (destProduct) {
+      // Actualizar stock existente
+      const newStock = destProduct.stock + transfer.quantity;
+      await apiCall('products', 'PATCH', { stock: newStock }, { id: `eq.${destProduct.id}` });
+    } else {
+      // Crear nuevo producto en destino
+      await apiCall('products', 'POST', {
+        name: product.name,
+        category: product.category,
+        stock: transfer.quantity,
+        unit: product.unit,
+        min_stock: product.min_stock,
+        expiry_date: product.expiry_date,
+        restaurant: transfer.to_restaurant,
+        image: product.image,
+        barcode: product.barcode,
+        created_at: new Date().toISOString()
+      });
+    }
+
+    // 4. Registrar movimiento de entrada en el destino
+    await apiCall('movements', 'POST', {
+      type: 'entrada',
+      quantity: transfer.quantity,
+      reason: `Transferencia desde ${transfer.from_restaurant}`,
+      product_id: destProduct ? destProduct.id : product.id, // idealmente usar el id del recién creado, pero podemos usar el original para referencia
+      user_id: user?.id,
+      restaurant: transfer.to_restaurant,
+      created_at: new Date().toISOString()
+    });
+
+    // 5. Marcar transferencia como completada
+    await apiCall('transfers', 'PATCH', {
       status: 'completado',
       completed_at: new Date().toISOString()
     }, { id: `eq.${id}` });
-  }, [apiCall]);
+
+    return { success: true };
+  }, [apiCall, user]);
+
+  // ==================== FIN TRANSFERENCIAS ====================
 
   const getRequests = useCallback(() => {
     return apiCall('requests', 'GET', null, {
