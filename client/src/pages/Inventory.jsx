@@ -50,7 +50,7 @@ const Inventory = () => {
         expiry_date: '', image: '', barcode: '' 
       });
     } catch (error) {
-      alert('Error al guardar');
+      alert('Error al guardar: ' + error.message);
     }
   };
 
@@ -78,6 +78,35 @@ const Inventory = () => {
         alert('Error al eliminar');
       }
     }
+  };
+
+  // Convertir imagen a Base64
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setFormData({ ...formData, image: event.target.result });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const openCamera = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.capture = 'environment';
+    input.onchange = handleImageChange;
+    input.click();
+  };
+
+  const openGallery = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = handleImageChange;
+    input.click();
   };
 
   const getStockStatus = (product) => {
@@ -203,6 +232,25 @@ const Inventory = () => {
           <div className="bg-white rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-4">Nuevo Producto</h2>
             <form onSubmit={handleAddProduct} className="space-y-3">
+              {/* Sección de imagen */}
+              <div>
+                <label className="block text-sm font-medium mb-2">📸 Foto del producto</label>
+                <div className="flex gap-2">
+                  <button type="button" onClick={openCamera} className="flex-1 p-3 bg-blue-50 text-blue-700 rounded-xl text-sm flex items-center justify-center gap-2 border border-blue-200">
+                    <CameraIcon className="h-5 w-5" /> Cámara
+                  </button>
+                  <button type="button" onClick={openGallery} className="flex-1 p-3 bg-gray-50 text-gray-700 rounded-xl text-sm flex items-center justify-center gap-2 border border-gray-200">
+                    🖼️ Galería
+                  </button>
+                </div>
+                {formData.image && (
+                  <div className="mt-3 relative inline-block">
+                    <img src={formData.image} alt="Vista previa" className="w-20 h-20 object-cover rounded-lg border" />
+                    <button type="button" onClick={() => setFormData({...formData, image: ''})} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow">✕</button>
+                  </div>
+                )}
+              </div>
+
               <input type="text" placeholder="Nombre*" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full p-3 border rounded-xl" required />
               <input type="text" placeholder="Categoría*" value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})} className="w-full p-3 border rounded-xl" required />
               <div className="flex gap-2">
