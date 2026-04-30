@@ -8,10 +8,9 @@ import {
   ClipboardDocumentListIcon,
   ChartBarIcon,
   TruckIcon,
+  BookOpenIcon,
   Bars3Icon,
-  XMarkIcon,
-  BellIcon,
-  BellAlertIcon
+  XMarkIcon
 } from '@heroicons/react/24/outline';
 
 import { useState } from 'react';
@@ -32,15 +31,16 @@ const Layout = () => {
     { id: 'GRAN_CAPITAN', name: 'Gran Capitán', icon: '🏛️', color: 'purple' }
   ];
 
-  const navigation = [
-    { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
-    { name: 'Inventario', href: '/inventory', icon: CubeIcon },
-    { name: 'Movimientos', href: '/movements', icon: ArrowPathIcon },
-    { name: 'Transferencias', href: '/transfers', icon: ArrowsRightLeftIcon },
-    { name: 'Pedidos', href: '/requests', icon: ClipboardDocumentListIcon },
-    { name: 'Reportes', href: '/reports', icon: ChartBarIcon },
-    { name: 'Proveedores', href: '/suppliers', icon: TruckIcon },
-  ];
+const navigation = [
+  { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
+  { name: 'Inventario', href: '/inventory', icon: CubeIcon },
+  { name: 'Movimientos', href: '/movements', icon: ArrowPathIcon },
+  { name: 'Transferencias', href: '/transfers', icon: ArrowsRightLeftIcon },
+  { name: 'Pedidos', href: '/requests', icon: ClipboardDocumentListIcon },
+  { name: 'Recetas', href: '/recipes', icon: BookOpenIcon },
+  { name: 'Proveedores', href: '/suppliers', icon: TruckIcon },
+  { name: 'Reportes', href: '/reports', icon: ChartBarIcon },
+];
 
   const currentRest = restaurants.find(r => r.id === currentRestaurant);
 
