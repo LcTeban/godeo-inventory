@@ -46,7 +46,7 @@ const Transfers = () => {
       setFormData({ productId: '', quantity: '', toRestaurant: '', reason: '' });
       fetchData();
     } catch (error) {
-      alert('Error al crear transferencia: ' + error.message); // 👈 Muestra el mensaje real
+      alert('Error al crear transferencia: ' + error.message);
     }
   };
 
