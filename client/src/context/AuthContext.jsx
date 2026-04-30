@@ -186,16 +186,19 @@ export const AuthProvider = ({ children }) => {
       order: 'created_at.desc'
     });
   }, [apiCall]);
-
+  
   const addTransfer = useCallback((data) => {
-    return apiCall('transfers', 'POST', {
-      ...data,
-      from_restaurant: currentRestaurant,
-      user_id: user?.id,
-      status: 'pendiente',
-      created_at: new Date().toISOString()
-    });
-  }, [apiCall, currentRestaurant, user]);
+  return apiCall('transfers', 'POST', {
+    product_id: data.productId, // 👈 ¡Corregido! Antes era productId, ahora product_id
+    quantity: data.quantity,
+    to_restaurant: data.toRestaurant,
+    reason: data.reason || null,
+    from_restaurant: currentRestaurant,
+    user_id: user?.id,
+    status: 'pendiente',
+    created_at: new Date().toISOString()
+  });
+}, [apiCall, currentRestaurant, user]);
 
   const completeTransfer = useCallback((id) => {
     return apiCall('transfers', 'PATCH', {
