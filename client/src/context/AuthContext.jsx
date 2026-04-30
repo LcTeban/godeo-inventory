@@ -179,16 +179,20 @@ export const AuthProvider = ({ children }) => {
     });
   }, [apiCall, currentRestaurant]);
 
+  // ✅ Función addMovement CORREGIDA (productId -> product_id)
   const addMovement = useCallback((data) => {
     return apiCall('movements', 'POST', {
-      ...data,
+      type: data.type,
+      quantity: data.quantity,
+      reason: data.reason || null,
+      product_id: data.productId,   // ← Aquí se corrige: productId -> product_id
       restaurant: currentRestaurant,
       user_id: user?.id,
       created_at: new Date().toISOString()
     });
   }, [apiCall, currentRestaurant, user]);
 
-  // Transferencias
+  // Transferencias (ya están bien)
   const getTransfers = useCallback(() => {
     return apiCall('transfers', 'GET', null, {
       select: '*,products(name,unit),users(name)',
@@ -375,7 +379,7 @@ export const AuthProvider = ({ children }) => {
     return apiCall('suppliers', 'DELETE', null, { id: `eq.${id}` });
   }, [apiCall, user]);
 
-  // Recetas (con imagen, solo admin puede modificar)
+  // Recetas (sin cambios)
   const getRecipes = useCallback(() => {
     return apiCall('recipes', 'GET', null, {
       select: '*,recipe_ingredients(*,products(name,unit))',
@@ -424,7 +428,6 @@ export const AuthProvider = ({ children }) => {
     const updateData = { name };
     if (finalImage !== undefined) updateData.image = finalImage;
     await apiCall('recipes', 'PATCH', updateData, { id: `eq.${id}` });
-    // Reemplazar ingredientes
     const existing = await apiCall('recipe_ingredients', 'GET', null, { select: 'id', recipe_id: `eq.${id}` });
     for (const ing of (Array.isArray(existing) ? existing : [])) {
       await apiCall('recipe_ingredients', 'DELETE', null, { id: `eq.${ing.id}` });
