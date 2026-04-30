@@ -39,7 +39,8 @@ const navigation = [
   { name: 'Pedidos', href: '/requests', icon: ClipboardDocumentListIcon },
   { name: 'Recetas', href: '/recipes', icon: BookOpenIcon },
   { name: 'Proveedores', href: '/suppliers', icon: TruckIcon },
-  { name: 'Reportes', href: '/reports', icon: ChartBarIcon },
+  // Solo admin ve Reportes
+  ...(user?.role === 'ADMIN' ? [{ name: 'Reportes', href: '/reports', icon: ChartBarIcon }] : []),
 ];
 
   const currentRest = restaurants.find(r => r.id === currentRestaurant);
