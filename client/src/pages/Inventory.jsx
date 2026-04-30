@@ -11,6 +11,7 @@ import 'jspdf-autotable';
 
 const Inventory = () => {
   const [products, setProducts] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showMovementModal, setShowMovementModal] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
@@ -19,15 +20,16 @@ const Inventory = () => {
   const [filterCategory, setFilterCategory] = useState('all');
   const [formData, setFormData] = useState({
     name: '', category: '', stock: '', unit: 'unidad', min_stock: '10', 
-    expiry_date: '', image: '', barcode: ''
+    expiry_date: '', image: '', barcode: '', supplier_id: ''
   });
   const [movementData, setMovementData] = useState({
     type: 'entrada', quantity: '', reason: ''
   });
-  const { currentRestaurant, isAdmin, getProducts, addProduct, deleteProduct, addMovement } = useAuth();
+  const { currentRestaurant, isAdmin, getProducts, addProduct, updateProduct, deleteProduct, addMovement, getSuppliers } = useAuth();
 
   useEffect(() => {
     fetchProducts();
+    fetchSuppliers();
   }, [currentRestaurant]);
 
   const fetchProducts = async () => {
@@ -39,26 +41,31 @@ const Inventory = () => {
     }
   };
 
+  const fetchSuppliers = async () => {
+    try {
+      const data = await getSuppliers();
+      setSuppliers(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Error getting suppliers:', error);
+    }
+  };
+
   const handleAddProduct = async (e) => {
-  e.preventDefault();
-  try {
-    await addProduct(formData);
-    fetchProducts();
-    setShowAddModal(false);
-    setFormData({ 
-      name: '', category: '', stock: '', unit: 'unidad', min_stock: '10', 
-      expiry_date: '', image: '', barcode: '' 
-    });
-  } catch (error) {
-    // Mensaje específico para duplicados
-    if (error.message.includes('duplicate')) {
-      alert('Ya existe un producto con ese nombre en este restaurante.');
-    } else {
+    e.preventDefault();
+    try {
+      await addProduct(formData);
+      fetchProducts();
+      setShowAddModal(false);
+      setFormData({ 
+        name: '', category: '', stock: '', unit: 'unidad', min_stock: '10', 
+        expiry_date: '', image: '', barcode: '', supplier_id: '' 
+      });
+    } catch (error) {
       alert('Error al guardar: ' + error.message);
     }
-  }
-};
+  };
 
+  // No se implementa edición en este ejemplo, pero si necesitas, puedes habilitarla con updateProduct
   const handleMovement = async (e) => {
     e.preventDefault();
     try {
@@ -85,35 +92,6 @@ const Inventory = () => {
     }
   };
 
-  // Convertir imagen a Base64
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setFormData({ ...formData, image: event.target.result });
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const openCamera = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.capture = 'environment';
-    input.onchange = handleImageChange;
-    input.click();
-  };
-
-  const openGallery = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.onchange = handleImageChange;
-    input.click();
-  };
-
   const getStockStatus = (product) => {
     if (product.stock === 0) return { color: 'bg-red-100 text-red-800', text: 'Agotado' };
     if (product.stock <= product.min_stock) return { color: 'bg-orange-100 text-orange-800', text: 'Bajo' };
@@ -128,7 +106,8 @@ const Inventory = () => {
       'Unidad': p.unit,
       'Stock Mínimo': p.min_stock,
       'Caducidad': p.expiry_date ? new Date(p.expiry_date).toLocaleDateString('es') : 'N/A',
-      'Código': p.barcode || 'N/A'
+      'Código': p.barcode || 'N/A',
+      'Proveedor': p.suppliers?.name || ''
     }));
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
@@ -145,10 +124,10 @@ const Inventory = () => {
     const tableData = filteredProducts.map(p => [
       p.name, p.category, `${p.stock} ${p.unit}`, p.min_stock,
       p.expiry_date ? new Date(p.expiry_date).toLocaleDateString('es') : 'N/A',
-      p.barcode || 'N/A'
+      p.barcode || 'N/A', p.suppliers?.name || ''
     ]);
     doc.autoTable({
-      head: [['Producto', 'Categoría', 'Stock', 'Mínimo', 'Caducidad', 'Código']],
+      head: [['Producto', 'Categoría', 'Stock', 'Mínimo', 'Caducidad', 'Código', 'Proveedor']],
       body: tableData,
       startY: 35,
       styles: { fontSize: 8 },
@@ -164,6 +143,38 @@ const Inventory = () => {
     const matchesCategory = filterCategory === 'all' || p.category === filterCategory;
     return matchesSearch && matchesCategory;
   });
+
+  // Abrir cámara o galería (se mantienen igual)
+  const openCamera = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.capture = 'environment';
+    input.onchange = (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => setFormData({ ...formData, image: event.target.result });
+        reader.readAsDataURL(file);
+      }
+    };
+    input.click();
+  };
+
+  const openGallery = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => setFormData({ ...formData, image: event.target.result });
+        reader.readAsDataURL(file);
+      }
+    };
+    input.click();
+  };
 
   return (
     <div className="space-y-4">
@@ -212,6 +223,9 @@ const Inventory = () => {
                     {isExpiring && <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800">⏰ Próximo</span>}
                   </div>
                   <p className="text-sm text-gray-500">{product.category}</p>
+                  {product.suppliers?.name && (
+                    <p className="text-xs text-gray-400">🏢 {product.suppliers.name}</p>
+                  )}
                   {product.barcode && <p className="text-xs text-gray-400">🏷️ {product.barcode}</p>}
                   <div className="flex items-center justify-between mt-2">
                     <div><span className="text-2xl font-bold">{product.stock}</span><span className="text-sm text-gray-500 ml-1">{product.unit}</span></div>
@@ -237,7 +251,7 @@ const Inventory = () => {
           <div className="bg-white rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-4">Nuevo Producto</h2>
             <form onSubmit={handleAddProduct} className="space-y-3">
-              {/* Sección de imagen */}
+              {/* Imagen */}
               <div>
                 <label className="block text-sm font-medium mb-2">📸 Foto del producto</label>
                 <div className="flex gap-2">
@@ -258,6 +272,22 @@ const Inventory = () => {
 
               <input type="text" placeholder="Nombre*" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full p-3 border rounded-xl" required />
               <input type="text" placeholder="Categoría*" value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})} className="w-full p-3 border rounded-xl" required />
+              
+              {/* Selector de proveedor */}
+              <div>
+                <label className="block text-sm font-medium mb-1">🏢 Proveedor</label>
+                <select
+                  value={formData.supplier_id}
+                  onChange={(e) => setFormData({...formData, supplier_id: e.target.value})}
+                  className="w-full p-3 border rounded-xl"
+                >
+                  <option value="">Sin proveedor</option>
+                  {suppliers.map(s => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+              </div>
+
               <div className="flex gap-2">
                 <input type="number" step="0.01" placeholder="Stock inicial*" value={formData.stock} onChange={(e) => setFormData({...formData, stock: e.target.value})} className="flex-1 p-3 border rounded-xl" required />
                 <select value={formData.unit} onChange={(e) => setFormData({...formData, unit: e.target.value})} className="w-24 p-3 border rounded-xl">
