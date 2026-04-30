@@ -39,16 +39,16 @@ const Transfers = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await addTransfer(formData);
-      setShowModal(false);
-      setFormData({ productId: '', quantity: '', toRestaurant: '', reason: '' });
-      fetchData();
-    } catch (error) {
-      alert('Error al crear transferencia');
-    }
-  };
+  e.preventDefault();
+  try {
+    await addTransfer(formData);
+    setShowModal(false);
+    setFormData({ productId: '', quantity: '', toRestaurant: '', reason: '' });
+    fetchData();
+  } catch (error) {
+    alert('Error al crear transferencia: ' + error.message);
+  }
+};
 
   const handleComplete = async (id) => {
     try {
