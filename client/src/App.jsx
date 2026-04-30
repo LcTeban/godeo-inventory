@@ -10,6 +10,7 @@ import Transfers from './pages/Transfers';
 import Requests from './pages/Requests';
 import Reports from './pages/Reports';
 import Suppliers from './pages/Suppliers';
+import Recipes from './pages/Recipes';
 
 
 function App() {
@@ -27,6 +28,7 @@ function App() {
             <Route path="requests" element={<Requests />} />
             <Route path="reports" element={<Reports />} />
             <Route path="suppliers" element={<Suppliers />} />
+            <Route path="recipes" element={<Recipes />} />
           </Route>
         </Routes>
       </BrowserRouter>
