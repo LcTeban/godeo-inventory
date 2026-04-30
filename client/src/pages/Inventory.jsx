@@ -50,7 +50,12 @@ const Inventory = () => {
       expiry_date: '', image: '', barcode: '' 
     });
   } catch (error) {
-    alert('Error al guardar: ' + error.message);
+    // Mensaje específico para duplicados
+    if (error.message.includes('duplicate')) {
+      alert('Ya existe un producto con ese nombre en este restaurante.');
+    } else {
+      alert('Error al guardar: ' + error.message);
+    }
   }
 };
 
