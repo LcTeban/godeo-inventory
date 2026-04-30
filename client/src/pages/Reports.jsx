@@ -3,11 +3,13 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const Reports = () => {
-  const { isAdmin, getProducts, getMovements, getTransfers } = useAuth(); // <-- CORREGIDO AQUÍ
+  const { isAdmin, currentRestaurant, switchRestaurant, getProducts, getMovements, getTransfers } = useAuth();
   const navigate = useNavigate();
 
+  // Estados
   const [activeTab, setActiveTab] = useState('summary');
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState([]);          // Todos los productos para el resumen
+  const [filteredProducts, setFilteredProducts] = useState([]); // Productos del restaurante seleccionado
   const [movements, setMovements] = useState([]);
   const [transfers, setTransfers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,30 +20,45 @@ const Reports = () => {
     if (!isAdmin) navigate('/dashboard');
   }, [isAdmin, navigate]);
 
-  // Cargar datos
+  // Cargar datos de todos los restaurantes para el resumen y los detalles
   useEffect(() => {
     if (!isAdmin) return;
-    const fetchData = async () => {
+    const fetchAllData = async () => {
       setLoading(true);
       try {
-        const [prodData, movData, transData] = await Promise.all([
-          getProducts(),
-          getMovements(),
-          getTransfers()
-        ]);
-        setProducts(Array.isArray(prodData) ? prodData : []);
-        setMovements(Array.isArray(movData) ? movData : []);
-        setTransfers(Array.isArray(transData) ? transData : []);
+        // Obtener productos de todos los restaurantes (sin filtrar)
+        const allProducts = await getProducts({ restaurant: null });
+        // Movimientos del restaurante actual
+        const movs = await getMovements({ restaurant: currentRestaurant });
+        // Transferencias de todos
+        const trans = await getTransfers();
+
+        setProducts(Array.isArray(allProducts) ? allProducts : []);
+        setFilteredProducts(Array.isArray(allProducts) ? allProducts.filter(p => p.restaurant === currentRestaurant) : []);
+        setMovements(Array.isArray(movs) ? movs : []);
+        setTransfers(Array.isArray(trans) ? trans : []);
       } catch (error) {
         console.error('Error fetching reports:', error);
       } finally {
         setLoading(false);
       }
     };
-    fetchData();
-  }, [isAdmin, getProducts, getMovements, getTransfers]);
+    fetchAllData();
+  }, [isAdmin, currentRestaurant, getProducts, getMovements, getTransfers]);
 
-  // ---- Cálculos financieros ----
+  // Refrescar movimientos al cambiar período o restaurante
+  useEffect(() => {
+    if (!isAdmin) return;
+    const fetchMovs = async () => {
+      try {
+        const movs = await getMovements({ restaurant: currentRestaurant, period });
+        setMovements(Array.isArray(movs) ? movs : []);
+      } catch (e) {}
+    };
+    fetchMovs();
+  }, [currentRestaurant, period, isAdmin, getMovements]);
+
+  // Cálculos financieros
   const inventoryValueByRestaurant = () => {
     const map = {};
     products.forEach(p => {
@@ -53,9 +70,9 @@ const Reports = () => {
   };
 
   const totalInventoryValue = Object.values(inventoryValueByRestaurant()).reduce((a, b) => a + b, 0);
-
-  const productsLowStock = products.filter(p => p.stock <= p.min_stock);
-  const lowStockValue = productsLowStock.reduce((sum, p) => sum + (p.stock * (p.price || 0)), 0);
+  const lowStockValue = filteredProducts
+    .filter(p => p.stock <= p.min_stock)
+    .reduce((sum, p) => sum + (p.stock * (p.price || 0)), 0);
 
   const filteredMovements = movements.filter(m => {
     const date = new Date(m.created_at);
@@ -72,7 +89,6 @@ const Reports = () => {
   const totalExits = filteredMovements
     .filter(m => m.type === 'salida')
     .reduce((sum, m) => sum + (m.quantity * (m.products?.price || 0)), 0);
-  const cogs = totalExits;
 
   const restaurants = ['POZOBLANCO', 'FUERTEVENTURA', 'GRAN_CAPITAN'];
   const restaurantNames = {
@@ -84,19 +100,33 @@ const Reports = () => {
   if (!isAdmin) return null;
   if (loading) return <div className="text-center py-8 text-gray-500">Cargando reportes...</div>;
 
-  const tabs = [
-    { key: 'summary', label: '📊 Resumen' },
-    { key: 'inventory', label: '📦 Inventario Valorizado' },
-    { key: 'movements', label: '🔄 Movimientos' },
-    { key: 'alerts', label: '⚠️ Alertas Stock' },
-  ];
-
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-800">📊 Reportes Financieros</h1>
+      {/* Encabezado con selector de restaurante */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <h1 className="text-2xl font-bold text-gray-800">📊 Reportes Financieros</h1>
+        <div className="flex items-center gap-2 bg-white rounded-xl px-4 py-2 shadow-sm">
+          <span className="text-sm text-gray-600">Ver:</span>
+          <select
+            value={currentRestaurant}
+            onChange={(e) => switchRestaurant(e.target.value)}
+            className="border rounded-lg p-2 text-sm font-medium"
+          >
+            {restaurants.map(rest => (
+              <option key={rest} value={rest}>{restaurantNames[rest]}</option>
+            ))}
+          </select>
+        </div>
+      </div>
 
+      {/* Pestañas */}
       <div className="flex gap-2 flex-wrap">
-        {tabs.map(tab => (
+        {[
+          { key: 'summary', label: '📊 Resumen General' },
+          { key: 'inventory', label: '📦 Inventario' },
+          { key: 'movements', label: '🔄 Movimientos' },
+          { key: 'alerts', label: '⚠️ Alertas' },
+        ].map(tab => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
@@ -109,18 +139,7 @@ const Reports = () => {
         ))}
       </div>
 
-      {activeTab === 'movements' && (
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-600">Período:</span>
-          <select value={period} onChange={(e) => setPeriod(e.target.value)} className="border rounded-lg p-2 text-sm">
-            <option value="week">Última semana</option>
-            <option value="month">Último mes</option>
-            <option value="year">Último año</option>
-          </select>
-        </div>
-      )}
-
-      {/* Pestaña Resumen */}
+      {/* Pestaña Resumen (todos los restaurantes) */}
       {activeTab === 'summary' && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -152,31 +171,30 @@ const Reports = () => {
               </div>
               <div>
                 <p className="text-sm text-gray-500">Costo de ventas (período)</p>
-                <p className="text-xl font-bold text-red-600">€{cogs.toFixed(2)}</p>
+                <p className="text-xl font-bold text-red-600">€{totalExits.toFixed(2)}</p>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Pestaña Inventario Valorizado */}
+      {/* Pestaña Inventario (restaurante actual) */}
       {activeTab === 'inventory' && (
         <div className="bg-white rounded-xl p-4 shadow-sm overflow-x-auto">
+          <h2 className="font-semibold text-lg mb-4">Inventario de {restaurantNames[currentRestaurant]}</h2>
           <table className="w-full text-sm">
             <thead className="bg-gray-100">
               <tr>
                 <th className="text-left p-2">Producto</th>
-                <th className="text-left p-2">Restaurante</th>
                 <th className="text-left p-2">Stock</th>
                 <th className="text-left p-2">Precio unit.</th>
                 <th className="text-left p-2">Valor total</th>
               </tr>
             </thead>
             <tbody>
-              {products.map(p => (
+              {filteredProducts.map(p => (
                 <tr key={p.id} className="border-t">
                   <td className="p-2 font-medium">{p.name}</td>
-                  <td className="p-2">{restaurantNames[p.restaurant]}</td>
                   <td className="p-2">{p.stock} {p.unit}</td>
                   <td className="p-2">€{(p.price || 0).toFixed(2)}</td>
                   <td className="p-2 font-semibold">€{(p.stock * (p.price || 0)).toFixed(2)}</td>
@@ -187,9 +205,17 @@ const Reports = () => {
         </div>
       )}
 
-      {/* Pestaña Movimientos */}
+      {/* Pestaña Movimientos (restaurante actual) */}
       {activeTab === 'movements' && (
         <div className="space-y-6">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600">Período:</span>
+            <select value={period} onChange={(e) => setPeriod(e.target.value)} className="border rounded-lg p-2 text-sm">
+              <option value="week">Última semana</option>
+              <option value="month">Último mes</option>
+              <option value="year">Último año</option>
+            </select>
+          </div>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div className="bg-white rounded-xl p-4 shadow-sm">
               <p className="text-sm text-gray-500">Total entradas (€)</p>
@@ -208,6 +234,7 @@ const Reports = () => {
           </div>
 
           <div className="bg-white rounded-xl p-4 shadow-sm overflow-x-auto">
+            <h2 className="font-semibold text-lg mb-4">Movimientos de {restaurantNames[currentRestaurant]}</h2>
             <table className="w-full text-sm">
               <thead className="bg-gray-100">
                 <tr>
@@ -240,23 +267,19 @@ const Reports = () => {
         </div>
       )}
 
-      {/* Pestaña Alertas */}
+      {/* Pestaña Alertas (restaurante actual) */}
       {activeTab === 'alerts' && (
         <div className="space-y-4">
           <div className="bg-white rounded-xl p-4 shadow-sm">
-            <h3 className="font-semibold text-lg mb-2">Productos con stock bajo</h3>
+            <h3 className="font-semibold text-lg mb-2">Stock bajo en {restaurantNames[currentRestaurant]}</h3>
             <p className="text-sm text-gray-600">
               Valor total en riesgo: <span className="font-bold text-red-600">€{lowStockValue.toFixed(2)}</span>
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {productsLowStock.map(p => (
+            {filteredProducts.filter(p => p.stock <= p.min_stock).map(p => (
               <div key={p.id} className="bg-white rounded-xl p-4 shadow-sm border-l-4 border-yellow-400">
-                <div className="flex justify-between">
-                  <h4 className="font-medium">{p.name}</h4>
-                  <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">Stock bajo</span>
-                </div>
-                <p className="text-sm text-gray-500">{restaurantNames[p.restaurant]}</p>
+                <h4 className="font-medium">{p.name}</h4>
                 <div className="mt-2 flex justify-between items-end">
                   <div>
                     <span className="text-lg font-bold">{p.stock}</span>
@@ -267,9 +290,6 @@ const Reports = () => {
               </div>
             ))}
           </div>
-          {productsLowStock.length === 0 && (
-            <p className="text-gray-500 text-center py-4">No hay productos con stock bajo</p>
-          )}
         </div>
       )}
     </div>
