@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { PlusIcon, TrashIcon, PencilIcon, CameraIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, TrashIcon, PencilIcon, CameraIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 const Recipes = () => {
   const [recipes, setRecipes] = useState([]);
   const [products, setProducts] = useState([]);
-  const [showModal, setShowModal] = useState(false);
+  const [showModal, setShowModal] = useState(false);      // Modal de edición (solo admin)
+  const [showDetail, setShowDetail] = useState(false);    // Modal de detalle (todos)
+  const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [editingRecipe, setEditingRecipe] = useState(null);
   const [name, setName] = useState('');
   const [image, setImage] = useState('');
@@ -133,6 +135,11 @@ const Recipes = () => {
     setShowModal(true);
   };
 
+  const openDetail = (recipe) => {
+    setSelectedRecipe(recipe);
+    setShowDetail(true);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -146,11 +153,15 @@ const Recipes = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {recipes.map(recipe => (
-          <div key={recipe.id} className="bg-white rounded-xl p-4 shadow-sm">
+          <div
+            key={recipe.id}
+            onClick={() => openDetail(recipe)}
+            className="bg-white rounded-xl p-4 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+          >
             <div className="flex justify-between items-start">
               <h3 className="font-semibold text-lg">{recipe.name}</h3>
               {isAdmin && (
-                <div className="flex gap-1">
+                <div className="flex gap-1 ml-2" onClick={(e) => e.stopPropagation()}>
                   <button onClick={() => openEdit(recipe)} className="p-1 text-blue-600"><PencilIcon className="h-4 w-4" /></button>
                   <button onClick={() => handleDelete(recipe.id)} className="p-1 text-red-600"><TrashIcon className="h-4 w-4" /></button>
                 </div>
@@ -159,14 +170,9 @@ const Recipes = () => {
             {recipe.image && (
               <img src={recipe.image} alt={recipe.name} className="w-full h-32 object-cover rounded-lg mt-2" />
             )}
-            <ul className="mt-3 space-y-1 text-sm text-gray-600">
-              {recipe.recipe_ingredients?.map((ing, i) => (
-                <li key={i} className="flex justify-between">
-                  <span>{ing.products?.name}</span>
-                  <span className="font-medium">{ing.quantity} {ing.unit}</span>
-                </li>
-              ))}
-            </ul>
+            <p className="text-sm text-gray-500 mt-2">
+              {recipe.recipe_ingredients?.length || 0} ingredientes
+            </p>
           </div>
         ))}
       </div>
@@ -175,7 +181,40 @@ const Recipes = () => {
         <div className="text-center py-8 text-gray-500">No hay recetas</div>
       )}
 
-      {/* Modal Agregar/Editar Receta (solo admin) */}
+      {/* MODAL DE DETALLE (para todos los usuarios) */}
+      {showDetail && selectedRecipe && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex flex-col">
+          <div className="p-4 flex justify-between items-center bg-black">
+            <h2 className="text-white font-bold text-xl">{selectedRecipe.name}</h2>
+            <button onClick={() => setShowDetail(false)} className="p-2 text-white">
+              <XMarkIcon className="h-6 w-6" />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4">
+            {selectedRecipe.image ? (
+              <img src={selectedRecipe.image} alt={selectedRecipe.name} className="w-full h-64 object-contain rounded-xl mb-6" />
+            ) : (
+              <div className="w-full h-64 bg-gray-800 rounded-xl flex items-center justify-center mb-6">
+                <CameraIcon className="h-12 w-12 text-gray-500" />
+              </div>
+            )}
+            <h3 className="text-white font-semibold mb-3 text-lg">🥄 Ingredientes</h3>
+            <ul className="space-y-2">
+              {selectedRecipe.recipe_ingredients?.map((ing, i) => (
+                <li key={i} className="bg-gray-800 rounded-lg p-3 flex justify-between items-center">
+                  <span className="text-gray-200">{ing.products?.name || `Producto #${ing.product_id}`}</span>
+                  <span className="text-white font-semibold">{ing.quantity} {ing.unit}</span>
+                </li>
+              ))}
+            </ul>
+            {(!selectedRecipe.recipe_ingredients || selectedRecipe.recipe_ingredients.length === 0) && (
+              <p className="text-gray-400 text-center">No hay ingredientes registrados</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE EDICIÓN (solo admin) */}
       {showModal && isAdmin && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50">
           <div className="bg-white rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md max-h-[85vh] flex flex-col">
@@ -190,7 +229,6 @@ const Recipes = () => {
                 required
               />
 
-              {/* Imagen de la receta */}
               <div>
                 <label className="block text-sm font-medium mb-2">📸 Foto de la receta</label>
                 <div className="flex gap-2">
