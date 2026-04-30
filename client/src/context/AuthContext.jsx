@@ -92,7 +92,7 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // Autenticación (sin cambios)
+  // Autenticación
   const login = async (email, password) => {
     try {
       const users = await apiCall('users', 'GET', null, {
@@ -179,20 +179,42 @@ export const AuthProvider = ({ children }) => {
     });
   }, [apiCall, currentRestaurant]);
 
-  // ✅ Función addMovement CORREGIDA (productId -> product_id)
-  const addMovement = useCallback((data) => {
+  // ✅ Función addMovement que actualiza el stock automáticamente
+  const addMovement = useCallback(async (data) => {
+    // 1. Obtener producto actual
+    const products = await apiCall('products', 'GET', null, {
+      select: '*',
+      id: `eq.${data.productId}`
+    });
+    const product = Array.isArray(products) ? products[0] : null;
+    if (!product) throw new Error('Producto no encontrado');
+
+    let newStock = product.stock;
+    const quantity = parseFloat(data.quantity);
+
+    if (data.type === 'entrada') {
+      newStock += quantity;
+    } else if (data.type === 'salida') {
+      if (product.stock < quantity) throw new Error('Stock insuficiente');
+      newStock -= quantity;
+    }
+
+    // 2. Actualizar stock del producto
+    await apiCall('products', 'PATCH', { stock: newStock }, { id: `eq.${data.productId}` });
+
+    // 3. Registrar el movimiento
     return apiCall('movements', 'POST', {
       type: data.type,
-      quantity: data.quantity,
+      quantity: quantity,
       reason: data.reason || null,
-      product_id: data.productId,   // ← Aquí se corrige: productId -> product_id
+      product_id: data.productId,
       restaurant: currentRestaurant,
       user_id: user?.id,
       created_at: new Date().toISOString()
     });
   }, [apiCall, currentRestaurant, user]);
 
-  // Transferencias (ya están bien)
+  // Transferencias
   const getTransfers = useCallback(() => {
     return apiCall('transfers', 'GET', null, {
       select: '*,products(name,unit),users(name)',
@@ -379,7 +401,7 @@ export const AuthProvider = ({ children }) => {
     return apiCall('suppliers', 'DELETE', null, { id: `eq.${id}` });
   }, [apiCall, user]);
 
-  // Recetas (sin cambios)
+  // Recetas
   const getRecipes = useCallback(() => {
     return apiCall('recipes', 'GET', null, {
       select: '*,recipe_ingredients(*,products(name,unit))',
