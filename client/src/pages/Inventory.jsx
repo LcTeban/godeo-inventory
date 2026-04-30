@@ -40,19 +40,19 @@ const Inventory = () => {
   };
 
   const handleAddProduct = async (e) => {
-    e.preventDefault();
-    try {
-      await addProduct(formData);
-      fetchProducts();
-      setShowAddModal(false);
-      setFormData({ 
-        name: '', category: '', stock: '', unit: 'unidad', min_stock: '10', 
-        expiry_date: '', image: '', barcode: '' 
-      });
-    } catch (error) {
-      alert('Error al guardar: ' + error.message);
-    }
-  };
+  e.preventDefault();
+  try {
+    await addProduct(formData);
+    fetchProducts();
+    setShowAddModal(false);
+    setFormData({ 
+      name: '', category: '', stock: '', unit: 'unidad', min_stock: '10', 
+      expiry_date: '', image: '', barcode: '' 
+    });
+  } catch (error) {
+    alert('Error al guardar: ' + error.message);
+  }
+};
 
   const handleMovement = async (e) => {
     e.preventDefault();
