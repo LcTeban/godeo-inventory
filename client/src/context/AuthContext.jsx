@@ -6,7 +6,6 @@ export const useAuth = () => useContext(AuthContext);
 const SUPABASE_URL = 'https://fshypzqmuyctllmbzdnh.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzaHlwenFtdXljdGxsbWJ6ZG5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0OTQ1NDMsImV4cCI6MjA5MzA3MDU0M30.m4c4A6J7K8JvGI69eHBpfUtGMMdD4jVGvfjz_NmQdHE';
 
-// Compresor de imágenes (sin cambios)
 const compressImage = (base64Str, maxWidth = 800) => {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -93,6 +92,7 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
+  // Autenticación
   const login = async (email, password) => {
     try {
       const users = await apiCall('users', 'GET', null, {
@@ -132,9 +132,10 @@ export const AuthProvider = ({ children }) => {
     if (user?.role === 'ADMIN') setCurrentRestaurant(restaurant);
   };
 
+  // Productos
   const getProducts = useCallback(() => {
     return apiCall('products', 'GET', null, {
-      select: '*',
+      select: '*,suppliers(name)',
       restaurant: `eq.${currentRestaurant}`,
       order: 'name.asc'
     });
@@ -149,17 +150,26 @@ export const AuthProvider = ({ children }) => {
         throw new Error('Error al procesar la imagen');
       }
     }
+    // Asegurar que supplier_id sea número o null
+    const supplierId = data.supplier_id ? parseInt(data.supplier_id, 10) : null;
     return apiCall('products', 'POST', {
       ...finalData,
+      supplier_id: supplierId,
       restaurant: currentRestaurant,
       created_at: new Date().toISOString()
     });
   }, [apiCall, currentRestaurant]);
 
+  const updateProduct = useCallback((id, data) => {
+    const supplierId = data.supplier_id ? parseInt(data.supplier_id, 10) : null;
+    return apiCall('products', 'PATCH', { ...data, supplier_id: supplierId }, { id: `eq.${id}` });
+  }, [apiCall]);
+
   const deleteProduct = useCallback((id) => {
     return apiCall('products', 'DELETE', null, { id: `eq.${id}` });
   }, [apiCall]);
 
+  // Movimientos
   const getMovements = useCallback(() => {
     return apiCall('movements', 'GET', null, {
       select: '*,products(name),users(name)',
@@ -178,6 +188,7 @@ export const AuthProvider = ({ children }) => {
     });
   }, [apiCall, currentRestaurant, user]);
 
+  // Transferencias
   const getTransfers = useCallback(() => {
     return apiCall('transfers', 'GET', null, {
       select: '*,products(name,unit),users(name)',
@@ -185,9 +196,7 @@ export const AuthProvider = ({ children }) => {
     });
   }, [apiCall]);
 
-  // ==================== TRANSFERENCIAS CORREGIDAS ====================
   const addTransfer = useCallback(async (data) => {
-    // 1. Obtener el producto para verificar stock
     const products = await apiCall('products', 'GET', null, {
       select: '*',
       id: `eq.${data.productId}`
@@ -196,7 +205,6 @@ export const AuthProvider = ({ children }) => {
     if (!product) throw new Error('Producto no encontrado');
     if (product.stock < data.quantity) throw new Error('Stock insuficiente');
 
-    // 2. Insertar la transferencia
     const transfer = await apiCall('transfers', 'POST', {
       product_id: data.productId,
       quantity: data.quantity,
@@ -208,11 +216,9 @@ export const AuthProvider = ({ children }) => {
       created_at: new Date().toISOString()
     });
 
-    // 3. Descontar stock del origen
     const newStock = product.stock - data.quantity;
     await apiCall('products', 'PATCH', { stock: newStock }, { id: `eq.${data.productId}` });
 
-    // 4. Registrar movimiento de salida
     await apiCall('movements', 'POST', {
       type: 'salida',
       quantity: data.quantity,
@@ -227,7 +233,6 @@ export const AuthProvider = ({ children }) => {
   }, [apiCall, currentRestaurant, user]);
 
   const completeTransfer = useCallback(async (id) => {
-    // 1. Obtener la transferencia
     const transfers = await apiCall('transfers', 'GET', null, {
       select: '*',
       id: `eq.${id}`
@@ -236,7 +241,6 @@ export const AuthProvider = ({ children }) => {
     if (!transfer) throw new Error('Transferencia no encontrada');
     if (transfer.status === 'completado') throw new Error('Ya está completada');
 
-    // 2. Obtener producto original (solo necesitamos sus datos)
     const products = await apiCall('products', 'GET', null, {
       select: '*',
       id: `eq.${transfer.product_id}`
@@ -244,7 +248,6 @@ export const AuthProvider = ({ children }) => {
     const product = Array.isArray(products) ? products[0] : null;
     if (!product) throw new Error('Producto original no encontrado');
 
-    // 3. Buscar si el producto ya existe en el destino
     const destProducts = await apiCall('products', 'GET', null, {
       select: '*',
       name: `eq.${product.name}`,
@@ -253,11 +256,9 @@ export const AuthProvider = ({ children }) => {
     const destProduct = Array.isArray(destProducts) ? destProducts[0] : null;
 
     if (destProduct) {
-      // Actualizar stock existente
       const newStock = destProduct.stock + transfer.quantity;
       await apiCall('products', 'PATCH', { stock: newStock }, { id: `eq.${destProduct.id}` });
     } else {
-      // Crear nuevo producto en destino
       await apiCall('products', 'POST', {
         name: product.name,
         category: product.category,
@@ -268,22 +269,21 @@ export const AuthProvider = ({ children }) => {
         restaurant: transfer.to_restaurant,
         image: product.image,
         barcode: product.barcode,
+        supplier_id: product.supplier_id,
         created_at: new Date().toISOString()
       });
     }
 
-    // 4. Registrar movimiento de entrada en el destino
     await apiCall('movements', 'POST', {
       type: 'entrada',
       quantity: transfer.quantity,
       reason: `Transferencia desde ${transfer.from_restaurant}`,
-      product_id: destProduct ? destProduct.id : product.id, // idealmente usar el id del recién creado, pero podemos usar el original para referencia
+      product_id: destProduct ? destProduct.id : product.id,
       user_id: user?.id,
       restaurant: transfer.to_restaurant,
       created_at: new Date().toISOString()
     });
 
-    // 5. Marcar transferencia como completada
     await apiCall('transfers', 'PATCH', {
       status: 'completado',
       completed_at: new Date().toISOString()
@@ -292,8 +292,7 @@ export const AuthProvider = ({ children }) => {
     return { success: true };
   }, [apiCall, user]);
 
-  // ==================== FIN TRANSFERENCIAS ====================
-
+  // Solicitudes
   const getRequests = useCallback(() => {
     return apiCall('requests', 'GET', null, {
       select: '*,users(name)',
@@ -315,6 +314,7 @@ export const AuthProvider = ({ children }) => {
     return apiCall('requests', 'PATCH', { status }, { id: `eq.${id}` });
   }, [apiCall]);
 
+  // Dashboard
   const getDashboard = useCallback(async () => {
     const restaurants = ['POZOBLANCO', 'FUERTEVENTURA', 'GRAN_CAPITAN'];
     const stats = {};
@@ -348,6 +348,33 @@ export const AuthProvider = ({ children }) => {
     });
   }, [apiCall, currentRestaurant]);
 
+  // -------------------- PROVEEDORES --------------------
+  const getSuppliers = useCallback(() => {
+    return apiCall('suppliers', 'GET', null, {
+      select: '*',
+      order: 'name.asc'
+    });
+  }, [apiCall]);
+
+  const addSupplier = useCallback((data) => {
+    if (user?.role !== 'ADMIN') throw new Error('Solo administradores');
+    return apiCall('suppliers', 'POST', {
+      ...data,
+      created_at: new Date().toISOString()
+    });
+  }, [apiCall, user]);
+
+  const updateSupplier = useCallback((id, data) => {
+    if (user?.role !== 'ADMIN') throw new Error('Solo administradores');
+    return apiCall('suppliers', 'PATCH', data, { id: `eq.${id}` });
+  }, [apiCall, user]);
+
+  const deleteSupplier = useCallback((id) => {
+    if (user?.role !== 'ADMIN') throw new Error('Solo administradores');
+    return apiCall('suppliers', 'DELETE', null, { id: `eq.${id}` });
+  }, [apiCall, user]);
+  // ----------------------------------------------------
+
   const restaurantNames = {
     POZOBLANCO: '🍽️ Godeo Pozoblanco',
     FUERTEVENTURA: '🏖️ Godeo Fuerteventura',
@@ -358,11 +385,12 @@ export const AuthProvider = ({ children }) => {
     user, login, logout, switchRestaurant, currentRestaurant,
     isAdmin: user?.role === 'ADMIN',
     restaurantName: restaurantNames[currentRestaurant],
-    getProducts, addProduct, deleteProduct,
+    getProducts, addProduct, updateProduct, deleteProduct,
     getMovements, addMovement,
     getTransfers, addTransfer, completeTransfer,
     getRequests, addRequest, updateRequest,
-    getDashboard, getReports
+    getDashboard, getReports,
+    getSuppliers, addSupplier, updateSupplier, deleteSupplier
   };
 
   return (
