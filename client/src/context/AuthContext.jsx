@@ -14,7 +14,6 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [currentRestaurant, setCurrentRestaurant] = useState(null);
 
-  // Al cargar, recuperar sesión guardada
   useEffect(() => {
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
@@ -28,7 +27,6 @@ export const AuthProvider = ({ children }) => {
 
   // Función universal para llamar a la API de Supabase
   const apiCall = useCallback(async (table, method, data = null, filters = {}) => {
-    const token = localStorage.getItem('token');
     const headers = {
       'Content-Type': 'application/json',
       'apikey': SUPABASE_KEY,
@@ -37,7 +35,6 @@ export const AuthProvider = ({ children }) => {
 
     let url = `${SUPABASE_URL}/rest/v1/${table}`;
 
-    // Agregar parámetros de consulta (filtros)
     const queryParams = new URLSearchParams();
     if (filters.select) queryParams.append('select', filters.select);
     if (filters.id) queryParams.append('id', filters.id);
@@ -46,7 +43,6 @@ export const AuthProvider = ({ children }) => {
     if (filters.status) queryParams.append('status', filters.status);
     if (filters.order) queryParams.append('order', filters.order);
     if (filters.limit) queryParams.append('limit', filters.limit);
-    // Añadir otros filtros genéricos
     Object.entries(filters).forEach(([key, value]) => {
       if (!['select', 'id', 'restaurant', 'email', 'status', 'order', 'limit'].includes(key)) {
         queryParams.append(key, value);
@@ -62,17 +58,14 @@ export const AuthProvider = ({ children }) => {
 
     const response = await fetch(url, config);
     
-    // Para DELETE, la respuesta suele ser vacía
     if (method === 'DELETE' && response.ok) {
       return { success: true };
     }
 
     const result = await response.json();
-    
     if (!response.ok) {
       throw new Error(result.message || 'Error en Supabase');
     }
-    
     return result;
   }, []);
 
@@ -81,7 +74,6 @@ export const AuthProvider = ({ children }) => {
   // ============================================
   const login = async (email, password) => {
     try {
-      // Buscar usuario por email
       const users = await apiCall('users', 'GET', null, {
         select: '*',
         email: `eq.${email}`
@@ -101,7 +93,6 @@ export const AuthProvider = ({ children }) => {
         restaurant: foundUser.restaurant
       };
       
-      // Token simple (para identificar al usuario)
       const token = btoa(JSON.stringify(userData));
       
       localStorage.setItem('token', token);
@@ -129,10 +120,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   // ============================================
-  // FUNCIONES ESPECÍFICAS PARA LA APP
+  // FUNCIONES ESPECÍFICAS
   // ============================================
   
-  // Productos
   const getProducts = useCallback(() => {
     return apiCall('products', 'GET', null, {
       select: '*',
@@ -157,7 +147,6 @@ export const AuthProvider = ({ children }) => {
     return apiCall('products', 'DELETE', null, { id: `eq.${id}` });
   }, [apiCall]);
 
-  // Movimientos
   const getMovements = useCallback(() => {
     return apiCall('movements', 'GET', null, {
       select: '*,products(name),users(name)',
@@ -176,7 +165,6 @@ export const AuthProvider = ({ children }) => {
     });
   }, [apiCall, currentRestaurant, user]);
 
-  // Transferencias
   const getTransfers = useCallback(() => {
     return apiCall('transfers', 'GET', null, {
       select: '*,products(name,unit),users(name)',
@@ -201,7 +189,6 @@ export const AuthProvider = ({ children }) => {
     }, { id: `eq.${id}` });
   }, [apiCall]);
 
-  // Solicitudes / Pedidos
   const getRequests = useCallback(() => {
     return apiCall('requests', 'GET', null, {
       select: '*,users(name)',
@@ -223,7 +210,6 @@ export const AuthProvider = ({ children }) => {
     return apiCall('requests', 'PATCH', { status }, { id: `eq.${id}` });
   }, [apiCall]);
 
-  // Dashboard
   const getDashboard = useCallback(async () => {
     const restaurants = ['POZOBLANCO', 'FUERTEVENTURA', 'GRAN_CAPITAN'];
     const stats = {};
@@ -251,9 +237,7 @@ export const AuthProvider = ({ children }) => {
     };
   }, [apiCall]);
 
-  // Reportes
   const getReports = useCallback((range) => {
-    // Aquí puedes implementar la lógica de reportes usando movimientos
     return apiCall('movements', 'GET', null, {
       select: '*,products(name,category)',
       restaurant: `eq.${currentRestaurant}`,
@@ -276,7 +260,6 @@ export const AuthProvider = ({ children }) => {
     currentRestaurant,
     isAdmin: user?.role === 'ADMIN',
     restaurantName: restaurantNames[currentRestaurant],
-    // Funciones API
     getProducts,
     addProduct,
     updateProduct,
