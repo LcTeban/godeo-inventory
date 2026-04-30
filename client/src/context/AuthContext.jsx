@@ -123,8 +123,11 @@ export const AuthProvider = ({ children }) => {
       try { finalData.image = await compressImage(finalData.image); } catch (e) { throw new Error('Error al procesar la imagen'); }
     }
     const supplierId = data.supplier_id ? parseInt(data.supplier_id, 10) : null;
+    // Convertir fecha vacía en null para PostgreSQL
+    const expiry = finalData.expiry_date && finalData.expiry_date.trim() !== '' ? finalData.expiry_date : null;
     return apiCall('products', 'POST', {
       ...finalData,
+      expiry_date: expiry,
       price: parseFloat(data.price) || 0,
       supplier_id: supplierId,
       restaurant: currentRestaurant,
@@ -134,7 +137,13 @@ export const AuthProvider = ({ children }) => {
 
   const updateProduct = useCallback((id, data) => {
     const supplierId = data.supplier_id ? parseInt(data.supplier_id, 10) : null;
-    return apiCall('products', 'PATCH', { ...data, price: parseFloat(data.price) || 0, supplier_id: supplierId }, { id: `eq.${id}` });
+    const expiry = data.expiry_date && data.expiry_date.trim() !== '' ? data.expiry_date : null;
+    return apiCall('products', 'PATCH', {
+      ...data,
+      expiry_date: expiry,
+      price: parseFloat(data.price) || 0,
+      supplier_id: supplierId
+    }, { id: `eq.${id}` });
   }, [apiCall]);
 
   const deleteProduct = useCallback((id) => apiCall('products', 'DELETE', null, { id: `eq.${id}` }), [apiCall]);
@@ -238,7 +247,7 @@ export const AuthProvider = ({ children }) => {
         stock: transfer.quantity,
         unit: product.unit,
         min_stock: product.min_stock,
-        expiry_date: product.expiry_date,
+        expiry_date: product.expiry_date || null,
         restaurant: transfer.to_restaurant,
         image: product.image,
         barcode: product.barcode,
