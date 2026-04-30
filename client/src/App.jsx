@@ -9,6 +9,8 @@ import Movements from './pages/Movements';
 import Transfers from './pages/Transfers';
 import Requests from './pages/Requests';
 import Reports from './pages/Reports';
+import Suppliers from './pages/Suppliers';
+
 
 function App() {
   return (
@@ -24,6 +26,7 @@ function App() {
             <Route path="transfers" element={<Transfers />} />
             <Route path="requests" element={<Requests />} />
             <Route path="reports" element={<Reports />} />
+            <Route path="suppliers" element={<Suppliers />} />
           </Route>
         </Routes>
       </BrowserRouter>
