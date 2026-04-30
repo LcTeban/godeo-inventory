@@ -16,11 +16,6 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// Detectar si está en modo standalone (PWA instalada)
-if (window.matchMedia('(display-mode: standalone)').matches) {
-  console.log('📱 Ejecutando como PWA instalada');
-}
-
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <App />
