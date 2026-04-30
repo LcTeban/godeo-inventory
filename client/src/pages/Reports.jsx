@@ -3,12 +3,13 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const Reports = () => {
-  const { isAdmin, getProducts, getMovements } = useAuth();
+  const { isAdmin, getProducts, getMovements, getTransfers } = useAuth(); // <-- CORREGIDO AQUÍ
   const navigate = useNavigate();
-  
+
   const [activeTab, setActiveTab] = useState('summary');
   const [products, setProducts] = useState([]);
   const [movements, setMovements] = useState([]);
+  const [transfers, setTransfers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState('month');
 
@@ -17,26 +18,28 @@ const Reports = () => {
     if (!isAdmin) navigate('/dashboard');
   }, [isAdmin, navigate]);
 
+  // Cargar datos
   useEffect(() => {
     if (!isAdmin) return;
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [prodData, movData, transData] = await Promise.all([
+          getProducts(),
+          getMovements(),
+          getTransfers()
+        ]);
+        setProducts(Array.isArray(prodData) ? prodData : []);
+        setMovements(Array.isArray(movData) ? movData : []);
+        setTransfers(Array.isArray(transData) ? transData : []);
+      } catch (error) {
+        console.error('Error fetching reports:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchData();
-  }, [isAdmin, period]);
-
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const [prodData, movData] = await Promise.all([
-        getProducts(),
-        getMovements()
-      ]);
-      setProducts(Array.isArray(prodData) ? prodData : []);
-      setMovements(Array.isArray(movData) ? movData : []);
-    } catch (error) {
-      console.error('Error fetching reports:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [isAdmin, getProducts, getMovements, getTransfers]);
 
   // ---- Cálculos financieros ----
   const inventoryValueByRestaurant = () => {
@@ -69,24 +72,7 @@ const Reports = () => {
   const totalExits = filteredMovements
     .filter(m => m.type === 'salida')
     .reduce((sum, m) => sum + (m.quantity * (m.products?.price || 0)), 0);
-  const cogs = totalExits; // Costo de mercancía vendida
-
-  const pendingTransfers = () => {
-    // Usamos la función del contexto para transferencias (se puede pedir)
-    // Pero como Reports es solo admin, podemos llamar a getTransfers desde el contexto
-    // Debemos agregar getTransfers en AuthContext si no está (ya está)
-    return 0; // Lo obtendremos más abajo
-  };
-
-  // Agregaremos en AuthContext la función getTransfers para usarla aquí
-  // Pero para no modificar AuthContext ahora, usaremos un estado adicional
-  const [transfers, setTransfers] = useState([]);
-  useEffect(() => {
-    const { getTransfers } = useAuth();
-    if (getTransfers) {
-      getTransfers().then(data => setTransfers(Array.isArray(data) ? data : [])).catch(() => {});
-    }
-  }, []);
+  const cogs = totalExits;
 
   const restaurants = ['POZOBLANCO', 'FUERTEVENTURA', 'GRAN_CAPITAN'];
   const restaurantNames = {
@@ -108,8 +94,7 @@ const Reports = () => {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-gray-800">📊 Reportes Financieros</h1>
-      
-      {/* Pestañas */}
+
       <div className="flex gap-2 flex-wrap">
         {tabs.map(tab => (
           <button
@@ -124,7 +109,6 @@ const Reports = () => {
         ))}
       </div>
 
-      {/* Selector de período (para movimientos) */}
       {activeTab === 'movements' && (
         <div className="flex items-center gap-2">
           <span className="text-sm text-gray-600">Período:</span>
@@ -136,10 +120,9 @@ const Reports = () => {
         </div>
       )}
 
-      {/* Contenido de pestañas */}
+      {/* Pestaña Resumen */}
       {activeTab === 'summary' && (
         <div className="space-y-6">
-          {/* Tarjetas por restaurante */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {restaurants.map(rest => (
               <div key={rest} className="bg-white rounded-xl p-5 shadow-sm">
@@ -152,7 +135,6 @@ const Reports = () => {
               </div>
             ))}
           </div>
-          {/* Totales generales */}
           <div className="bg-white rounded-xl p-5 shadow-sm">
             <h3 className="font-semibold text-lg">💰 Total General</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
@@ -177,6 +159,7 @@ const Reports = () => {
         </div>
       )}
 
+      {/* Pestaña Inventario Valorizado */}
       {activeTab === 'inventory' && (
         <div className="bg-white rounded-xl p-4 shadow-sm overflow-x-auto">
           <table className="w-full text-sm">
@@ -204,6 +187,7 @@ const Reports = () => {
         </div>
       )}
 
+      {/* Pestaña Movimientos */}
       {activeTab === 'movements' && (
         <div className="space-y-6">
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -256,11 +240,14 @@ const Reports = () => {
         </div>
       )}
 
+      {/* Pestaña Alertas */}
       {activeTab === 'alerts' && (
         <div className="space-y-4">
           <div className="bg-white rounded-xl p-4 shadow-sm">
             <h3 className="font-semibold text-lg mb-2">Productos con stock bajo</h3>
-            <p className="text-sm text-gray-600">Valor total en riesgo: <span className="font-bold text-red-600">€{lowStockValue.toFixed(2)}</span></p>
+            <p className="text-sm text-gray-600">
+              Valor total en riesgo: <span className="font-bold text-red-600">€{lowStockValue.toFixed(2)}</span>
+            </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {productsLowStock.map(p => (
