@@ -6,7 +6,6 @@ export const useAuth = () => useContext(AuthContext);
 const SUPABASE_URL = 'https://fshypzqmuyctllmbzdnh.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzaHlwenFtdXljdGxsbWJ6ZG5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0OTQ1NDMsImV4cCI6MjA5MzA3MDU0M30.m4c4A6J7K8JvGI69eHBpfUtGMMdD4jVGvfjz_NmQdHE';
 
-// Comprime imágenes muy grandes antes de enviarlas
 const compressImage = (base64Str, maxWidth = 800) => {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -54,7 +53,9 @@ export const AuthProvider = ({ children }) => {
 
     let url = `${SUPABASE_URL}/rest/v1/${table}`;
     const queryParams = new URLSearchParams();
-    if (method === 'GET' || method === 'DELETE') {
+
+    // Añadir filtros también para PATCH y PUT (evita UPDATE sin WHERE)
+    if (method !== 'POST') {
       if (filters.select) queryParams.append('select', filters.select);
       if (filters.id) queryParams.append('id', filters.id);
       if (filters.restaurant) queryParams.append('restaurant', filters.restaurant);
@@ -63,6 +64,7 @@ export const AuthProvider = ({ children }) => {
       if (filters.order) queryParams.append('order', filters.order);
       if (filters.limit) queryParams.append('limit', filters.limit);
     }
+
     const queryString = queryParams.toString();
     if (queryString) url += `?${queryString}`;
 
@@ -73,7 +75,6 @@ export const AuthProvider = ({ children }) => {
 
     const response = await fetch(url, config);
 
-    // Manejar errores de red
     if (!response.ok) {
       let errorMsg = 'Error de red';
       try {
@@ -83,10 +84,8 @@ export const AuthProvider = ({ children }) => {
       throw new Error(errorMsg);
     }
 
-    // Si la respuesta es 204 (sin contenido) o DELETE, devolvemos éxito
     if (response.status === 204 || method === 'DELETE') return { success: true };
 
-    // Intentar parsear JSON
     try {
       return await response.json();
     } catch (e) {
@@ -143,7 +142,6 @@ export const AuthProvider = ({ children }) => {
 
   const addProduct = useCallback(async (data) => {
     let finalData = { ...data };
-    // Comprimir imagen solo si existe y es base64
     if (finalData.image && finalData.image.startsWith('data:image')) {
       try {
         finalData.image = await compressImage(finalData.image);
@@ -186,20 +184,21 @@ export const AuthProvider = ({ children }) => {
       order: 'created_at.desc'
     });
   }, [apiCall]);
-  
-  const addTransfer = useCallback((data) => {
-  return apiCall('transfers', 'POST', {
-    product_id: data.productId, // 👈 ¡Corregido! Antes era productId, ahora product_id
-    quantity: data.quantity,
-    to_restaurant: data.toRestaurant,
-    reason: data.reason || null,
-    from_restaurant: currentRestaurant,
-    user_id: user?.id,
-    status: 'pendiente',
-    created_at: new Date().toISOString()
-  });
-}, [apiCall, currentRestaurant, user]);
 
+  const addTransfer = useCallback((data) => {
+    return apiCall('transfers', 'POST', {
+      product_id: data.productId,
+      quantity: data.quantity,
+      to_restaurant: data.toRestaurant,
+      reason: data.reason || null,
+      from_restaurant: currentRestaurant,
+      user_id: user?.id,
+      status: 'pendiente',
+      created_at: new Date().toISOString()
+    });
+  }, [apiCall, currentRestaurant, user]);
+
+  // 👉 completeTransfer corregida: incluye filtro id correcto
   const completeTransfer = useCallback((id) => {
     return apiCall('transfers', 'PATCH', {
       status: 'completado',
