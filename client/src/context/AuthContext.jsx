@@ -3,11 +3,30 @@ import { createContext, useState, useContext, useEffect, useCallback } from 'rea
 const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
 
-// ============================================
-// CONFIGURACIÓN DE SUPABASE
-// ============================================
 const SUPABASE_URL = 'https://fshypzqmuyctllmbzdnh.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzaHlwenFtdXljdGxsbWJ6ZG5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0OTQ1NDMsImV4cCI6MjA5MzA3MDU0M30.m4c4A6J7K8JvGI69eHBpfUtGMMdD4jVGvfjz_NmQdHE';
+
+// Función para comprimir imagen base64
+const compressImage = (base64Str, maxWidth = 800) => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.src = base64Str;
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let width = img.width;
+      let height = img.height;
+      if (width > maxWidth) {
+        height = (height * maxWidth) / width;
+        width = maxWidth;
+      }
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL('image/jpeg', 0.7)); // JPEG calidad 70%
+    };
+  });
+};
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -25,7 +44,6 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  // Función universal para llamar a la API de Supabase
   const apiCall = useCallback(async (table, method, data = null, filters = {}) => {
     const headers = {
       'Content-Type': 'application/json',
@@ -34,20 +52,16 @@ export const AuthProvider = ({ children }) => {
     };
 
     let url = `${SUPABASE_URL}/rest/v1/${table}`;
-
     const queryParams = new URLSearchParams();
-    if (filters.select) queryParams.append('select', filters.select);
-    if (filters.id) queryParams.append('id', filters.id);
-    if (filters.restaurant) queryParams.append('restaurant', filters.restaurant);
-    if (filters.email) queryParams.append('email', filters.email);
-    if (filters.status) queryParams.append('status', filters.status);
-    if (filters.order) queryParams.append('order', filters.order);
-    if (filters.limit) queryParams.append('limit', filters.limit);
-    Object.entries(filters).forEach(([key, value]) => {
-      if (!['select', 'id', 'restaurant', 'email', 'status', 'order', 'limit'].includes(key)) {
-        queryParams.append(key, value);
-      }
-    });
+    if (method === 'GET' || method === 'DELETE') {
+      if (filters.select) queryParams.append('select', filters.select);
+      if (filters.id) queryParams.append('id', filters.id);
+      if (filters.restaurant) queryParams.append('restaurant', filters.restaurant);
+      if (filters.email) queryParams.append('email', filters.email);
+      if (filters.status) queryParams.append('status', filters.status);
+      if (filters.order) queryParams.append('order', filters.order);
+      if (filters.limit) queryParams.append('limit', filters.limit);
+    }
     const queryString = queryParams.toString();
     if (queryString) url += `?${queryString}`;
 
@@ -57,34 +71,25 @@ export const AuthProvider = ({ children }) => {
     }
 
     const response = await fetch(url, config);
-    
-    if (method === 'DELETE' && response.ok) {
-      return { success: true };
-    }
-
-    const result = await response.json();
     if (!response.ok) {
-      throw new Error(result.message || 'Error en Supabase');
+      const error = await response.json();
+      throw new Error(error.message || 'Error de red');
     }
-    return result;
+    if (method === 'DELETE') return { success: true };
+    if (response.status === 204) return null;
+    return response.json();
   }, []);
 
-  // ============================================
-  // AUTENTICACIÓN
-  // ============================================
   const login = async (email, password) => {
     try {
       const users = await apiCall('users', 'GET', null, {
         select: '*',
         email: `eq.${email}`
       });
-      
       const foundUser = Array.isArray(users) ? users[0] : null;
-      
       if (!foundUser || foundUser.password !== password) {
         return { success: false, error: 'Credenciales inválidas' };
       }
-      
       const userData = {
         id: foundUser.id,
         email: foundUser.email,
@@ -92,14 +97,11 @@ export const AuthProvider = ({ children }) => {
         role: foundUser.role,
         restaurant: foundUser.restaurant
       };
-      
       const token = btoa(JSON.stringify(userData));
-      
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(userData));
       setUser(userData);
       setCurrentRestaurant(userData.restaurant);
-      
       return { success: true };
     } catch (error) {
       return { success: false, error: error.message };
@@ -114,15 +116,10 @@ export const AuthProvider = ({ children }) => {
   };
 
   const switchRestaurant = (restaurant) => {
-    if (user?.role === 'ADMIN') {
-      setCurrentRestaurant(restaurant);
-    }
+    if (user?.role === 'ADMIN') setCurrentRestaurant(restaurant);
   };
 
-  // ============================================
-  // FUNCIONES ESPECÍFICAS
-  // ============================================
-  
+  // CRUD de productos
   const getProducts = useCallback(() => {
     return apiCall('products', 'GET', null, {
       select: '*',
@@ -131,17 +128,18 @@ export const AuthProvider = ({ children }) => {
     });
   }, [apiCall, currentRestaurant]);
 
-  const addProduct = useCallback((data) => {
+  const addProduct = useCallback(async (data) => {
+    // Si hay imagen, la comprimimos
+    let finalData = { ...data };
+    if (finalData.image && finalData.image.startsWith('data:image')) {
+      finalData.image = await compressImage(finalData.image);
+    }
     return apiCall('products', 'POST', {
-      ...data,
+      ...finalData,
       restaurant: currentRestaurant,
       created_at: new Date().toISOString()
     });
   }, [apiCall, currentRestaurant]);
-
-  const updateProduct = useCallback((id, data) => {
-    return apiCall('products', 'PATCH', data, { id: `eq.${id}` });
-  }, [apiCall]);
 
   const deleteProduct = useCallback((id) => {
     return apiCall('products', 'DELETE', null, { id: `eq.${id}` });
@@ -213,7 +211,6 @@ export const AuthProvider = ({ children }) => {
   const getDashboard = useCallback(async () => {
     const restaurants = ['POZOBLANCO', 'FUERTEVENTURA', 'GRAN_CAPITAN'];
     const stats = {};
-    
     for (const rest of restaurants) {
       const products = await apiCall('products', 'GET', null, {
         select: '*',
@@ -225,15 +222,13 @@ export const AuthProvider = ({ children }) => {
         lowStock: prods.filter(p => p.stock <= p.min_stock).length
       };
     }
-    
     const pendingTransfers = await apiCall('transfers', 'GET', null, {
       select: 'id',
       status: 'eq.pendiente'
     });
-    
-    return { 
-      restaurants: stats, 
-      pendingTransfers: Array.isArray(pendingTransfers) ? pendingTransfers.length : 0 
+    return {
+      restaurants: stats,
+      pendingTransfers: Array.isArray(pendingTransfers) ? pendingTransfers.length : 0
     };
   }, [apiCall]);
 
@@ -253,27 +248,14 @@ export const AuthProvider = ({ children }) => {
   };
 
   const value = {
-    user,
-    login,
-    logout,
-    switchRestaurant,
-    currentRestaurant,
+    user, login, logout, switchRestaurant, currentRestaurant,
     isAdmin: user?.role === 'ADMIN',
     restaurantName: restaurantNames[currentRestaurant],
-    getProducts,
-    addProduct,
-    updateProduct,
-    deleteProduct,
-    getMovements,
-    addMovement,
-    getTransfers,
-    addTransfer,
-    completeTransfer,
-    getRequests,
-    addRequest,
-    updateRequest,
-    getDashboard,
-    getReports
+    getProducts, addProduct, deleteProduct,
+    getMovements, addMovement,
+    getTransfers, addTransfer, completeTransfer,
+    getRequests, addRequest, updateRequest,
+    getDashboard, getReports
   };
 
   return (
