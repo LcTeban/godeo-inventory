@@ -70,24 +70,31 @@ const Dashboard = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-3">
-        <Link to="/inventory" className="bg-white rounded-xl p-4 shadow-sm text-center hover:bg-gray-50">
-          <span className="text-3xl">📦</span>
-          <p className="font-medium mt-1">Inventario</p>
-        </Link>
-        <Link to="/movements" className="bg-white rounded-xl p-4 shadow-sm text-center hover:bg-gray-50">
-          <span className="text-3xl">🔄</span>
-          <p className="font-medium mt-1">Movimientos</p>
-        </Link>
-        <Link to="/requests" className="bg-white rounded-xl p-4 shadow-sm text-center hover:bg-gray-50">
-          <span className="text-3xl">📋</span>
-          <p className="font-medium mt-1">Pedidos</p>
-        </Link>
-        <Link to="/reports" className="bg-white rounded-xl p-4 shadow-sm text-center hover:bg-gray-50">
-          <span className="text-3xl">📊</span>
-          <p className="font-medium mt-1">Reportes</p>
-        </Link>
-      </div>
+     <div className="grid grid-cols-2 gap-3">
+  <Link to="/inventory" className="bg-white rounded-xl p-4 shadow-sm text-center hover:bg-gray-50">
+    <span className="text-3xl">📦</span>
+    <p className="font-medium mt-1">Inventario</p>
+  </Link>
+  <Link to="/movements" className="bg-white rounded-xl p-4 shadow-sm text-center hover:bg-gray-50">
+    <span className="text-3xl">🔄</span>
+    <p className="font-medium mt-1">Movimientos</p>
+  </Link>
+  <Link to="/requests" className="bg-white rounded-xl p-4 shadow-sm text-center hover:bg-gray-50">
+    <span className="text-3xl">📋</span>
+    <p className="font-medium mt-1">Pedidos</p>
+  </Link>
+  {isAdmin ? (
+    <Link to="/reports" className="bg-white rounded-xl p-4 shadow-sm text-center hover:bg-gray-50">
+      <span className="text-3xl">📊</span>
+      <p className="font-medium mt-1">Reportes</p>
+    </Link>
+  ) : (
+    <Link to="/recipes" className="bg-white rounded-xl p-4 shadow-sm text-center hover:bg-gray-50">
+      <span className="text-3xl">📖</span>
+      <p className="font-medium mt-1">Recetas</p>
+    </Link>
+  )}
+</div>
     </div>
   );
 };
