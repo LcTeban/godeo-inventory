@@ -6,9 +6,9 @@ export const useAuth = () => useContext(AuthContext);
 const SUPABASE_URL = 'https://fshypzqmuyctllmbzdnh.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzaHlwenFtdXljdGxsbWJ6ZG5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0OTQ1NDMsImV4cCI6MjA5MzA3MDU0M30.m4c4A6J7K8JvGI69eHBpfUtGMMdD4jVGvfjz_NmQdHE';
 
-// Función para comprimir imagen base64
+// Comprime imágenes muy grandes antes de enviarlas
 const compressImage = (base64Str, maxWidth = 800) => {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const img = new Image();
     img.src = base64Str;
     img.onload = () => {
@@ -23,8 +23,9 @@ const compressImage = (base64Str, maxWidth = 800) => {
       canvas.height = height;
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0, width, height);
-      resolve(canvas.toDataURL('image/jpeg', 0.7)); // JPEG calidad 70%
+      resolve(canvas.toDataURL('image/jpeg', 0.6));
     };
+    img.onerror = () => reject(new Error('No se pudo cargar la imagen'));
   });
 };
 
@@ -71,13 +72,26 @@ export const AuthProvider = ({ children }) => {
     }
 
     const response = await fetch(url, config);
+
+    // Manejar errores de red
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Error de red');
+      let errorMsg = 'Error de red';
+      try {
+        const errorBody = await response.json();
+        errorMsg = errorBody.message || errorMsg;
+      } catch (e) {}
+      throw new Error(errorMsg);
     }
-    if (method === 'DELETE') return { success: true };
-    if (response.status === 204) return null;
-    return response.json();
+
+    // Si la respuesta es 204 (sin contenido) o DELETE, devolvemos éxito
+    if (response.status === 204 || method === 'DELETE') return { success: true };
+
+    // Intentar parsear JSON
+    try {
+      return await response.json();
+    } catch (e) {
+      return { success: true };
+    }
   }, []);
 
   const login = async (email, password) => {
@@ -119,7 +133,6 @@ export const AuthProvider = ({ children }) => {
     if (user?.role === 'ADMIN') setCurrentRestaurant(restaurant);
   };
 
-  // CRUD de productos
   const getProducts = useCallback(() => {
     return apiCall('products', 'GET', null, {
       select: '*',
@@ -129,10 +142,14 @@ export const AuthProvider = ({ children }) => {
   }, [apiCall, currentRestaurant]);
 
   const addProduct = useCallback(async (data) => {
-    // Si hay imagen, la comprimimos
     let finalData = { ...data };
+    // Comprimir imagen solo si existe y es base64
     if (finalData.image && finalData.image.startsWith('data:image')) {
-      finalData.image = await compressImage(finalData.image);
+      try {
+        finalData.image = await compressImage(finalData.image);
+      } catch (e) {
+        throw new Error('Error al procesar la imagen');
+      }
     }
     return apiCall('products', 'POST', {
       ...finalData,
