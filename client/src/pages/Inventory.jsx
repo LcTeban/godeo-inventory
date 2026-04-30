@@ -20,7 +20,7 @@ const Inventory = () => {
   const [filterCategory, setFilterCategory] = useState('all');
   const [formData, setFormData] = useState({
     name: '', category: '', stock: '', unit: 'unidad', min_stock: '10', 
-    expiry_date: '', image: '', barcode: '', supplier_id: ''
+    expiry_date: '', image: '', barcode: '', supplier_id: '', price: ''
   });
   const [movementData, setMovementData] = useState({
     type: 'entrada', quantity: '', reason: ''
@@ -58,14 +58,13 @@ const Inventory = () => {
       setShowAddModal(false);
       setFormData({ 
         name: '', category: '', stock: '', unit: 'unidad', min_stock: '10', 
-        expiry_date: '', image: '', barcode: '', supplier_id: '' 
+        expiry_date: '', image: '', barcode: '', supplier_id: '', price: '' 
       });
     } catch (error) {
       alert('Error al guardar: ' + error.message);
     }
   };
 
-  // No se implementa edición en este ejemplo, pero si necesitas, puedes habilitarla con updateProduct
   const handleMovement = async (e) => {
     e.preventDefault();
     try {
@@ -107,7 +106,8 @@ const Inventory = () => {
       'Stock Mínimo': p.min_stock,
       'Caducidad': p.expiry_date ? new Date(p.expiry_date).toLocaleDateString('es') : 'N/A',
       'Código': p.barcode || 'N/A',
-      'Proveedor': p.suppliers?.name || ''
+      'Proveedor': p.suppliers?.name || '',
+      'Precio': p.price || 0
     }));
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
@@ -124,10 +124,10 @@ const Inventory = () => {
     const tableData = filteredProducts.map(p => [
       p.name, p.category, `${p.stock} ${p.unit}`, p.min_stock,
       p.expiry_date ? new Date(p.expiry_date).toLocaleDateString('es') : 'N/A',
-      p.barcode || 'N/A', p.suppliers?.name || ''
+      p.barcode || 'N/A', p.suppliers?.name || '', `€${p.price || 0}`
     ]);
     doc.autoTable({
-      head: [['Producto', 'Categoría', 'Stock', 'Mínimo', 'Caducidad', 'Código', 'Proveedor']],
+      head: [['Producto', 'Categoría', 'Stock', 'Mínimo', 'Caducidad', 'Código', 'Proveedor', 'Precio']],
       body: tableData,
       startY: 35,
       styles: { fontSize: 8 },
@@ -144,7 +144,6 @@ const Inventory = () => {
     return matchesSearch && matchesCategory;
   });
 
-  // Abrir cámara o galería (se mantienen igual)
   const openCamera = () => {
     const input = document.createElement('input');
     input.type = 'file';
@@ -223,10 +222,9 @@ const Inventory = () => {
                     {isExpiring && <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800">⏰ Próximo</span>}
                   </div>
                   <p className="text-sm text-gray-500">{product.category}</p>
-                  {product.suppliers?.name && (
-                    <p className="text-xs text-gray-400">🏢 {product.suppliers.name}</p>
-                  )}
+                  {product.suppliers?.name && <p className="text-xs text-gray-400">🏢 {product.suppliers.name}</p>}
                   {product.barcode && <p className="text-xs text-gray-400">🏷️ {product.barcode}</p>}
+                  {isAdmin && product.price > 0 && <p className="text-xs text-gray-500">💰 €{product.price}</p>}
                   <div className="flex items-center justify-between mt-2">
                     <div><span className="text-2xl font-bold">{product.stock}</span><span className="text-sm text-gray-500 ml-1">{product.unit}</span></div>
                     {product.expiry_date && <div className="text-xs text-gray-500">Caduca: {new Date(product.expiry_date).toLocaleDateString('es')}</div>}
@@ -273,20 +271,22 @@ const Inventory = () => {
               <input type="text" placeholder="Nombre*" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full p-3 border rounded-xl" required />
               <input type="text" placeholder="Categoría*" value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})} className="w-full p-3 border rounded-xl" required />
               
-              {/* Selector de proveedor */}
+              {/* Proveedor */}
               <div>
                 <label className="block text-sm font-medium mb-1">🏢 Proveedor</label>
-                <select
-                  value={formData.supplier_id}
-                  onChange={(e) => setFormData({...formData, supplier_id: e.target.value})}
-                  className="w-full p-3 border rounded-xl"
-                >
+                <select value={formData.supplier_id} onChange={(e) => setFormData({...formData, supplier_id: e.target.value})} className="w-full p-3 border rounded-xl">
                   <option value="">Sin proveedor</option>
-                  {suppliers.map(s => (
-                    <option key={s.id} value={s.id}>{s.name}</option>
-                  ))}
+                  {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select>
               </div>
+
+              {/* Precio (solo admin) */}
+              {isAdmin && (
+                <div>
+                  <label className="block text-sm font-medium mb-1">💰 Precio (€)</label>
+                  <input type="number" step="0.01" placeholder="Precio unitario" value={formData.price || ''} onChange={(e) => setFormData({...formData, price: e.target.value})} className="w-full p-3 border rounded-xl" />
+                </div>
+              )}
 
               <div className="flex gap-2">
                 <input type="number" step="0.01" placeholder="Stock inicial*" value={formData.stock} onChange={(e) => setFormData({...formData, stock: e.target.value})} className="flex-1 p-3 border rounded-xl" required />
