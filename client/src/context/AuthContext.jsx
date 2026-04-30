@@ -3,15 +3,17 @@ import { createContext, useState, useContext, useEffect, useCallback } from 'rea
 const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
 
-// 🔻 REEMPLAZA ESTA URL POR LA TUYA (la que te dio Apps Script)
-const API_URL = 'https://script.google.com/macros/s/AKfycbyrLTPusv3McWjtcygzjr-dEH4vvn3eJQGY56kh2pVoOnEq3x83hwCXodlOaloMg4mc/exec';
+// ============================================
+// CONFIGURACIÓN DE SUPABASE
+// ============================================
+const SUPABASE_URL = 'https://fshypzqmuyctllmbzdnh.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzaHlwenFtdXljdGxsbWJ6ZG5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0OTQ1NDMsImV4cCI6MjA5MzA3MDU0M30.m4c4A6J7K8JvGI69eHBpfUtGMMdD4jVGvfjz_NmQdHE';
 
-export const AuthProvider = ({ children }) => {
+const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentRestaurant, setCurrentRestaurant] = useState(null);
 
-  // Al cargar, recuperar sesión guardada
   useEffect(() => {
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
@@ -23,41 +25,75 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  // Función universal para llamar a la API
-  const apiCall = useCallback(async (action, data = {}, restaurantOverride = null) => {
+  // Función universal para llamar a Supabase
+  const apiCall = useCallback(async (table, method, data = null, filters = {}) => {
     const token = localStorage.getItem('token');
-    const restaurant = restaurantOverride || currentRestaurant || 
-                       (user ? user.restaurant : 'POZOBLANCO');
-    
-    const params = new URLSearchParams();
-    params.append('action', action);
-    if (token && action !== 'login') params.append('token', token);
-    if (restaurant) params.append('restaurant', restaurant);
-    if (Object.keys(data).length > 0) {
-      params.append('data', JSON.stringify(data));
+    const headers = {
+      'Content-Type': 'application/json',
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${token || SUPABASE_KEY}`
+    };
+
+    let url = `${SUPABASE_URL}/rest/v1/${table}`;
+
+    // Agregar filtros
+    const queryParams = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      queryParams.append(key, value);
+    });
+    if (queryParams.toString()) url += `?${queryParams.toString()}`;
+
+    const config = { method, headers };
+    if (data && (method === 'POST' || method === 'PUT' || method === 'PATCH')) {
+      config.body = JSON.stringify(data);
     }
+
+    const response = await fetch(url, config);
     
-    const response = await fetch(`${API_URL}?${params.toString()}`);
+    if (method === 'DELETE' && response.ok) {
+      return { success: true };
+    }
+
     const result = await response.json();
     
-    if (!response.ok || result.error) {
-      throw new Error(result.error || 'Error en la API');
+    if (!response.ok) {
+      throw new Error(result.message || 'Error en Supabase');
     }
     
     return result;
-  }, [currentRestaurant, user]);
+  }, []);
 
+  // Login
   const login = async (email, password) => {
     try {
-      const result = await apiCall('login', { email, password }, 'POZOBLANCO');
-      if (result.token) {
-        localStorage.setItem('token', result.token);
-        localStorage.setItem('user', JSON.stringify(result.user));
-        setUser(result.user);
-        setCurrentRestaurant(result.user.restaurant);
-        return { success: true };
+      const users = await apiCall('users', 'GET', null, {
+        select: '*',
+        email: `eq.${email}`
+      });
+      
+      const foundUser = users[0];
+      
+      if (!foundUser || foundUser.password !== password) {
+        return { success: false, error: 'Credenciales inválidas' };
       }
-      return { success: false, error: result.error };
+      
+      const userData = {
+        id: foundUser.id,
+        email: foundUser.email,
+        name: foundUser.name,
+        role: foundUser.role,
+        restaurant: foundUser.restaurant
+      };
+      
+      // Token simple (solo para identificación, no JWT real)
+      const token = btoa(JSON.stringify(userData));
+      
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(userData));
+      setUser(userData);
+      setCurrentRestaurant(userData.restaurant);
+      
+      return { success: true };
     } catch (error) {
       return { success: false, error: error.message };
     }
@@ -99,3 +135,5 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
+
+export { AuthProvider };
