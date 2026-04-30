@@ -6,7 +6,6 @@ export const useAuth = () => useContext(AuthContext);
 const SUPABASE_URL = 'https://fshypzqmuyctllmbzdnh.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzaHlwenFtdXljdGxsbWJ6ZG5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0OTQ1NDMsImV4cCI6MjA5MzA3MDU0M30.m4c4A6J7K8JvGI69eHBpfUtGMMdD4jVGvfjz_NmQdHE';
 
-// Compresor de imágenes (se usa en productos, recetas, etc.)
 const compressImage = (base64Str, maxWidth = 800) => {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -64,6 +63,15 @@ export const AuthProvider = ({ children }) => {
       if (filters.status) queryParams.append('status', filters.status);
       if (filters.order) queryParams.append('order', filters.order);
       if (filters.limit) queryParams.append('limit', filters.limit);
+      // Soporte para filtro de período (movimientos)
+      if (filters.period && filters.period !== 'all') {
+        const now = new Date();
+        let dateFilter = '';
+        if (filters.period === 'week') dateFilter = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();
+        else if (filters.period === 'month') dateFilter = new Date(now - 30 * 24 * 60 * 60 * 1000).toISOString();
+        else if (filters.period === 'year') dateFilter = new Date(now - 365 * 24 * 60 * 60 * 1000).toISOString();
+        if (dateFilter) queryParams.append('created_at', `gte.${dateFilter}`);
+      }
     }
 
     const queryString = queryParams.toString();
@@ -134,13 +142,19 @@ export const AuthProvider = ({ children }) => {
     if (user?.role === 'ADMIN') setCurrentRestaurant(restaurant);
   };
 
-  // ============ PRODUCTOS ============
-  const getProducts = useCallback(() => {
-    return apiCall('products', 'GET', null, {
+  // ============ PRODUCTOS (flexible para reportes) ============
+  const getProducts = useCallback(async (options = {}) => {
+    const { restaurant } = options;
+    // Si se especifica restaurant (puede ser null para todos), se usa; si no, el actual
+    const filterRestaurant = restaurant !== undefined ? restaurant : currentRestaurant;
+    const filters = {
       select: '*,suppliers(name)',
-      restaurant: `eq.${currentRestaurant}`,
       order: 'name.asc'
-    });
+    };
+    if (filterRestaurant) {
+      filters.restaurant = `eq.${filterRestaurant}`;
+    }
+    return apiCall('products', 'GET', null, filters);
   }, [apiCall, currentRestaurant]);
 
   const addProduct = useCallback(async (data) => {
@@ -171,14 +185,22 @@ export const AuthProvider = ({ children }) => {
     return apiCall('products', 'DELETE', null, { id: `eq.${id}` });
   }, [apiCall]);
 
-  // ============ MOVIMIENTOS (actualiza stock) ============
-  const getMovements = useCallback(() => {
-    return apiCall('movements', 'GET', null, {
+  // ============ MOVIMIENTOS (flexible para reportes) ============
+  const getMovements = useCallback(async (options = {}) => {
+    const { restaurant, period } = options;
+    const filterRestaurant = restaurant !== undefined ? restaurant : currentRestaurant;
+    const filters = {
       select: '*,products(name,price),users(name)',
-      restaurant: `eq.${currentRestaurant}`,
       order: 'created_at.desc',
-      limit: '100'
-    });
+      limit: '200'
+    };
+    if (filterRestaurant) {
+      filters.restaurant = `eq.${filterRestaurant}`;
+    }
+    if (period && period !== 'all') {
+      filters.period = period;
+    }
+    return apiCall('movements', 'GET', null, filters);
   }, [apiCall, currentRestaurant]);
 
   const addMovement = useCallback(async (data) => {
@@ -210,7 +232,7 @@ export const AuthProvider = ({ children }) => {
       type: data.type,
       quantity: quantity,
       reason: data.reason || null,
-      product_id: data.productId,   // ← Ajuste importante: product_id en BD
+      product_id: data.productId,
       restaurant: currentRestaurant,
       user_id: user?.id,
       created_at: new Date().toISOString()
@@ -401,7 +423,7 @@ export const AuthProvider = ({ children }) => {
     return apiCall('suppliers', 'DELETE', null, { id: `eq.${id}` });
   }, [apiCall, user]);
 
-  // ============ RECETAS (admin edita, todos ven) ============
+  // ============ RECETAS ============
   const getRecipes = useCallback(() => {
     return apiCall('recipes', 'GET', null, {
       select: '*,recipe_ingredients(*,products(name,unit))',
@@ -470,7 +492,6 @@ export const AuthProvider = ({ children }) => {
     return apiCall('recipes', 'DELETE', null, { id: `eq.${id}` });
   }, [apiCall, user]);
 
-  // Nombres para la UI
   const restaurantNames = {
     POZOBLANCO: '🍽️ Godeo Pozoblanco',
     FUERTEVENTURA: '🏖️ Godeo Fuerteventura',
