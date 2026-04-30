@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 const Dashboard = () => {
   const [stats, setStats] = useState({ restaurants: {}, pendingTransfers: 0 });
   const [loading, setLoading] = useState(true);
-  const { currentRestaurant, isAdmin, apiCall } = useAuth();
+  const { currentRestaurant, isAdmin, getDashboard } = useAuth();
 
   useEffect(() => {
     fetchDashboard();
@@ -13,10 +13,10 @@ const Dashboard = () => {
 
   const fetchDashboard = async () => {
     try {
-      const data = await apiCall('dashboard');
+      const data = await getDashboard();
       setStats(data);
     } catch (error) {
-      console.error('Error dashboard:', error);
+      console.error('Error:', error);
     } finally {
       setLoading(false);
     }
@@ -30,13 +30,10 @@ const Dashboard = () => {
 
   const currentRest = restaurants.find(r => r.id === currentRestaurant);
 
-  if (loading) {
-    return <div className="flex justify-center items-center h-64 text-gray-500">Cargando...</div>;
-  }
+  if (loading) return <div className="text-center py-8 text-gray-500">Cargando...</div>;
 
   return (
     <div className="space-y-6">
-      {/* Header del restaurante actual */}
       <div className={`bg-gradient-to-r ${currentRest?.color} rounded-2xl p-6 text-white`}>
         <div className="flex items-center gap-3 mb-2">
           <span className="text-4xl">{currentRest?.icon}</span>
@@ -45,13 +42,10 @@ const Dashboard = () => {
         <p className="opacity-90">Panel de Control de Inventario</p>
       </div>
 
-      {/* Tarjetas de resumen */}
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-white rounded-xl p-4 shadow-sm">
           <div className="text-2xl mb-1">📦</div>
-          <div className="text-2xl font-bold">
-            {stats.restaurants[currentRestaurant]?.totalProducts || 0}
-          </div>
+          <div className="text-2xl font-bold">{stats.restaurants[currentRestaurant]?.totalProducts || 0}</div>
           <div className="text-xs text-gray-500">Productos</div>
         </div>
         <div className="bg-white rounded-xl p-4 shadow-sm">
@@ -63,23 +57,19 @@ const Dashboard = () => {
         </div>
         <div className="bg-white rounded-xl p-4 shadow-sm">
           <div className="text-2xl mb-1">🚚</div>
-          <div className={`text-2xl font-bold ${stats.pendingTransfers > 0 ? 'text-blue-600' : ''}`}>
-            {stats.pendingTransfers}
-          </div>
+          <div className="text-2xl font-bold">{stats.pendingTransfers}</div>
           <div className="text-xs text-gray-500">Pendientes</div>
         </div>
       </div>
 
-      {/* Alertas */}
       {isAdmin && stats.pendingTransfers > 0 && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
           <Link to="/transfers" className="text-yellow-800 font-medium">
-            ⚠️ Hay {stats.pendingTransfers} transferencias pendientes por revisar
+            ⚠️ Hay {stats.pendingTransfers} transferencias pendientes
           </Link>
         </div>
       )}
 
-      {/* Accesos rápidos */}
       <div className="grid grid-cols-2 gap-3">
         <Link to="/inventory" className="bg-white rounded-xl p-4 shadow-sm text-center hover:bg-gray-50">
           <span className="text-3xl">📦</span>
