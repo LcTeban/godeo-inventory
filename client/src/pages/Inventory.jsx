@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { 
   PlusIcon, MinusIcon, TrashIcon, CameraIcon, QrCodeIcon,
-  DocumentArrowDownIcon, TableCellsIcon 
+  DocumentArrowDownIcon, TableCellsIcon, PencilIcon 
 } from '@heroicons/react/24/outline';
 import BarcodeScanner from '../components/BarcodeScanner';
 import * as XLSX from 'xlsx';
@@ -13,6 +13,7 @@ const Inventory = () => {
   const [products, setProducts] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null); // producto en edición
   const [showMovementModal, setShowMovementModal] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -50,12 +51,45 @@ const Inventory = () => {
     }
   };
 
+  // Abre el modal en modo crear
+  const openAddModal = () => {
+    setEditingProduct(null);
+    setFormData({
+      name: '', category: '', stock: '', unit: 'unidad', min_stock: '10',
+      expiry_date: '', image: '', barcode: '', supplier_id: '', price: ''
+    });
+    setShowAddModal(true);
+  };
+
+  // Abre el modal en modo edición
+  const openEditModal = (product) => {
+    setEditingProduct(product);
+    setFormData({
+      name: product.name || '',
+      category: product.category || '',
+      stock: product.stock?.toString() || '',
+      unit: product.unit || 'unidad',
+      min_stock: product.min_stock?.toString() || '10',
+      expiry_date: product.expiry_date || '',
+      image: product.image || '',
+      barcode: product.barcode || '',
+      supplier_id: product.supplier_id ? product.supplier_id.toString() : '',
+      price: product.price?.toString() || ''
+    });
+    setShowAddModal(true);
+  };
+
   const handleAddProduct = async (e) => {
     e.preventDefault();
     try {
-      await addProduct(formData);
+      if (editingProduct) {
+        await updateProduct(editingProduct.id, formData);
+      } else {
+        await addProduct(formData);
+      }
       fetchProducts();
       setShowAddModal(false);
+      setEditingProduct(null);
       setFormData({ 
         name: '', category: '', stock: '', unit: 'unidad', min_stock: '10', 
         expiry_date: '', image: '', barcode: '', supplier_id: '', price: '' 
@@ -97,6 +131,7 @@ const Inventory = () => {
     return { color: 'bg-green-100 text-green-800', text: 'OK' };
   };
 
+  // Exportar a Excel (completo)
   const exportToExcel = () => {
     const data = filteredProducts.map(p => ({
       'Nombre': p.name,
@@ -115,6 +150,7 @@ const Inventory = () => {
     XLSX.writeFile(wb, `inventario_${currentRestaurant}_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
+  // Exportar a PDF (completo)
   const exportToPDF = () => {
     const doc = new jsPDF();
     doc.setFontSize(16);
@@ -144,6 +180,7 @@ const Inventory = () => {
     return matchesSearch && matchesCategory;
   });
 
+  // Funciones para la cámara y galería
   const openCamera = () => {
     const input = document.createElement('input');
     input.type = 'file';
@@ -177,6 +214,7 @@ const Inventory = () => {
 
   return (
     <div className="space-y-4">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold">Inventario</h1>
         <div className="flex items-center gap-2">
@@ -187,16 +225,17 @@ const Inventory = () => {
             <DocumentArrowDownIcon className="h-5 w-5" />
           </button>
           {isAdmin && (
-            <button onClick={() => setShowAddModal(true)} className="bg-blue-600 text-white p-3 rounded-full shadow-lg">
+            <button onClick={openAddModal} className="bg-blue-600 text-white p-3 rounded-full shadow-lg">
               <PlusIcon className="h-6 w-6" />
             </button>
           )}
         </div>
       </div>
 
+      {/* Buscador */}
       <div className="flex gap-2">
         <div className="flex-1 relative">
-          <input type="text" placeholder="🔍 Buscar..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+          <input type="text" placeholder="🔍 Buscar por nombre o código..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full p-3 border rounded-xl pl-10" />
           <QrCodeIcon className="h-5 w-5 absolute left-3 top-3.5 text-gray-400" />
         </div>
@@ -206,6 +245,7 @@ const Inventory = () => {
         </select>
       </div>
 
+      {/* Lista de productos */}
       <div className="space-y-2">
         {filteredProducts.map(product => {
           const status = getStockStatus(product);
@@ -231,6 +271,12 @@ const Inventory = () => {
                   </div>
                 </div>
                 <div className="flex flex-col gap-1">
+                  {/* Botón de editar (solo admin) */}
+                  {isAdmin && (
+                    <button onClick={() => openEditModal(product)} className="p-2 bg-yellow-100 text-yellow-700 rounded-lg" title="Editar">
+                      <PencilIcon className="h-5 w-5" />
+                    </button>
+                  )}
                   <button onClick={() => { setSelectedProduct(product); setMovementData({ type: 'entrada', quantity: '', reason: '' }); setShowMovementModal(true); }}
                     className="p-2 bg-green-100 text-green-700 rounded-lg"><PlusIcon className="h-5 w-5" /></button>
                   <button onClick={() => { setSelectedProduct(product); setMovementData({ type: 'salida', quantity: '', reason: '' }); setShowMovementModal(true); }}
@@ -243,11 +289,11 @@ const Inventory = () => {
         })}
       </div>
 
-      {/* Modal Agregar Producto */}
+      {/* Modal Agregar/Editar Producto */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 overflow-y-auto">
           <div className="bg-white rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold mb-4">Nuevo Producto</h2>
+            <h2 className="text-xl font-bold mb-4">{editingProduct ? 'Editar Producto' : 'Nuevo Producto'}</h2>
             <form onSubmit={handleAddProduct} className="space-y-3">
               {/* Imagen */}
               <div>
@@ -271,7 +317,6 @@ const Inventory = () => {
               <input type="text" placeholder="Nombre*" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full p-3 border rounded-xl" required />
               <input type="text" placeholder="Categoría*" value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})} className="w-full p-3 border rounded-xl" required />
               
-              {/* Proveedor */}
               <div>
                 <label className="block text-sm font-medium mb-1">🏢 Proveedor</label>
                 <select value={formData.supplier_id} onChange={(e) => setFormData({...formData, supplier_id: e.target.value})} className="w-full p-3 border rounded-xl">
@@ -280,7 +325,6 @@ const Inventory = () => {
                 </select>
               </div>
 
-              {/* Precio (solo admin) */}
               {isAdmin && (
                 <div>
                   <label className="block text-sm font-medium mb-1">💰 Precio (€)</label>
@@ -301,8 +345,10 @@ const Inventory = () => {
                 <button type="button" onClick={() => setShowScanner(true)} className="px-4 bg-gray-100 rounded-xl"><QrCodeIcon className="h-5 w-5" /></button>
               </div>
               <div className="flex gap-2 pt-2">
-                <button type="button" onClick={() => setShowAddModal(false)} className="flex-1 p-3 border rounded-xl">Cancelar</button>
-                <button type="submit" className="flex-1 p-3 bg-blue-600 text-white rounded-xl">Guardar</button>
+                <button type="button" onClick={() => setShowModal(false)} className="flex-1 p-3 border rounded-xl">Cancelar</button>
+                <button type="submit" className="flex-1 p-3 bg-blue-600 text-white rounded-xl">
+                  {editingProduct ? 'Actualizar' : 'Guardar'}
+                </button>
               </div>
             </form>
           </div>
@@ -337,6 +383,7 @@ const Inventory = () => {
         </div>
       )}
 
+      {/* Modal Escáner */}
       {showScanner && (
         <BarcodeScanner onScan={(code) => { setFormData({...formData, barcode: code}); setShowScanner(false); }} onClose={() => setShowScanner(false)} />
       )}
