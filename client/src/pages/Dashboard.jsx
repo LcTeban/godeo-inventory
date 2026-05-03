@@ -2,6 +2,23 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
 
+const Skeleton = () => (
+  <div className="animate-pulse space-y-4">
+    <div className="h-24 bg-gray-200 rounded-2xl"></div>
+    <div className="grid grid-cols-3 gap-3">
+      <div className="h-20 bg-gray-200 rounded-xl"></div>
+      <div className="h-20 bg-gray-200 rounded-xl"></div>
+      <div className="h-20 bg-gray-200 rounded-xl"></div>
+    </div>
+    <div className="grid grid-cols-2 gap-3">
+      <div className="h-20 bg-gray-200 rounded-xl"></div>
+      <div className="h-20 bg-gray-200 rounded-xl"></div>
+      <div className="h-20 bg-gray-200 rounded-xl"></div>
+      <div className="h-20 bg-gray-200 rounded-xl"></div>
+    </div>
+  </div>
+);
+
 const Dashboard = () => {
   const [stats, setStats] = useState({ restaurants: {}, pendingTransfers: 0 });
   const [loading, setLoading] = useState(true);
@@ -12,6 +29,7 @@ const Dashboard = () => {
   }, [currentRestaurant]);
 
   const fetchDashboard = async () => {
+    setLoading(true);
     try {
       const data = await getDashboard();
       setStats(data);
@@ -30,7 +48,7 @@ const Dashboard = () => {
 
   const currentRest = restaurants.find(r => r.id === currentRestaurant);
 
-  if (loading) return <div className="text-center py-8 text-gray-500">Cargando...</div>;
+  if (loading) return <div className="p-4"><Skeleton /></div>;
 
   return (
     <div className="space-y-6">
@@ -70,31 +88,31 @@ const Dashboard = () => {
         </div>
       )}
 
-     <div className="grid grid-cols-2 gap-3">
-  <Link to="/inventory" className="bg-white rounded-xl p-4 shadow-sm text-center hover:bg-gray-50">
-    <span className="text-3xl">📦</span>
-    <p className="font-medium mt-1">Inventario</p>
-  </Link>
-  <Link to="/movements" className="bg-white rounded-xl p-4 shadow-sm text-center hover:bg-gray-50">
-    <span className="text-3xl">🔄</span>
-    <p className="font-medium mt-1">Movimientos</p>
-  </Link>
-  <Link to="/requests" className="bg-white rounded-xl p-4 shadow-sm text-center hover:bg-gray-50">
-    <span className="text-3xl">📋</span>
-    <p className="font-medium mt-1">Pedidos</p>
-  </Link>
-  {isAdmin ? (
-    <Link to="/reports" className="bg-white rounded-xl p-4 shadow-sm text-center hover:bg-gray-50">
-      <span className="text-3xl">📊</span>
-      <p className="font-medium mt-1">Reportes</p>
-    </Link>
-  ) : (
-    <Link to="/recipes" className="bg-white rounded-xl p-4 shadow-sm text-center hover:bg-gray-50">
-      <span className="text-3xl">📖</span>
-      <p className="font-medium mt-1">Recetas</p>
-    </Link>
-  )}
-</div>
+      <div className="grid grid-cols-2 gap-3">
+        <Link to="/inventory" className="bg-white rounded-xl p-4 shadow-sm text-center hover:bg-gray-50">
+          <span className="text-3xl">📦</span>
+          <p className="font-medium mt-1">Inventario</p>
+        </Link>
+        <Link to="/movements" className="bg-white rounded-xl p-4 shadow-sm text-center hover:bg-gray-50">
+          <span className="text-3xl">🔄</span>
+          <p className="font-medium mt-1">Movimientos</p>
+        </Link>
+        <Link to="/requests" className="bg-white rounded-xl p-4 shadow-sm text-center hover:bg-gray-50">
+          <span className="text-3xl">📋</span>
+          <p className="font-medium mt-1">Pedidos</p>
+        </Link>
+        {isAdmin ? (
+          <Link to="/reports" className="bg-white rounded-xl p-4 shadow-sm text-center hover:bg-gray-50">
+            <span className="text-3xl">📊</span>
+            <p className="font-medium mt-1">Reportes</p>
+          </Link>
+        ) : (
+          <Link to="/recipes" className="bg-white rounded-xl p-4 shadow-sm text-center hover:bg-gray-50">
+            <span className="text-3xl">📖</span>
+            <p className="font-medium mt-1">Recetas</p>
+          </Link>
+        )}
+      </div>
     </div>
   );
 };
