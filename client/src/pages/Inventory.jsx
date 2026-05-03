@@ -27,7 +27,7 @@ const Inventory = () => {
     type: 'entrada', quantity: '', reason: ''
   });
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
-  const [isSaving, setIsSaving] = useState(false); // 👈 nuevo estado para el botón
+  const [isSaving, setIsSaving] = useState(false);
 
   const { currentRestaurant, isAdmin, getProducts, addProduct, updateProduct, deleteProduct, addMovement, getSuppliers } = useAuth();
 
@@ -92,6 +92,7 @@ const Inventory = () => {
     setShowAddModal(true);
   };
 
+  // ✅ CORREGIDO: cierra el modal inmediatamente después de guardar, recarga en segundo plano
   const handleAddProduct = async (e) => {
     e.preventDefault();
     setIsSaving(true);
@@ -101,8 +102,10 @@ const Inventory = () => {
       } else {
         await addProduct(formData);
       }
-      await fetchProducts();
+      // Cerrar el modal inmediatamente
       resetModal();
+      // Recargar la lista en segundo plano (sin await)
+      fetchProducts();
     } catch (error) {
       alert('Error al guardar: ' + error.message);
     } finally {
@@ -110,6 +113,7 @@ const Inventory = () => {
     }
   };
 
+  // ✅ CORREGIDO: cierra el modal inmediatamente después de guardar el movimiento
   const handleMovement = async (e) => {
     e.preventDefault();
     setIsSaving(true);
@@ -118,9 +122,11 @@ const Inventory = () => {
         ...movementData,
         productId: selectedProduct.id
       });
-      await fetchProducts();
+      // Cerrar el modal inmediatamente
       setShowMovementModal(false);
       setMovementData({ type: 'entrada', quantity: '', reason: '' });
+      // Recargar la lista en segundo plano
+      fetchProducts();
     } catch (error) {
       alert(error.message || 'Error al registrar movimiento');
     } finally {
@@ -145,6 +151,7 @@ const Inventory = () => {
     return { color: 'bg-green-100 text-green-800', text: 'OK' };
   };
 
+  // Exportar a Excel
   const exportToExcel = () => {
     const data = filteredProducts.map(p => ({
       'Nombre': p.name,
@@ -163,6 +170,7 @@ const Inventory = () => {
     XLSX.writeFile(wb, `inventario_${currentRestaurant}_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
+  // Exportar a PDF
   const exportToPDF = () => {
     const doc = new jsPDF();
     doc.setFontSize(16);
@@ -315,7 +323,6 @@ const Inventory = () => {
           <div className="bg-white rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-4">{editingProduct ? 'Editar Producto' : 'Nuevo Producto'}</h2>
             <form onSubmit={handleAddProduct} className="space-y-3">
-              {/* Foto */}
               <div>
                 <label className="block text-sm font-medium mb-2">📸 Foto del producto</label>
                 <div className="flex gap-2">
