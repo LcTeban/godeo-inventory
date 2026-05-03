@@ -13,7 +13,7 @@ const Inventory = () => {
   const [products, setProducts] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [editingProduct, setEditingProduct] = useState(null); // producto en edición
+  const [editingProduct, setEditingProduct] = useState(null);
   const [showMovementModal, setShowMovementModal] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -26,6 +26,7 @@ const Inventory = () => {
   const [movementData, setMovementData] = useState({
     type: 'entrada', quantity: '', reason: ''
   });
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true); // <-- Estado para esqueleto
   const { currentRestaurant, isAdmin, getProducts, addProduct, updateProduct, deleteProduct, addMovement, getSuppliers } = useAuth();
 
   useEffect(() => {
@@ -34,11 +35,14 @@ const Inventory = () => {
   }, [currentRestaurant]);
 
   const fetchProducts = async () => {
+    setIsLoadingProducts(true);
     try {
       const data = await getProducts();
       setProducts(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error:', error);
+    } finally {
+      setIsLoadingProducts(false);
     }
   };
 
@@ -51,7 +55,6 @@ const Inventory = () => {
     }
   };
 
-  // Abre el modal en modo crear
   const openAddModal = () => {
     setEditingProduct(null);
     setFormData({
@@ -61,7 +64,6 @@ const Inventory = () => {
     setShowAddModal(true);
   };
 
-  // Abre el modal en modo edición
   const openEditModal = (product) => {
     setEditingProduct(product);
     setFormData({
@@ -212,6 +214,7 @@ const Inventory = () => {
     input.click();
   };
 
+  // ==================== RENDER ====================
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -245,49 +248,62 @@ const Inventory = () => {
         </select>
       </div>
 
-      {/* Lista de productos */}
-      <div className="space-y-2">
-        {filteredProducts.map(product => {
-          const status = getStockStatus(product);
-          const isExpiring = product.expiry_date && (new Date(product.expiry_date) - new Date()) / (1000 * 60 * 60 * 24) <= 7;
-          return (
-            <div key={product.id} className="bg-white rounded-xl p-4 shadow-sm">
-              <div className="flex items-start gap-3">
-                {product.image ? <img src={product.image} alt="" className="w-16 h-16 object-cover rounded-lg" /> :
-                  <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center"><CameraIcon className="h-6 w-6 text-gray-400" /></div>}
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="font-semibold">{product.name}</h3>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${status.color}`}>{status.text}</span>
-                    {isExpiring && <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800">⏰ Próximo</span>}
+      {/* Esqueleto de carga */}
+      {isLoadingProducts && (
+        <div className="animate-pulse space-y-3">
+          {[1,2,3,4,5].map(i => (
+            <div key={i} className="h-20 bg-gray-200 rounded-xl"></div>
+          ))}
+        </div>
+      )}
+
+      {/* Lista de productos (solo cuando no está cargando) */}
+      {!isLoadingProducts && (
+        <div className="space-y-2">
+          {filteredProducts.map(product => {
+            const status = getStockStatus(product);
+            const isExpiring = product.expiry_date && (new Date(product.expiry_date) - new Date()) / (1000 * 60 * 60 * 24) <= 7;
+            return (
+              <div key={product.id} className="bg-white rounded-xl p-4 shadow-sm">
+                <div className="flex items-start gap-3">
+                  {product.image ? <img src={product.image} alt="" className="w-16 h-16 object-cover rounded-lg" /> :
+                    <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center"><CameraIcon className="h-6 w-6 text-gray-400" /></div>}
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-semibold">{product.name}</h3>
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${status.color}`}>{status.text}</span>
+                      {isExpiring && <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800">⏰ Próximo</span>}
+                    </div>
+                    <p className="text-sm text-gray-500">{product.category}</p>
+                    {product.suppliers?.name && <p className="text-xs text-gray-400">🏢 {product.suppliers.name}</p>}
+                    {product.barcode && <p className="text-xs text-gray-400">🏷️ {product.barcode}</p>}
+                    {isAdmin && product.price > 0 && <p className="text-xs text-gray-500">💰 €{product.price}</p>}
+                    <div className="flex items-center justify-between mt-2">
+                      <div><span className="text-2xl font-bold">{product.stock}</span><span className="text-sm text-gray-500 ml-1">{product.unit}</span></div>
+                      {product.expiry_date && <div className="text-xs text-gray-500">Caduca: {new Date(product.expiry_date).toLocaleDateString('es')}</div>}
+                    </div>
                   </div>
-                  <p className="text-sm text-gray-500">{product.category}</p>
-                  {product.suppliers?.name && <p className="text-xs text-gray-400">🏢 {product.suppliers.name}</p>}
-                  {product.barcode && <p className="text-xs text-gray-400">🏷️ {product.barcode}</p>}
-                  {isAdmin && product.price > 0 && <p className="text-xs text-gray-500">💰 €{product.price}</p>}
-                  <div className="flex items-center justify-between mt-2">
-                    <div><span className="text-2xl font-bold">{product.stock}</span><span className="text-sm text-gray-500 ml-1">{product.unit}</span></div>
-                    {product.expiry_date && <div className="text-xs text-gray-500">Caduca: {new Date(product.expiry_date).toLocaleDateString('es')}</div>}
+                  <div className="flex flex-col gap-1">
+                    {isAdmin && (
+                      <button onClick={() => openEditModal(product)} className="p-2 bg-yellow-100 text-yellow-700 rounded-lg" title="Editar">
+                        <PencilIcon className="h-5 w-5" />
+                      </button>
+                    )}
+                    <button onClick={() => { setSelectedProduct(product); setMovementData({ type: 'entrada', quantity: '', reason: '' }); setShowMovementModal(true); }}
+                      className="p-2 bg-green-100 text-green-700 rounded-lg"><PlusIcon className="h-5 w-5" /></button>
+                    <button onClick={() => { setSelectedProduct(product); setMovementData({ type: 'salida', quantity: '', reason: '' }); setShowMovementModal(true); }}
+                      className="p-2 bg-red-100 text-red-700 rounded-lg" disabled={product.stock === 0}><MinusIcon className="h-5 w-5" /></button>
+                    {isAdmin && <button onClick={() => handleDelete(product.id)} className="p-2 bg-gray-100 text-gray-700 rounded-lg"><TrashIcon className="h-5 w-5" /></button>}
                   </div>
-                </div>
-                <div className="flex flex-col gap-1">
-                  {/* Botón de editar (solo admin) */}
-                  {isAdmin && (
-                    <button onClick={() => openEditModal(product)} className="p-2 bg-yellow-100 text-yellow-700 rounded-lg" title="Editar">
-                      <PencilIcon className="h-5 w-5" />
-                    </button>
-                  )}
-                  <button onClick={() => { setSelectedProduct(product); setMovementData({ type: 'entrada', quantity: '', reason: '' }); setShowMovementModal(true); }}
-                    className="p-2 bg-green-100 text-green-700 rounded-lg"><PlusIcon className="h-5 w-5" /></button>
-                  <button onClick={() => { setSelectedProduct(product); setMovementData({ type: 'salida', quantity: '', reason: '' }); setShowMovementModal(true); }}
-                    className="p-2 bg-red-100 text-red-700 rounded-lg" disabled={product.stock === 0}><MinusIcon className="h-5 w-5" /></button>
-                  {isAdmin && <button onClick={() => handleDelete(product.id)} className="p-2 bg-gray-100 text-gray-700 rounded-lg"><TrashIcon className="h-5 w-5" /></button>}
                 </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+          {filteredProducts.length === 0 && !isLoadingProducts && (
+            <div className="text-center py-8 text-gray-500">No hay productos</div>
+          )}
+        </div>
+      )}
 
       {/* Modal Agregar/Editar Producto */}
       {showAddModal && (
