@@ -26,7 +26,9 @@ const Inventory = () => {
   const [movementData, setMovementData] = useState({
     type: 'entrada', quantity: '', reason: ''
   });
-  const [isLoadingProducts, setIsLoadingProducts] = useState(true); // <-- Estado para esqueleto
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
+  const [isSaving, setIsSaving] = useState(false); // 👈 nuevo estado para el botón
+
   const { currentRestaurant, isAdmin, getProducts, addProduct, updateProduct, deleteProduct, addMovement, getSuppliers } = useAuth();
 
   useEffect(() => {
@@ -53,6 +55,15 @@ const Inventory = () => {
     } catch (error) {
       console.error('Error getting suppliers:', error);
     }
+  };
+
+  const resetModal = () => {
+    setShowAddModal(false);
+    setEditingProduct(null);
+    setFormData({
+      name: '', category: '', stock: '', unit: 'unidad', min_stock: '10',
+      expiry_date: '', image: '', barcode: '', supplier_id: '', price: ''
+    });
   };
 
   const openAddModal = () => {
@@ -83,36 +94,37 @@ const Inventory = () => {
 
   const handleAddProduct = async (e) => {
     e.preventDefault();
+    setIsSaving(true);
     try {
       if (editingProduct) {
         await updateProduct(editingProduct.id, formData);
       } else {
         await addProduct(formData);
       }
-      fetchProducts();
-      setShowAddModal(false);
-      setEditingProduct(null);
-      setFormData({ 
-        name: '', category: '', stock: '', unit: 'unidad', min_stock: '10', 
-        expiry_date: '', image: '', barcode: '', supplier_id: '', price: '' 
-      });
+      await fetchProducts();
+      resetModal();
     } catch (error) {
       alert('Error al guardar: ' + error.message);
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const handleMovement = async (e) => {
     e.preventDefault();
+    setIsSaving(true);
     try {
       await addMovement({
         ...movementData,
         productId: selectedProduct.id
       });
-      fetchProducts();
+      await fetchProducts();
       setShowMovementModal(false);
       setMovementData({ type: 'entrada', quantity: '', reason: '' });
     } catch (error) {
       alert(error.message || 'Error al registrar movimiento');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -133,7 +145,6 @@ const Inventory = () => {
     return { color: 'bg-green-100 text-green-800', text: 'OK' };
   };
 
-  // Exportar a Excel (completo)
   const exportToExcel = () => {
     const data = filteredProducts.map(p => ({
       'Nombre': p.name,
@@ -152,7 +163,6 @@ const Inventory = () => {
     XLSX.writeFile(wb, `inventario_${currentRestaurant}_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
-  // Exportar a PDF (completo)
   const exportToPDF = () => {
     const doc = new jsPDF();
     doc.setFontSize(16);
@@ -182,7 +192,6 @@ const Inventory = () => {
     return matchesSearch && matchesCategory;
   });
 
-  // Funciones para la cámara y galería
   const openCamera = () => {
     const input = document.createElement('input');
     input.type = 'file';
@@ -214,10 +223,8 @@ const Inventory = () => {
     input.click();
   };
 
-  // ==================== RENDER ====================
   return (
     <div className="space-y-4">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold">Inventario</h1>
         <div className="flex items-center gap-2">
@@ -235,7 +242,6 @@ const Inventory = () => {
         </div>
       </div>
 
-      {/* Buscador */}
       <div className="flex gap-2">
         <div className="flex-1 relative">
           <input type="text" placeholder="🔍 Buscar por nombre o código..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
@@ -248,7 +254,6 @@ const Inventory = () => {
         </select>
       </div>
 
-      {/* Esqueleto de carga */}
       {isLoadingProducts && (
         <div className="animate-pulse space-y-3">
           {[1,2,3,4,5].map(i => (
@@ -257,7 +262,6 @@ const Inventory = () => {
         </div>
       )}
 
-      {/* Lista de productos (solo cuando no está cargando) */}
       {!isLoadingProducts && (
         <div className="space-y-2">
           {filteredProducts.map(product => {
@@ -311,7 +315,7 @@ const Inventory = () => {
           <div className="bg-white rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-4">{editingProduct ? 'Editar Producto' : 'Nuevo Producto'}</h2>
             <form onSubmit={handleAddProduct} className="space-y-3">
-              {/* Imagen */}
+              {/* Foto */}
               <div>
                 <label className="block text-sm font-medium mb-2">📸 Foto del producto</label>
                 <div className="flex gap-2">
@@ -361,9 +365,9 @@ const Inventory = () => {
                 <button type="button" onClick={() => setShowScanner(true)} className="px-4 bg-gray-100 rounded-xl"><QrCodeIcon className="h-5 w-5" /></button>
               </div>
               <div className="flex gap-2 pt-2">
-                <button type="button" onClick={() => setShowModal(false)} className="flex-1 p-3 border rounded-xl">Cancelar</button>
-                <button type="submit" className="flex-1 p-3 bg-blue-600 text-white rounded-xl">
-                  {editingProduct ? 'Actualizar' : 'Guardar'}
+                <button type="button" onClick={resetModal} className="flex-1 p-3 border rounded-xl">Cancelar</button>
+                <button type="submit" disabled={isSaving} className="flex-1 p-3 bg-blue-600 text-white rounded-xl disabled:opacity-50">
+                  {isSaving ? 'Guardando...' : editingProduct ? 'Actualizar' : 'Guardar'}
                 </button>
               </div>
             </form>
@@ -391,15 +395,16 @@ const Inventory = () => {
                 onChange={(e) => setMovementData({...movementData, reason: e.target.value})}
                 className="w-full p-3 border rounded-xl" />
               <div className="flex gap-2 pt-2">
-                <button type="button" onClick={() => setShowMovementModal(false)} className="flex-1 p-3 text-gray-600 border rounded-xl">Cancelar</button>
-                <button type="submit" className={`flex-1 p-3 text-white rounded-xl ${movementData.type === 'entrada' ? 'bg-green-600' : 'bg-red-600'}`}>Confirmar</button>
+                <button type="button" onClick={() => setShowMovementModal(false)} className="flex-1 p-3 border rounded-xl">Cancelar</button>
+                <button type="submit" disabled={isSaving} className={`flex-1 p-3 text-white rounded-xl disabled:opacity-50 ${movementData.type === 'entrada' ? 'bg-green-600' : 'bg-red-600'}`}>
+                  {isSaving ? 'Registrando...' : 'Confirmar'}
+                </button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* Modal Escáner */}
       {showScanner && (
         <BarcodeScanner onScan={(code) => { setFormData({...formData, barcode: code}); setShowScanner(false); }} onClose={() => setShowScanner(false)} />
       )}
