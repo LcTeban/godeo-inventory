@@ -8,6 +8,7 @@ import BarcodeScanner from '../components/BarcodeScanner';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import LazyImage from '../components/LazyImage';
 
 const Inventory = () => {
   const [products, setProducts] = useState([]);
@@ -234,6 +235,7 @@ const Inventory = () => {
     };
     input.click();
   };
+  const { currentRestaurant, isAdmin, getProducts, addProduct, updateProduct, deleteProduct, addMovement, getSuppliers, getProductById, getProductImage } = useAuth();
 
   return (
     <div className="space-y-4">
