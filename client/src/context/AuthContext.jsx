@@ -59,6 +59,7 @@ export const AuthProvider = ({ children }) => {
       if (filters.select) queryParams.append('select', filters.select);
       if (filters.id) queryParams.append('id', filters.id);
       if (filters.restaurant) queryParams.append('restaurant', filters.restaurant);
+      if (filters.parent_id) queryParams.append('parent_id', filters.parent_id);
       if (filters.email) queryParams.append('email', filters.email);
       if (filters.status) queryParams.append('status', filters.status);
       if (filters.order) queryParams.append('order', filters.order);
@@ -108,10 +109,36 @@ export const AuthProvider = ({ children }) => {
   const logout = () => { localStorage.removeItem('token'); localStorage.removeItem('user'); setUser(null); setCurrentRestaurant(null); };
   const switchRestaurant = (r) => { if (user?.role === 'ADMIN') setCurrentRestaurant(r); };
 
+  // ========== CATEGORÍAS ==========
+  const getCategories = useCallback(async (parentId = null) => {
+    const filters = { select: '*', restaurant: `eq.${currentRestaurant}`, order: 'name.asc' };
+    if (parentId === null) {
+      filters.parent_id = 'is.null';
+    } else {
+      filters.parent_id = `eq.${parentId}`;
+    }
+    return apiCall('categories', 'GET', null, filters);
+  }, [apiCall, currentRestaurant]);
+
+  const addCategory = useCallback(async (name, parentId = null) => {
+    if (user?.role !== 'ADMIN') throw new Error('Solo administradores');
+    return apiCall('categories', 'POST', {
+      name,
+      parent_id: parentId,
+      restaurant: currentRestaurant,
+      created_at: new Date().toISOString()
+    });
+  }, [apiCall, currentRestaurant, user]);
+
+  const deleteCategory = useCallback(async (id) => {
+    if (user?.role !== 'ADMIN') throw new Error('Solo administradores');
+    return apiCall('categories', 'DELETE', null, { id: `eq.${id}` });
+  }, [apiCall, user]);
+
   // ========== PRODUCTOS ==========
   const fetchProductsMeta = useCallback(async (restaurant) => {
     const filters = {
-      select: 'id,name,category,stock,unit,price,min_stock,expiry_date,restaurant,barcode,supplier_id,suppliers(name)',
+      select: 'id,name,category_id,stock,unit,price,min_stock,expiry_date,restaurant,barcode,supplier_id,suppliers(name),categories(name,parent_id)',
       order: 'name.asc'
     };
     if (restaurant) filters.restaurant = `eq.${restaurant}`;
@@ -120,15 +147,13 @@ export const AuthProvider = ({ children }) => {
 
   const refreshProductCache = useCallback(async (restaurant) => {
     try {
-      const products = await fetchProductsMeta(restaurant);
+      const prods = await fetchProductsMeta(restaurant);
       setCachedProducts(prev => {
         const others = prev.filter(p => p.restaurant !== restaurant);
-        return [...others, ...products];
+        return [...others, ...prods];
       });
-      return products;
-    } catch (e) {
-      return [];
-    }
+      return prods;
+    } catch (e) { return []; }
   }, [fetchProductsMeta]);
 
   const getProducts = useCallback(async (options = {}) => {
@@ -141,18 +166,19 @@ export const AuthProvider = ({ children }) => {
   }, [cachedProducts, currentRestaurant, refreshProductCache]);
 
   const getProductById = useCallback(async (id) => {
-    const products = await apiCall('products', 'GET', null, { select: '*', id: `eq.${id}` });
-    return Array.isArray(products) ? products[0] : null;
+    const prods = await apiCall('products', 'GET', null, {
+      select: '*,categories(name,parent_id)',
+      id: `eq.${id}`
+    });
+    return Array.isArray(prods) ? prods[0] : null;
   }, [apiCall]);
 
   const getProductImage = useCallback(async (id) => {
     try {
       const result = await apiCall('products', 'GET', null, { select: 'image', id: `eq.${id}` });
-      const product = Array.isArray(result) ? result[0] : null;
-      return product?.image || null;
-    } catch {
-      return null;
-    }
+      const prod = Array.isArray(result) ? result[0] : null;
+      return prod?.image || null;
+    } catch { return null; }
   }, [apiCall]);
 
   const addProduct = useCallback(async (data) => {
@@ -162,11 +188,13 @@ export const AuthProvider = ({ children }) => {
     }
     const supplierId = data.supplier_id ? parseInt(data.supplier_id, 10) : null;
     const expiry = finalData.expiry_date && finalData.expiry_date.trim() !== '' ? finalData.expiry_date : null;
+    const categoryId = finalData.category_id ? parseInt(finalData.category_id, 10) : null;
     const result = await apiCall('products', 'POST', {
       ...finalData,
       expiry_date: expiry,
       price: parseFloat(data.price) || 0,
       supplier_id: supplierId,
+      category_id: categoryId,
       restaurant: currentRestaurant,
       created_at: new Date().toISOString()
     });
@@ -178,6 +206,7 @@ export const AuthProvider = ({ children }) => {
     const supplierId = data.supplier_id ? parseInt(data.supplier_id, 10) : null;
     const expiry = data.expiry_date && data.expiry_date.trim() !== '' ? data.expiry_date : null;
     const patchData = { ...data, expiry_date: expiry, price: parseFloat(data.price) || 0, supplier_id: supplierId };
+    if (data.category_id !== undefined) patchData.category_id = parseInt(data.category_id, 10) || null;
     if (patchData.image === '' || patchData.image === undefined) delete patchData.image;
     const result = await apiCall('products', 'PATCH', patchData, { id: `eq.${id}` });
     await refreshProductCache(currentRestaurant);
@@ -288,7 +317,8 @@ export const AuthProvider = ({ children }) => {
     } else {
       await apiCall('products', 'POST', {
         name: product.name,
-        category: product.category,
+        category_id: product.category_id,
+        category: undefined,
         stock: transfer.quantity,
         unit: product.unit,
         min_stock: product.min_stock,
@@ -400,7 +430,8 @@ export const AuthProvider = ({ children }) => {
     getRequests, addRequest, updateRequest,
     getDashboard,
     getSuppliers, addSupplier, updateSupplier, deleteSupplier,
-    getRecipes, addRecipe, updateRecipe, deleteRecipe
+    getRecipes, addRecipe, updateRecipe, deleteRecipe,
+    getCategories, addCategory, deleteCategory
   };
 
   return (
