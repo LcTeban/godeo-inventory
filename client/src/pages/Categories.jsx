@@ -6,14 +6,24 @@ const TreeNode = ({ category, allCategories, onEdit, onDelete, onAddChild }) => 
   const [expanded, setExpanded] = useState(false);
   const children = allCategories.filter(c => c.parent_id === category.id);
 
+  // Manejador único para expandir/colapsar
+  const toggleExpand = () => setExpanded(!expanded);
+
   return (
     <div className="ml-3 sm:ml-4">
-      <div className="flex items-center gap-2 py-1.5 px-2 hover:bg-gray-100 rounded-lg flex-wrap">
-        <button onClick={() => setExpanded(!expanded)} className="p-1 flex-shrink-0">
+      {/* Fila completa ahora es cliqueable para expandir */}
+      <div 
+        className="flex items-center gap-2 py-1.5 px-2 hover:bg-gray-100 rounded-lg cursor-pointer flex-wrap"
+        onClick={toggleExpand}
+      >
+        <button 
+          onClick={(e) => { e.stopPropagation(); toggleExpand(); }} 
+          className="p-1 flex-shrink-0"
+        >
           <FolderIcon className={`h-5 w-5 ${children.length > 0 ? 'text-yellow-500' : 'text-gray-400'}`} />
         </button>
         <span className="flex-1 font-medium text-sm sm:text-base break-words">{category.name}</span>
-        <div className="flex gap-1 flex-shrink-0">
+        <div className="flex gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
           <button onClick={() => onAddChild(category.id)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg" title="Añadir subcategoría">
             <PlusIcon className="h-4 w-4" />
           </button>
