@@ -1,10 +1,10 @@
 const CACHE_NAME = 'godeo-v1';
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png'
+  '/godeo-inventory/',
+  '/godeo-inventory/index.html',
+  '/godeo-inventory/manifest.json',
+  '/godeo-inventory/icon-192.png',
+  '/godeo-inventory/icon-512.png'
 ];
 
 // Instalar Service Worker
