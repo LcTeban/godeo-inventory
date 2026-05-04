@@ -14,12 +14,10 @@ const Reports = () => {
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState('month');
 
-  // Redirigir si no es admin
   useEffect(() => {
     if (!isAdmin) navigate('/dashboard');
   }, [isAdmin, navigate]);
 
-  // Cargar datos cuando cambia el restaurante o el período
   useEffect(() => {
     mountedRef.current = true;
     const fetchData = async () => {
@@ -47,9 +45,8 @@ const Reports = () => {
     return () => {
       mountedRef.current = false;
     };
-  }, [currentRestaurant, period]); // <-- solo dependencias reales
+  }, [currentRestaurant, period]);
 
-  // ===== Cálculos financieros =====
   const inventoryValueByRestaurant = () => {
     const map = {};
     allProducts.forEach(p => {
@@ -61,7 +58,6 @@ const Reports = () => {
   };
 
   const totalInventoryValue = Object.values(inventoryValueByRestaurant()).reduce((a, b) => a + b, 0);
-
   const productsLowStock = allProducts.filter(p => (p.stock || 0) <= (p.min_stock || 10));
   const lowStockValue = productsLowStock.reduce((sum, p) => sum + ((p.stock || 0) * (p.price || 0)), 0);
 
@@ -141,7 +137,6 @@ const Reports = () => {
         </div>
       )}
 
-      {/* Pestaña Resumen */}
       {activeTab === 'summary' && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -159,28 +154,15 @@ const Reports = () => {
           <div className="bg-white rounded-xl p-5 shadow-sm">
             <h3 className="font-semibold text-lg">💰 Total General</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-              <div>
-                <p className="text-sm text-gray-500">Valor total inventario</p>
-                <p className="text-xl font-bold">€{totalInventoryValue.toFixed(2)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Productos totales</p>
-                <p className="text-xl font-bold">{allProducts.length}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Transferencias pendientes</p>
-                <p className="text-xl font-bold">{transfers.filter(t => t.status === 'pendiente').length}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Costo de ventas (período)</p>
-                <p className="text-xl font-bold text-red-600">€{totalExits.toFixed(2)}</p>
-              </div>
+              <div><p className="text-sm text-gray-500">Valor total inventario</p><p className="text-xl font-bold">€{totalInventoryValue.toFixed(2)}</p></div>
+              <div><p className="text-sm text-gray-500">Productos totales</p><p className="text-xl font-bold">{allProducts.length}</p></div>
+              <div><p className="text-sm text-gray-500">Transferencias pendientes</p><p className="text-xl font-bold">{transfers.filter(t => t.status === 'pendiente').length}</p></div>
+              <div><p className="text-sm text-gray-500">Costo de ventas (período)</p><p className="text-xl font-bold text-red-600">€{totalExits.toFixed(2)}</p></div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Pestaña Inventario (restaurante actual) */}
       {activeTab === 'inventory' && (
         <div className="bg-white rounded-xl p-4 shadow-sm overflow-x-auto">
           <h2 className="font-semibold text-lg mb-4">Inventario de {restaurantNames[currentRestaurant]}</h2>
@@ -207,26 +189,13 @@ const Reports = () => {
         </div>
       )}
 
-      {/* Pestaña Movimientos (restaurante actual) */}
       {activeTab === 'movements' && (
         <div className="space-y-6">
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <div className="bg-white rounded-xl p-4 shadow-sm">
-              <p className="text-sm text-gray-500">Total entradas (€)</p>
-              <p className="text-xl font-bold text-green-600">+€{totalEntries.toFixed(2)}</p>
-            </div>
-            <div className="bg-white rounded-xl p-4 shadow-sm">
-              <p className="text-sm text-gray-500">Total salidas (€)</p>
-              <p className="text-xl font-bold text-red-600">-€{totalExits.toFixed(2)}</p>
-            </div>
-            <div className="bg-white rounded-xl p-4 shadow-sm">
-              <p className="text-sm text-gray-500">Diferencia</p>
-              <p className={`text-xl font-bold ${totalEntries - totalExits >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
-                €{(totalEntries - totalExits).toFixed(2)}
-              </p>
-            </div>
+            <div className="bg-white rounded-xl p-4 shadow-sm"><p className="text-sm text-gray-500">Total entradas (€)</p><p className="text-xl font-bold text-green-600">+€{totalEntries.toFixed(2)}</p></div>
+            <div className="bg-white rounded-xl p-4 shadow-sm"><p className="text-sm text-gray-500">Total salidas (€)</p><p className="text-xl font-bold text-red-600">-€{totalExits.toFixed(2)}</p></div>
+            <div className="bg-white rounded-xl p-4 shadow-sm"><p className="text-sm text-gray-500">Diferencia</p><p className={`text-xl font-bold ${totalEntries - totalExits >= 0 ? 'text-blue-600' : 'text-red-600'}`}>€{(totalEntries - totalExits).toFixed(2)}</p></div>
           </div>
-
           <div className="bg-white rounded-xl p-4 shadow-sm overflow-x-auto">
             <h2 className="font-semibold text-lg mb-4">Movimientos de {restaurantNames[currentRestaurant]}</h2>
             <table className="w-full text-sm">
@@ -246,9 +215,7 @@ const Reports = () => {
                   <tr key={m.id} className="border-t">
                     <td className="p-2">{new Date(m.created_at).toLocaleDateString('es')}</td>
                     <td className="p-2">{m.products?.name || '-'}</td>
-                    <td className={`p-2 font-medium ${m.type === 'entrada' ? 'text-green-600' : 'text-red-600'}`}>
-                      {m.type}
-                    </td>
+                    <td className={`p-2 font-medium ${m.type === 'entrada' ? 'text-green-600' : 'text-red-600'}`}>{m.type}</td>
                     <td className="p-2">{m.quantity}</td>
                     <td className="p-2">€{(m.products?.price || 0).toFixed(2)}</td>
                     <td className="p-2 font-semibold">€{((m.quantity || 0) * (m.products?.price || 0)).toFixed(2)}</td>
@@ -261,24 +228,18 @@ const Reports = () => {
         </div>
       )}
 
-      {/* Pestaña Alertas (restaurante actual) */}
       {activeTab === 'alerts' && (
         <div className="space-y-4">
           <div className="bg-white rounded-xl p-4 shadow-sm">
             <h3 className="font-semibold text-lg mb-2">Stock bajo en {restaurantNames[currentRestaurant]}</h3>
-            <p className="text-sm text-gray-600">
-              Valor total en riesgo: <span className="font-bold text-red-600">€{lowStockValue.toFixed(2)}</span>
-            </p>
+            <p className="text-sm text-gray-600">Valor total en riesgo: <span className="font-bold text-red-600">€{lowStockValue.toFixed(2)}</span></p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {allProducts.filter(p => p.restaurant === currentRestaurant && (p.stock || 0) <= (p.min_stock || 10)).map(p => (
               <div key={p.id} className="bg-white rounded-xl p-4 shadow-sm border-l-4 border-yellow-400">
                 <h4 className="font-medium">{p.name}</h4>
                 <div className="mt-2 flex justify-between items-end">
-                  <div>
-                    <span className="text-lg font-bold">{p.stock || 0}</span>
-                    <span className="text-sm text-gray-500 ml-1">{p.unit}</span>
-                  </div>
+                  <div><span className="text-lg font-bold">{p.stock || 0}</span><span className="text-sm text-gray-500 ml-1">{p.unit}</span></div>
                   <span className="font-semibold">€{((p.stock || 0) * (p.price || 0)).toFixed(2)}</span>
                 </div>
               </div>
