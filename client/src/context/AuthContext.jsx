@@ -120,6 +120,24 @@ export const AuthProvider = ({ children }) => {
     return apiCall('categories', 'GET', null, filters);
   }, [apiCall, currentRestaurant]);
 
+  const getAllCategoriesFlat = useCallback(async () => {
+    const all = await apiCall('categories', 'GET', null, { select: '*', restaurant: `eq.${currentRestaurant}`, order: 'name.asc' });
+    const categories = all || [];
+    // Construir jerarquía con sangría
+    const addPath = (cat, depth = 0) => {
+      const children = categories.filter(c => c.parent_id === cat.id);
+      const result = [{ ...cat, depth, label: ' '.repeat(depth) + cat.name }];
+      children.forEach(child => {
+        result.push(...addPath(child, depth + 1));
+      });
+      return result;
+    };
+    const roots = categories.filter(c => c.parent_id === null);
+    let flat = [];
+    roots.forEach(r => flat.push(...addPath(r)));
+    return flat;
+  }, [apiCall, currentRestaurant]);
+
   const addCategory = useCallback(async (name, parentId = null) => {
     if (user?.role !== 'ADMIN') throw new Error('Solo administradores');
     return apiCall('categories', 'POST', {
@@ -130,15 +148,34 @@ export const AuthProvider = ({ children }) => {
     });
   }, [apiCall, currentRestaurant, user]);
 
+  const updateCategory = useCallback(async (id, name, parentId) => {
+    if (user?.role !== 'ADMIN') throw new Error('Solo administradores');
+    return apiCall('categories', 'PATCH', { name, parent_id: parentId }, { id: `eq.${id}` });
+  }, [apiCall, user]);
+
   const deleteCategory = useCallback(async (id) => {
     if (user?.role !== 'ADMIN') throw new Error('Solo administradores');
     return apiCall('categories', 'DELETE', null, { id: `eq.${id}` });
   }, [apiCall, user]);
 
+  const getCategoryPath = useCallback(async (categoryId) => {
+    if (!categoryId) return '';
+    let path = [];
+    let currentId = categoryId;
+    while (currentId) {
+      const result = await apiCall('categories', 'GET', null, { select: 'id,name,parent_id', id: `eq.${currentId}` });
+      const cat = result?.[0];
+      if (!cat) break;
+      path.unshift(cat.name);
+      currentId = cat.parent_id;
+    }
+    return path.join(' > ');
+  }, [apiCall]);
+
   // ========== PRODUCTOS ==========
   const fetchProductsMeta = useCallback(async (restaurant) => {
     const filters = {
-      select: 'id,name,category_id,stock,unit,price,min_stock,expiry_date,restaurant,barcode,supplier_id,suppliers(name),categories(name,parent_id)',
+      select: 'id,name,category_id,stock,unit,price,min_stock,expiry_date,restaurant,barcode,supplier_id,suppliers(name),categories!products_category_id_fkey(name,parent_id)',
       order: 'name.asc'
     };
     if (restaurant) filters.restaurant = `eq.${restaurant}`;
@@ -167,7 +204,7 @@ export const AuthProvider = ({ children }) => {
 
   const getProductById = useCallback(async (id) => {
     const prods = await apiCall('products', 'GET', null, {
-      select: '*,categories(name,parent_id)',
+      select: '*,categories!products_category_id_fkey(name,parent_id)',
       id: `eq.${id}`
     });
     return Array.isArray(prods) ? prods[0] : null;
@@ -318,7 +355,6 @@ export const AuthProvider = ({ children }) => {
       await apiCall('products', 'POST', {
         name: product.name,
         category_id: product.category_id,
-        category: undefined,
         stock: transfer.quantity,
         unit: product.unit,
         min_stock: product.min_stock,
@@ -431,7 +467,7 @@ export const AuthProvider = ({ children }) => {
     getDashboard,
     getSuppliers, addSupplier, updateSupplier, deleteSupplier,
     getRecipes, addRecipe, updateRecipe, deleteRecipe,
-    getCategories, addCategory, deleteCategory
+    getCategories, getAllCategoriesFlat, addCategory, updateCategory, deleteCategory, getCategoryPath
   };
 
   return (
