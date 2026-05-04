@@ -13,8 +13,6 @@ import Suppliers from './pages/Suppliers';
 import Recipes from './pages/Recipes';
 import Categories from './pages/Categories';
 
-
-
 function App() {
   return (
     <AuthProvider>
