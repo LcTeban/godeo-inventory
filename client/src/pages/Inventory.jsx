@@ -226,10 +226,8 @@ const Inventory = () => {
     const matchesSearch = p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           p.barcode?.includes(searchTerm);
     if (filterCategory === '') {
-      // General: mostrar todos
       return matchesSearch;
     }
-    // Filtrar por categoría y subcategorías
     const categoryIds = getCategoryAndChildrenIds(filterCategory);
     return matchesSearch && categoryIds.has(p.category_id);
   });
@@ -284,17 +282,19 @@ const Inventory = () => {
         </div>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex flex-col sm:flex-row gap-2">
         <div className="flex-1 relative">
           <input type="text" placeholder="🔍 Buscar por nombre o código..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full p-3 border rounded-xl pl-10" />
           <QrCodeIcon className="h-5 w-5 absolute left-3 top-3.5 text-gray-400" />
         </div>
-        <CategorySelect
-          value={filterCategory}
-          onChange={(val) => setFilterCategory(val)}
-          restaurant={currentRestaurant}
-        />
+        <div className="w-full sm:w-auto">
+          <CategorySelect
+            value={filterCategory}
+            onChange={(val) => setFilterCategory(val)}
+            restaurant={currentRestaurant}
+          />
+        </div>
       </div>
 
       {isLoadingProducts && (
