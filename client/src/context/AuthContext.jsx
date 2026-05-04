@@ -6,7 +6,6 @@ export const useAuth = () => useContext(AuthContext);
 const SUPABASE_URL = 'https://fshypzqmuyctllmbzdnh.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzaHlwenFtdXljdGxsbWJ6ZG5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0OTQ1NDMsImV4cCI6MjA5MzA3MDU0M30.m4c4A6J7K8JvGI69eHBpfUtGMMdD4jVGvfjz_NmQdHE';
 
-// Compresor de imágenes (más agresivo para velocidad)
 const compressImage = (base64Str, maxWidth = 400) => {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -23,7 +22,7 @@ const compressImage = (base64Str, maxWidth = 400) => {
       canvas.height = height;
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0, width, height);
-      resolve(canvas.toDataURL('image/jpeg', 0.4)); // calidad 40%
+      resolve(canvas.toDataURL('image/jpeg', 0.4));
     };
     img.onerror = () => reject(new Error('No se pudo cargar la imagen'));
   });
@@ -33,7 +32,6 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentRestaurant, setCurrentRestaurant] = useState(null);
-  // Cache global de productos (sin imágenes) – clave por restaurante
   const [cachedProducts, setCachedProducts] = useState([]);
 
   useEffect(() => {
@@ -47,7 +45,6 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  // Función centralizada para llamadas a la API de Supabase
   const apiCall = useCallback(async (table, method, data = null, filters = {}) => {
     const headers = {
       'Content-Type': 'application/json',
@@ -75,7 +72,6 @@ export const AuthProvider = ({ children }) => {
         if (dateFilter) queryParams.append('created_at', `gte.${dateFilter}`);
       }
     }
-
     const queryString = queryParams.toString();
     if (queryString) url += `?${queryString}`;
 
@@ -112,8 +108,7 @@ export const AuthProvider = ({ children }) => {
   const logout = () => { localStorage.removeItem('token'); localStorage.removeItem('user'); setUser(null); setCurrentRestaurant(null); };
   const switchRestaurant = (r) => { if (user?.role === 'ADMIN') setCurrentRestaurant(r); };
 
-  // ========== PRODUCTOS (CACHE Y METADATOS) ==========
-  // Obtener productos SIN la imagen (metadatos ligeros)
+  // ========== PRODUCTOS ==========
   const fetchProductsMeta = useCallback(async (restaurant) => {
     const filters = {
       select: 'id,name,category,stock,unit,price,min_stock,expiry_date,restaurant,barcode,supplier_id,suppliers(name)',
@@ -123,7 +118,6 @@ export const AuthProvider = ({ children }) => {
     return apiCall('products', 'GET', null, filters);
   }, [apiCall]);
 
-  // Refrescar la caché global de productos para un restaurante dado
   const refreshProductCache = useCallback(async (restaurant) => {
     try {
       const products = await fetchProductsMeta(restaurant);
@@ -137,7 +131,6 @@ export const AuthProvider = ({ children }) => {
     }
   }, [fetchProductsMeta]);
 
-  // Obtener productos desde caché o red
   const getProducts = useCallback(async (options = {}) => {
     const { restaurant, forceRefresh } = options;
     const filterRestaurant = restaurant !== undefined ? restaurant : currentRestaurant;
@@ -147,16 +140,21 @@ export const AuthProvider = ({ children }) => {
     return refreshProductCache(filterRestaurant);
   }, [cachedProducts, currentRestaurant, refreshProductCache]);
 
-  // Obtener producto completo (con imagen) para edición
   const getProductById = useCallback(async (id) => {
-    const products = await apiCall('products', 'GET', null, {
-      select: '*',
-      id: `eq.${id}`
-    });
+    const products = await apiCall('products', 'GET', null, { select: '*', id: `eq.${id}` });
     return Array.isArray(products) ? products[0] : null;
   }, [apiCall]);
 
-  // Agregar producto
+  const getProductImage = useCallback(async (id) => {
+    try {
+      const result = await apiCall('products', 'GET', null, { select: 'image', id: `eq.${id}` });
+      const product = Array.isArray(result) ? result[0] : null;
+      return product?.image || null;
+    } catch {
+      return null;
+    }
+  }, [apiCall]);
+
   const addProduct = useCallback(async (data) => {
     let finalData = { ...data };
     if (finalData.image && finalData.image.startsWith('data:image')) {
@@ -176,24 +174,16 @@ export const AuthProvider = ({ children }) => {
     return result;
   }, [apiCall, currentRestaurant, refreshProductCache]);
 
-  // Actualizar producto (sin borrar imagen si no se envía una nueva)
   const updateProduct = useCallback(async (id, data) => {
     const supplierId = data.supplier_id ? parseInt(data.supplier_id, 10) : null;
     const expiry = data.expiry_date && data.expiry_date.trim() !== '' ? data.expiry_date : null;
-    const patchData = {
-      ...data,
-      expiry_date: expiry,
-      price: parseFloat(data.price) || 0,
-      supplier_id: supplierId
-    };
-    // Si el campo image está vacío (no se modificó), lo eliminamos para no sobreescribir con null
+    const patchData = { ...data, expiry_date: expiry, price: parseFloat(data.price) || 0, supplier_id: supplierId };
     if (patchData.image === '' || patchData.image === undefined) delete patchData.image;
     const result = await apiCall('products', 'PATCH', patchData, { id: `eq.${id}` });
     await refreshProductCache(currentRestaurant);
     return result;
   }, [apiCall, currentRestaurant, refreshProductCache]);
 
-  // Eliminar producto
   const deleteProduct = useCallback(async (id) => {
     const result = await apiCall('products', 'DELETE', null, { id: `eq.${id}` });
     await refreshProductCache(currentRestaurant);
@@ -393,19 +383,17 @@ export const AuthProvider = ({ children }) => {
     return apiCall('recipes', 'DELETE', null, { id: `eq.${id}` });
   }, [apiCall, user]);
 
-  // ========== UTILIDADES ==========
   const restaurantNames = {
     POZOBLANCO: '🍽️ Godeo Pozoblanco',
     FUERTEVENTURA: '🏖️ Godeo Fuerteventura',
     GRAN_CAPITAN: '🏛️ Godeo Gran Capitán'
   };
 
-  // ========== VALOR EXPORTADO ==========
   const value = {
     user, login, logout, switchRestaurant, currentRestaurant,
     isAdmin: user?.role === 'ADMIN',
     restaurantName: restaurantNames[currentRestaurant],
-    getProducts, getProductById, refreshProductCache,
+    getProducts, getProductById, getProductImage, refreshProductCache,
     addProduct, updateProduct, deleteProduct,
     getMovements, addMovement,
     getTransfers, addTransfer, completeTransfer,
