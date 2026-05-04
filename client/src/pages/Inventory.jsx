@@ -29,7 +29,7 @@ const Inventory = () => {
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
-  const { currentRestaurant, isAdmin, getProducts, addProduct, updateProduct, deleteProduct, addMovement, getSuppliers } = useAuth();
+  const { currentRestaurant, isAdmin, getProducts, getProductById, addProduct, updateProduct, deleteProduct, addMovement, getSuppliers, refreshProductCache } = useAuth();
 
   useEffect(() => {
     fetchProducts();
@@ -39,7 +39,7 @@ const Inventory = () => {
   const fetchProducts = async () => {
     setIsLoadingProducts(true);
     try {
-      const data = await getProducts();
+      const data = await getProducts({ forceRefresh: false }); // usa caché
       setProducts(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error:', error);
@@ -75,24 +75,25 @@ const Inventory = () => {
     setShowAddModal(true);
   };
 
-  const openEditModal = (product) => {
+  const openEditModal = async (product) => {
     setEditingProduct(product);
+    // Cargar producto completo para obtener la imagen si existe
+    const fullProduct = await getProductById(product.id);
     setFormData({
-      name: product.name || '',
-      category: product.category || '',
-      stock: product.stock?.toString() || '',
-      unit: product.unit || 'unidad',
-      min_stock: product.min_stock?.toString() || '10',
-      expiry_date: product.expiry_date || '',
-      image: product.image || '',
-      barcode: product.barcode || '',
-      supplier_id: product.supplier_id ? product.supplier_id.toString() : '',
-      price: product.price?.toString() || ''
+      name: fullProduct.name || '',
+      category: fullProduct.category || '',
+      stock: fullProduct.stock?.toString() || '',
+      unit: fullProduct.unit || 'unidad',
+      min_stock: fullProduct.min_stock?.toString() || '10',
+      expiry_date: fullProduct.expiry_date || '',
+      image: fullProduct.image || '',
+      barcode: fullProduct.barcode || '',
+      supplier_id: fullProduct.supplier_id ? fullProduct.supplier_id.toString() : '',
+      price: fullProduct.price?.toString() || ''
     });
     setShowAddModal(true);
   };
 
-  // ✅ CORREGIDO: cierra el modal inmediatamente después de guardar, recarga en segundo plano
   const handleAddProduct = async (e) => {
     e.preventDefault();
     setIsSaving(true);
@@ -102,10 +103,9 @@ const Inventory = () => {
       } else {
         await addProduct(formData);
       }
-      // Cerrar el modal inmediatamente
       resetModal();
-      // Recargar la lista en segundo plano (sin await)
-      fetchProducts();
+      // Refrescar la caché y la lista (ya se hace dentro de addProduct/updateProduct)
+      await fetchProducts();
     } catch (error) {
       alert('Error al guardar: ' + error.message);
     } finally {
@@ -113,7 +113,6 @@ const Inventory = () => {
     }
   };
 
-  // ✅ CORREGIDO: cierra el modal inmediatamente después de guardar el movimiento
   const handleMovement = async (e) => {
     e.preventDefault();
     setIsSaving(true);
@@ -122,10 +121,8 @@ const Inventory = () => {
         ...movementData,
         productId: selectedProduct.id
       });
-      // Cerrar el modal inmediatamente
       setShowMovementModal(false);
       setMovementData({ type: 'entrada', quantity: '', reason: '' });
-      // Recargar la lista en segundo plano
       fetchProducts();
     } catch (error) {
       alert(error.message || 'Error al registrar movimiento');
@@ -151,7 +148,6 @@ const Inventory = () => {
     return { color: 'bg-green-100 text-green-800', text: 'OK' };
   };
 
-  // Exportar a Excel
   const exportToExcel = () => {
     const data = filteredProducts.map(p => ({
       'Nombre': p.name,
@@ -170,7 +166,6 @@ const Inventory = () => {
     XLSX.writeFile(wb, `inventario_${currentRestaurant}_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
-  // Exportar a PDF
   const exportToPDF = () => {
     const doc = new jsPDF();
     doc.setFontSize(16);
@@ -278,8 +273,10 @@ const Inventory = () => {
             return (
               <div key={product.id} className="bg-white rounded-xl p-4 shadow-sm">
                 <div className="flex items-start gap-3">
-                  {product.image ? <img src={product.image} alt="" className="w-16 h-16 object-cover rounded-lg" /> :
-                    <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center"><CameraIcon className="h-6 w-6 text-gray-400" /></div>}
+                  {/* Mostramos solo icono (sin imagen) para máxima velocidad */}
+                  <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <CameraIcon className="h-6 w-6 text-gray-400" />
+                  </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-semibold">{product.name}</h3>
