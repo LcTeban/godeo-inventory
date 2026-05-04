@@ -6,7 +6,7 @@ export const useAuth = () => useContext(AuthContext);
 const SUPABASE_URL = 'https://fshypzqmuyctllmbzdnh.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzaHlwenFtdXljdGxsbWJ6ZG5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0OTQ1NDMsImV4cCI6MjA5MzA3MDU0M30.m4c4A6J7K8JvGI69eHBpfUtGMMdD4jVGvfjz_NmQdHE';
 
-// Compresor más agresivo (más rápido)
+// Compresor de imágenes (más agresivo para velocidad)
 const compressImage = (base64Str, maxWidth = 400) => {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -47,6 +47,7 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
+  // Función centralizada para llamadas a la API de Supabase
   const apiCall = useCallback(async (table, method, data = null, filters = {}) => {
     const headers = {
       'Content-Type': 'application/json',
@@ -74,6 +75,7 @@ export const AuthProvider = ({ children }) => {
         if (dateFilter) queryParams.append('created_at', `gte.${dateFilter}`);
       }
     }
+
     const queryString = queryParams.toString();
     if (queryString) url += `?${queryString}`;
 
@@ -93,6 +95,7 @@ export const AuthProvider = ({ children }) => {
     try { return await response.json(); } catch (e) { return { success: true }; }
   }, []);
 
+  // ========== AUTENTICACIÓN ==========
   const login = async (email, password) => {
     const users = await apiCall('users', 'GET', null, { select: '*', email: `eq.${email}` });
     const foundUser = Array.isArray(users) ? users[0] : null;
@@ -109,6 +112,8 @@ export const AuthProvider = ({ children }) => {
   const logout = () => { localStorage.removeItem('token'); localStorage.removeItem('user'); setUser(null); setCurrentRestaurant(null); };
   const switchRestaurant = (r) => { if (user?.role === 'ADMIN') setCurrentRestaurant(r); };
 
+  // ========== PRODUCTOS (CACHE Y METADATOS) ==========
+  // Obtener productos SIN la imagen (metadatos ligeros)
   const fetchProductsMeta = useCallback(async (restaurant) => {
     const filters = {
       select: 'id,name,category,stock,unit,price,min_stock,expiry_date,restaurant,barcode,supplier_id,suppliers(name)',
@@ -118,6 +123,7 @@ export const AuthProvider = ({ children }) => {
     return apiCall('products', 'GET', null, filters);
   }, [apiCall]);
 
+  // Refrescar la caché global de productos para un restaurante dado
   const refreshProductCache = useCallback(async (restaurant) => {
     try {
       const products = await fetchProductsMeta(restaurant);
@@ -131,7 +137,7 @@ export const AuthProvider = ({ children }) => {
     }
   }, [fetchProductsMeta]);
 
-  // ✅ getProducts corregido: si no se fuerza refresco y hay datos para este restaurante, usa caché
+  // Obtener productos desde caché o red
   const getProducts = useCallback(async (options = {}) => {
     const { restaurant, forceRefresh } = options;
     const filterRestaurant = restaurant !== undefined ? restaurant : currentRestaurant;
@@ -141,7 +147,16 @@ export const AuthProvider = ({ children }) => {
     return refreshProductCache(filterRestaurant);
   }, [cachedProducts, currentRestaurant, refreshProductCache]);
 
-  // Ya no se usa getProductById (quitamos la descarga de imagen)
+  // Obtener producto completo (con imagen) para edición
+  const getProductById = useCallback(async (id) => {
+    const products = await apiCall('products', 'GET', null, {
+      select: '*',
+      id: `eq.${id}`
+    });
+    return Array.isArray(products) ? products[0] : null;
+  }, [apiCall]);
+
+  // Agregar producto
   const addProduct = useCallback(async (data) => {
     let finalData = { ...data };
     if (finalData.image && finalData.image.startsWith('data:image')) {
@@ -161,6 +176,7 @@ export const AuthProvider = ({ children }) => {
     return result;
   }, [apiCall, currentRestaurant, refreshProductCache]);
 
+  // Actualizar producto (sin borrar imagen si no se envía una nueva)
   const updateProduct = useCallback(async (id, data) => {
     const supplierId = data.supplier_id ? parseInt(data.supplier_id, 10) : null;
     const expiry = data.expiry_date && data.expiry_date.trim() !== '' ? data.expiry_date : null;
@@ -177,12 +193,14 @@ export const AuthProvider = ({ children }) => {
     return result;
   }, [apiCall, currentRestaurant, refreshProductCache]);
 
+  // Eliminar producto
   const deleteProduct = useCallback(async (id) => {
     const result = await apiCall('products', 'DELETE', null, { id: `eq.${id}` });
     await refreshProductCache(currentRestaurant);
     return result;
   }, [apiCall, currentRestaurant, refreshProductCache]);
 
+  // ========== MOVIMIENTOS ==========
   const getMovements = useCallback(async (options = {}) => {
     const { restaurant, period } = options;
     const filterRestaurant = restaurant !== undefined ? restaurant : currentRestaurant;
@@ -219,6 +237,7 @@ export const AuthProvider = ({ children }) => {
     return result;
   }, [apiCall, currentRestaurant, user, refreshProductCache]);
 
+  // ========== TRANSFERENCIAS ==========
   const getTransfers = useCallback(() => {
     return apiCall('transfers', 'GET', null, { select: '*,products(name,unit,price),users(name)', order: 'created_at.desc' });
   }, [apiCall]);
@@ -308,6 +327,7 @@ export const AuthProvider = ({ children }) => {
     return { success: true };
   }, [apiCall, user, refreshProductCache, currentRestaurant]);
 
+  // ========== SOLICITUDES ==========
   const getRequests = useCallback(() => {
     return apiCall('requests', 'GET', null, { select: '*,users(name)', order: 'created_at.desc' });
   }, [apiCall]);
@@ -320,6 +340,7 @@ export const AuthProvider = ({ children }) => {
     return apiCall('requests', 'PATCH', { status }, { id: `eq.${id}` });
   }, [apiCall]);
 
+  // ========== DASHBOARD ==========
   const getDashboard = useCallback(async () => {
     const allProducts = await getProducts({ restaurant: null, forceRefresh: true });
     const restaurants = ['POZOBLANCO', 'FUERTEVENTURA', 'GRAN_CAPITAN'];
@@ -335,11 +356,13 @@ export const AuthProvider = ({ children }) => {
     return { restaurants: stats, pendingTransfers: pending.length };
   }, [apiCall, getProducts]);
 
+  // ========== PROVEEDORES ==========
   const getSuppliers = useCallback(() => apiCall('suppliers', 'GET', null, { select: '*', order: 'name.asc' }), [apiCall]);
   const addSupplier = useCallback((data) => { if (user?.role !== 'ADMIN') throw new Error('Solo admin'); return apiCall('suppliers', 'POST', { ...data, created_at: new Date().toISOString() }); }, [apiCall, user]);
   const updateSupplier = useCallback((id, data) => { if (user?.role !== 'ADMIN') throw new Error('Solo admin'); return apiCall('suppliers', 'PATCH', data, { id: `eq.${id}` }); }, [apiCall, user]);
   const deleteSupplier = useCallback((id) => { if (user?.role !== 'ADMIN') throw new Error('Solo admin'); return apiCall('suppliers', 'DELETE', null, { id: `eq.${id}` }); }, [apiCall, user]);
 
+  // ========== RECETAS ==========
   const getRecipes = useCallback(() => {
     return apiCall('recipes', 'GET', null, { select: '*,recipe_ingredients(*,products(name,unit))', restaurant: `eq.${currentRestaurant}`, order: 'name.asc' });
   }, [apiCall, currentRestaurant]);
@@ -370,17 +393,19 @@ export const AuthProvider = ({ children }) => {
     return apiCall('recipes', 'DELETE', null, { id: `eq.${id}` });
   }, [apiCall, user]);
 
+  // ========== UTILIDADES ==========
   const restaurantNames = {
     POZOBLANCO: '🍽️ Godeo Pozoblanco',
     FUERTEVENTURA: '🏖️ Godeo Fuerteventura',
     GRAN_CAPITAN: '🏛️ Godeo Gran Capitán'
   };
 
+  // ========== VALOR EXPORTADO ==========
   const value = {
     user, login, logout, switchRestaurant, currentRestaurant,
     isAdmin: user?.role === 'ADMIN',
     restaurantName: restaurantNames[currentRestaurant],
-    getProducts, refreshProductCache,
+    getProducts, getProductById, refreshProductCache,
     addProduct, updateProduct, deleteProduct,
     getMovements, addMovement,
     getTransfers, addTransfer, completeTransfer,
