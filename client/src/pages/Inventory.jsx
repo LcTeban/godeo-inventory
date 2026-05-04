@@ -5,10 +5,10 @@ import {
   DocumentArrowDownIcon, TableCellsIcon, PencilIcon 
 } from '@heroicons/react/24/outline';
 import BarcodeScanner from '../components/BarcodeScanner';
+import LazyImage from '../components/LazyImage';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
-import LazyImage from '../components/LazyImage';
 
 const Inventory = () => {
   const [products, setProducts] = useState([]);
@@ -30,7 +30,7 @@ const Inventory = () => {
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
-  const { currentRestaurant, isAdmin, getProducts, addProduct, updateProduct, deleteProduct, addMovement, getSuppliers, getProductById } = useAuth();
+  const { currentRestaurant, isAdmin, getProducts, addProduct, updateProduct, deleteProduct, addMovement, getSuppliers, getProductById, getProductImage } = useAuth();
 
   useEffect(() => {
     fetchProducts();
@@ -78,7 +78,6 @@ const Inventory = () => {
 
   const openEditModal = (product) => {
     setEditingProduct(product);
-    // Rellenar campos menos imagen (se cargará en breve)
     setFormData({
       name: product.name || '',
       category: product.category || '',
@@ -93,7 +92,6 @@ const Inventory = () => {
     });
     setShowAddModal(true);
 
-    // Cargar imagen real del producto en segundo plano
     if (product.id) {
       getProductById(product.id)
         .then(full => {
@@ -235,7 +233,6 @@ const Inventory = () => {
     };
     input.click();
   };
-  const { currentRestaurant, isAdmin, getProducts, addProduct, updateProduct, deleteProduct, addMovement, getSuppliers, getProductById, getProductImage } = useAuth();
 
   return (
     <div className="space-y-4">
@@ -284,9 +281,7 @@ const Inventory = () => {
             return (
               <div key={product.id} className="bg-white rounded-xl p-4 shadow-sm">
                 <div className="flex items-start gap-3">
-                  <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <CameraIcon className="h-6 w-6 text-gray-400" />
-                  </div>
+                  <LazyImage productId={product.id} fetchImage={getProductImage} />
                   <div className="flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-semibold">{product.name}</h3>
@@ -324,7 +319,7 @@ const Inventory = () => {
         </div>
       )}
 
-      {/* Modal Agregar/Editar */}
+      {/* Modal Agregar/Editar Producto */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 overflow-y-auto">
           <div className="bg-white rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
@@ -389,7 +384,7 @@ const Inventory = () => {
         </div>
       )}
 
-      {/* Modal Movimiento (sin cambios) */}
+      {/* Modal Movimiento */}
       {showMovementModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50">
           <div className="bg-white rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md">
