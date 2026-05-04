@@ -123,7 +123,6 @@ export const AuthProvider = ({ children }) => {
   const getAllCategoriesFlat = useCallback(async () => {
     const all = await apiCall('categories', 'GET', null, { select: '*', restaurant: `eq.${currentRestaurant}`, order: 'name.asc' });
     const categories = all || [];
-    // Construir jerarquía con sangría
     const addPath = (cat, depth = 0) => {
       const children = categories.filter(c => c.parent_id === cat.id);
       const result = [{ ...cat, depth, label: ' '.repeat(depth) + cat.name }];
