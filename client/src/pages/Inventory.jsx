@@ -29,7 +29,7 @@ const Inventory = () => {
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
-  const { currentRestaurant, isAdmin, getProducts, addProduct, updateProduct, deleteProduct, addMovement, getSuppliers } = useAuth();
+  const { currentRestaurant, isAdmin, getProducts, addProduct, updateProduct, deleteProduct, addMovement, getSuppliers, getProductById } = useAuth();
 
   useEffect(() => {
     fetchProducts();
@@ -39,7 +39,6 @@ const Inventory = () => {
   const fetchProducts = async () => {
     setIsLoadingProducts(true);
     try {
-      // forzar refresco al cambiar de restaurante evita caché sucia
       const data = await getProducts({ forceRefresh: true });
       setProducts(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -76,9 +75,9 @@ const Inventory = () => {
     setShowAddModal(true);
   };
 
-  // ✅ Edición sin cargar la imagen (instantáneo)
   const openEditModal = (product) => {
     setEditingProduct(product);
+    // Rellenar campos menos imagen (se cargará en breve)
     setFormData({
       name: product.name || '',
       category: product.category || '',
@@ -86,12 +85,23 @@ const Inventory = () => {
       unit: product.unit || 'unidad',
       min_stock: product.min_stock?.toString() || '10',
       expiry_date: product.expiry_date || '',
-      image: '', // no precargamos la imagen, se conserva si no se sube una nueva
       barcode: product.barcode || '',
       supplier_id: product.supplier_id ? product.supplier_id.toString() : '',
-      price: product.price?.toString() || ''
+      price: product.price?.toString() || '',
+      image: ''
     });
     setShowAddModal(true);
+
+    // Cargar imagen real del producto en segundo plano
+    if (product.id) {
+      getProductById(product.id)
+        .then(full => {
+          if (full && full.image) {
+            setFormData(prev => ({ ...prev, image: full.image }));
+          }
+        })
+        .catch(() => {});
+    }
   };
 
   const handleAddProduct = async (e) => {
@@ -312,7 +322,7 @@ const Inventory = () => {
         </div>
       )}
 
-      {/* Modal Agregar/Editar Producto */}
+      {/* Modal Agregar/Editar */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 overflow-y-auto">
           <div className="bg-white rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
@@ -377,7 +387,7 @@ const Inventory = () => {
         </div>
       )}
 
-      {/* Modal Movimiento */}
+      {/* Modal Movimiento (sin cambios) */}
       {showMovementModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50">
           <div className="bg-white rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md">
