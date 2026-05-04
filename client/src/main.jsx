@@ -3,10 +3,11 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
 
-// Registrar Service Worker para PWA
+// Registrar Service Worker para PWA (corregido a la subcarpeta real)
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/service-worker.js')
+    navigator.serviceWorker
+      .register('/godeo-inventory/service-worker.js')
       .then(registration => {
         console.log('✅ Service Worker registrado:', registration.scope);
       })
