@@ -92,6 +92,7 @@ const Inventory = () => {
       image: ''
     });
     setShowAddModal(true);
+
     if (product.id) {
       getProductById(product.id)
         .then(full => {
@@ -200,11 +201,10 @@ const Inventory = () => {
     doc.save(`inventario_${currentRestaurant}_${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
-  const categories = [...new Set(products.map(p => p.categories?.name).filter(Boolean))];
   const filteredProducts = products.filter(p => {
     const matchesSearch = p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           p.barcode?.includes(searchTerm);
-    const matchesCategory = filterCategory === 'all' || p.categories?.name === filterCategory;
+    const matchesCategory = filterCategory === 'all' || p.category_id?.toString() === filterCategory;
     return matchesSearch && matchesCategory;
   });
 
@@ -264,10 +264,11 @@ const Inventory = () => {
             className="w-full p-3 border rounded-xl pl-10" />
           <QrCodeIcon className="h-5 w-5 absolute left-3 top-3.5 text-gray-400" />
         </div>
-        <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="p-3 border rounded-xl bg-white">
-          <option value="all">Todas</option>
-          {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-        </select>
+        <CategorySelect
+          value={filterCategory}
+          onChange={(val) => setFilterCategory(val)}
+          restaurant={currentRestaurant}
+        />
       </div>
 
       {isLoadingProducts && (
@@ -353,7 +354,6 @@ const Inventory = () => {
 
               <input type="text" placeholder="Nombre*" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full p-3 border rounded-xl" required />
               
-              {/* Selector de categoría + subcategoría */}
               <CategorySelect
                 value={formData.category_id}
                 onChange={(val) => setFormData({...formData, category_id: val})}
@@ -398,7 +398,7 @@ const Inventory = () => {
         </div>
       )}
 
-      {/* Modal Movimiento (sin cambios) */}
+      {/* Modal Movimiento */}
       {showMovementModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50">
           <div className="bg-white rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md">
