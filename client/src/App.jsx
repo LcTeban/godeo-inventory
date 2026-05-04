@@ -11,6 +11,8 @@ import Requests from './pages/Requests';
 import Reports from './pages/Reports';
 import Suppliers from './pages/Suppliers';
 import Recipes from './pages/Recipes';
+import Categories from './pages/Categories';
+
 
 
 function App() {
@@ -29,6 +31,7 @@ function App() {
             <Route path="reports" element={<Reports />} />
             <Route path="suppliers" element={<Suppliers />} />
             <Route path="recipes" element={<Recipes />} />
+            <Route path="categories" element={<Categories />} />
           </Route>
         </Routes>
       </BrowserRouter>
