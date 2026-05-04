@@ -10,14 +10,42 @@
   "start_url": "/godeo-inventory/",
   "id": "/godeo-inventory/",
   "icons": [
-    { "src": "/godeo-inventory/icon-72.png", "sizes": "72x72", "type": "image/png", "purpose": "any" },
-    { "src": "/godeo-inventory/icon-96.png", "sizes": "96x96", "type": "image/png", "purpose": "any" },
-    { "src": "/godeo-inventory/icon-128.png", "sizes": "128x128", "type": "image/png", "purpose": "any" },
-    { "src": "/godeo-inventory/icon-144.png", "sizes": "144x144", "type": "image/png", "purpose": "any" },
-    { "src": "/godeo-inventory/icon-152.png", "sizes": "152x152", "type": "image/png", "purpose": "any" },
-    { "src": "/godeo-inventory/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "/godeo-inventory/icon-384.png", "sizes": "384x384", "type": "image/png", "purpose": "any" },
-    { "src": "/godeo-inventory/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    {
+      "src": "/godeo-inventory/icon-72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/godeo-inventory/icon-96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/godeo-inventory/icon-128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/godeo-inventory/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/godeo-inventory/icon-384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/godeo-inventory/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
   ],
   "screenshots": [],
   "categories": ["business", "productivity"],
