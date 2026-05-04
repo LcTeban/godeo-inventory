@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const Reports = () => {
   const { isAdmin, currentRestaurant, switchRestaurant, getProducts, getMovements, getTransfers } = useAuth();
   const navigate = useNavigate();
+  const mountedRef = useRef(true);
 
   const [activeTab, setActiveTab] = useState('summary');
   const [allProducts, setAllProducts] = useState([]);
@@ -20,28 +21,33 @@ const Reports = () => {
 
   // Cargar datos cuando cambia el restaurante o el período
   useEffect(() => {
-    if (!isAdmin) return;
-
+    mountedRef.current = true;
     const fetchData = async () => {
       setLoading(true);
       try {
         const [prods, movs, trans] = await Promise.all([
-          getProducts({ restaurant: null }),   // todos los restaurantes para el resumen
+          getProducts({ restaurant: null }),
           getMovements({ restaurant: currentRestaurant, period }),
           getTransfers(),
         ]);
-        setAllProducts(Array.isArray(prods) ? prods : []);
-        setMovements(Array.isArray(movs) ? movs : []);
-        setTransfers(Array.isArray(trans) ? trans : []);
+        if (mountedRef.current) {
+          setAllProducts(Array.isArray(prods) ? prods : []);
+          setMovements(Array.isArray(movs) ? movs : []);
+          setTransfers(Array.isArray(trans) ? trans : []);
+        }
       } catch (error) {
         console.error('Error loading reports:', error);
       } finally {
-        setLoading(false);
+        if (mountedRef.current) setLoading(false);
       }
     };
 
     fetchData();
-  }, [currentRestaurant, period, isAdmin, getProducts, getMovements, getTransfers]);
+
+    return () => {
+      mountedRef.current = false;
+    };
+  }, [currentRestaurant, period]); // <-- solo dependencias reales
 
   // ===== Cálculos financieros =====
   const inventoryValueByRestaurant = () => {
