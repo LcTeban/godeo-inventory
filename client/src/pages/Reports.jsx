@@ -1,15 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const Reports = () => {
-  const { isAdmin, currentRestaurant, switchRestaurant, getProducts, getMovements, getTransfers } = useAuth();
+  const { isAdmin, getProducts, getMovements, getTransfers, currentRestaurant, switchRestaurant } = useAuth();
   const navigate = useNavigate();
 
-  // Estados
   const [activeTab, setActiveTab] = useState('summary');
-  const [products, setProducts] = useState([]);          // Todos los productos para el resumen
-  const [filteredProducts, setFilteredProducts] = useState([]); // Productos del restaurante seleccionado
+  const [allProducts, setAllProducts] = useState([]);   // productos de toda la cadena
   const [movements, setMovements] = useState([]);
   const [transfers, setTransfers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,59 +18,44 @@ const Reports = () => {
     if (!isAdmin) navigate('/dashboard');
   }, [isAdmin, navigate]);
 
-  // Cargar datos de todos los restaurantes para el resumen y los detalles
+  // Cargar datos solo una vez al montar (y cuando cambie currentRestaurant o período)
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [prods, movs, trans] = await Promise.all([
+        getProducts({ restaurant: null }),   // trae todos los productos (sin imagen)
+        getMovements({ restaurant: currentRestaurant, period }),
+        getTransfers(),
+      ]);
+      setAllProducts(Array.isArray(prods) ? prods : []);
+      setMovements(Array.isArray(movs) ? movs : []);
+      setTransfers(Array.isArray(trans) ? trans : []);
+    } catch (error) {
+      console.error('Error loading reports:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [getProducts, getMovements, getTransfers, currentRestaurant, period]);
+
   useEffect(() => {
-    if (!isAdmin) return;
-    const fetchAllData = async () => {
-      setLoading(true);
-      try {
-        // Obtener productos de todos los restaurantes (sin filtrar)
-        const allProducts = await getProducts({ restaurant: null });
-        // Movimientos del restaurante actual
-        const movs = await getMovements({ restaurant: currentRestaurant });
-        // Transferencias de todos
-        const trans = await getTransfers();
+    loadData();
+  }, [loadData]);
 
-        setProducts(Array.isArray(allProducts) ? allProducts : []);
-        setFilteredProducts(Array.isArray(allProducts) ? allProducts.filter(p => p.restaurant === currentRestaurant) : []);
-        setMovements(Array.isArray(movs) ? movs : []);
-        setTransfers(Array.isArray(trans) ? trans : []);
-      } catch (error) {
-        console.error('Error fetching reports:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchAllData();
-  }, [isAdmin, currentRestaurant, getProducts, getMovements, getTransfers]);
-
-  // Refrescar movimientos al cambiar período o restaurante
-  useEffect(() => {
-    if (!isAdmin) return;
-    const fetchMovs = async () => {
-      try {
-        const movs = await getMovements({ restaurant: currentRestaurant, period });
-        setMovements(Array.isArray(movs) ? movs : []);
-      } catch (e) {}
-    };
-    fetchMovs();
-  }, [currentRestaurant, period, isAdmin, getMovements]);
-
-  // Cálculos financieros
+  // Cálculos financieros (usando price de cada producto)
   const inventoryValueByRestaurant = () => {
     const map = {};
-    products.forEach(p => {
+    allProducts.forEach(p => {
       const rest = p.restaurant;
       if (!map[rest]) map[rest] = 0;
-      map[rest] += (p.stock * (p.price || 0));
+      map[rest] += (p.stock || 0) * (p.price || 0);
     });
     return map;
   };
 
   const totalInventoryValue = Object.values(inventoryValueByRestaurant()).reduce((a, b) => a + b, 0);
-  const lowStockValue = filteredProducts
-    .filter(p => p.stock <= p.min_stock)
-    .reduce((sum, p) => sum + (p.stock * (p.price || 0)), 0);
+
+  const productsLowStock = allProducts.filter(p => (p.stock || 0) <= (p.min_stock || 10));
+  const lowStockValue = productsLowStock.reduce((sum, p) => sum + ((p.stock || 0) * (p.price || 0)), 0);
 
   const filteredMovements = movements.filter(m => {
     const date = new Date(m.created_at);
@@ -85,10 +68,10 @@ const Reports = () => {
 
   const totalEntries = filteredMovements
     .filter(m => m.type === 'entrada')
-    .reduce((sum, m) => sum + (m.quantity * (m.products?.price || 0)), 0);
+    .reduce((sum, m) => sum + ((m.quantity || 0) * (m.products?.price || 0)), 0);
   const totalExits = filteredMovements
     .filter(m => m.type === 'salida')
-    .reduce((sum, m) => sum + (m.quantity * (m.products?.price || 0)), 0);
+    .reduce((sum, m) => sum + ((m.quantity || 0) * (m.products?.price || 0)), 0);
 
   const restaurants = ['POZOBLANCO', 'FUERTEVENTURA', 'GRAN_CAPITAN'];
   const restaurantNames = {
@@ -100,9 +83,15 @@ const Reports = () => {
   if (!isAdmin) return null;
   if (loading) return <div className="text-center py-8 text-gray-500">Cargando reportes...</div>;
 
+  const tabs = [
+    { key: 'summary', label: '📊 Resumen General' },
+    { key: 'inventory', label: '📦 Inventario' },
+    { key: 'movements', label: '🔄 Movimientos' },
+    { key: 'alerts', label: '⚠️ Alertas' },
+  ];
+
   return (
     <div className="space-y-6">
-      {/* Encabezado con selector de restaurante */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-2xl font-bold text-gray-800">📊 Reportes Financieros</h1>
         <div className="flex items-center gap-2 bg-white rounded-xl px-4 py-2 shadow-sm">
@@ -119,14 +108,8 @@ const Reports = () => {
         </div>
       </div>
 
-      {/* Pestañas */}
       <div className="flex gap-2 flex-wrap">
-        {[
-          { key: 'summary', label: '📊 Resumen General' },
-          { key: 'inventory', label: '📦 Inventario' },
-          { key: 'movements', label: '🔄 Movimientos' },
-          { key: 'alerts', label: '⚠️ Alertas' },
-        ].map(tab => (
+        {tabs.map(tab => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
@@ -139,17 +122,28 @@ const Reports = () => {
         ))}
       </div>
 
-      {/* Pestaña Resumen (todos los restaurantes) */}
+      {activeTab === 'movements' && (
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-600">Período:</span>
+          <select value={period} onChange={(e) => setPeriod(e.target.value)} className="border rounded-lg p-2 text-sm">
+            <option value="week">Última semana</option>
+            <option value="month">Último mes</option>
+            <option value="year">Último año</option>
+          </select>
+        </div>
+      )}
+
+      {/* Pestaña Resumen */}
       {activeTab === 'summary' && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {restaurants.map(rest => (
               <div key={rest} className="bg-white rounded-xl p-5 shadow-sm">
                 <h3 className="font-semibold text-lg">{restaurantNames[rest]}</h3>
-                <p className="text-2xl font-bold mt-2">€{inventoryValueByRestaurant()[rest]?.toFixed(2) || '0.00'}</p>
+                <p className="text-2xl font-bold mt-2">€{(inventoryValueByRestaurant()[rest] || 0).toFixed(2)}</p>
                 <p className="text-sm text-gray-500">Valor inventario</p>
                 <p className="text-sm mt-2">
-                  {products.filter(p => p.restaurant === rest).length} productos
+                  {allProducts.filter(p => p.restaurant === rest).length} productos
                 </p>
               </div>
             ))}
@@ -163,7 +157,7 @@ const Reports = () => {
               </div>
               <div>
                 <p className="text-sm text-gray-500">Productos totales</p>
-                <p className="text-xl font-bold">{products.length}</p>
+                <p className="text-xl font-bold">{allProducts.length}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Transferencias pendientes</p>
@@ -192,12 +186,12 @@ const Reports = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredProducts.map(p => (
+              {allProducts.filter(p => p.restaurant === currentRestaurant).map(p => (
                 <tr key={p.id} className="border-t">
                   <td className="p-2 font-medium">{p.name}</td>
-                  <td className="p-2">{p.stock} {p.unit}</td>
+                  <td className="p-2">{p.stock || 0} {p.unit}</td>
                   <td className="p-2">€{(p.price || 0).toFixed(2)}</td>
-                  <td className="p-2 font-semibold">€{(p.stock * (p.price || 0)).toFixed(2)}</td>
+                  <td className="p-2 font-semibold">€{((p.stock || 0) * (p.price || 0)).toFixed(2)}</td>
                 </tr>
               ))}
             </tbody>
@@ -208,14 +202,6 @@ const Reports = () => {
       {/* Pestaña Movimientos (restaurante actual) */}
       {activeTab === 'movements' && (
         <div className="space-y-6">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">Período:</span>
-            <select value={period} onChange={(e) => setPeriod(e.target.value)} className="border rounded-lg p-2 text-sm">
-              <option value="week">Última semana</option>
-              <option value="month">Último mes</option>
-              <option value="year">Último año</option>
-            </select>
-          </div>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div className="bg-white rounded-xl p-4 shadow-sm">
               <p className="text-sm text-gray-500">Total entradas (€)</p>
@@ -257,7 +243,7 @@ const Reports = () => {
                     </td>
                     <td className="p-2">{m.quantity}</td>
                     <td className="p-2">€{(m.products?.price || 0).toFixed(2)}</td>
-                    <td className="p-2 font-semibold">€{(m.quantity * (m.products?.price || 0)).toFixed(2)}</td>
+                    <td className="p-2 font-semibold">€{((m.quantity || 0) * (m.products?.price || 0)).toFixed(2)}</td>
                     <td className="p-2">{m.users?.name || '-'}</td>
                   </tr>
                 ))}
@@ -277,12 +263,12 @@ const Reports = () => {
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredProducts.filter(p => p.stock <= p.min_stock).map(p => (
+            {allProducts.filter(p => p.restaurant === currentRestaurant && (p.stock || 0) <= (p.min_stock || 10)).map(p => (
               <div key={p.id} className="bg-white rounded-xl p-4 shadow-sm border-l-4 border-yellow-400">
                 <h4 className="font-medium">{p.name}</h4>
                 <div className="mt-2 flex justify-between items-end">
                   <div>
-                    <span className="text-lg font-bold">{p.stock}</span>
+                    <span className="text-lg font-bold">{p.stock || 0}</span>
                     <span className="text-sm text-gray-500 ml-1">{p.unit}</span>
                   </div>
                   <span className="font-semibold">€{((p.stock || 0) * (p.price || 0)).toFixed(2)}</span>
