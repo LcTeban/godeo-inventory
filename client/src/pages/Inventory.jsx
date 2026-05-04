@@ -30,7 +30,7 @@ const Inventory = () => {
   });
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [categoryTree, setCategoryTree] = useState([]); // para filtro de subcategorías
+  const [categoryTree, setCategoryTree] = useState([]);
 
   const { currentRestaurant, isAdmin, getProducts, addProduct, updateProduct, deleteProduct, addMovement, getSuppliers, getProductById, getProductImage, getAllCategoriesFlat } = useAuth();
 
@@ -45,7 +45,6 @@ const Inventory = () => {
     setCategoryTree(flat || []);
   };
 
-  // Obtener IDs de una categoría y todas sus subcategorías
   const getCategoryAndChildrenIds = (categoryId) => {
     const ids = new Set();
     const addChildren = (parentId) => {
@@ -221,13 +220,10 @@ const Inventory = () => {
     doc.save(`inventario_${currentRestaurant}_${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
-  // Filtrado de productos (incluye subcategorías)
   const filteredProducts = products.filter(p => {
     const matchesSearch = p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           p.barcode?.includes(searchTerm);
-    if (filterCategory === '') {
-      return matchesSearch;
-    }
+    if (filterCategory === '') return matchesSearch;
     const categoryIds = getCategoryAndChildrenIds(filterCategory);
     return matchesSearch && categoryIds.has(p.category_id);
   });
@@ -353,12 +349,13 @@ const Inventory = () => {
         </div>
       )}
 
-      {/* Modal Agregar/Editar Producto */}
+      {/* Modal Agregar/Editar Producto - Cierra al tocar fuera */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 overflow-y-auto">
-          <div className="bg-white rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end sm:items-center justify-center overflow-y-auto" onClick={resetModal}>
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <h2 className="text-xl font-bold mb-4">{editingProduct ? 'Editar Producto' : 'Nuevo Producto'}</h2>
             <form onSubmit={handleAddProduct} className="space-y-3">
+              {/* Foto */}
               <div>
                 <label className="block text-sm font-medium mb-2">📸 Foto del producto</label>
                 <div className="flex gap-2">
@@ -425,8 +422,8 @@ const Inventory = () => {
 
       {/* Modal Movimiento */}
       {showMovementModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50">
-          <div className="bg-white rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50" onClick={() => setShowMovementModal(false)}>
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
             <h2 className="text-xl font-bold mb-4">
               {movementData.type === 'entrada' ? '📥 Entrada' : '📤 Salida'} - {selectedProduct?.name}
             </h2>
