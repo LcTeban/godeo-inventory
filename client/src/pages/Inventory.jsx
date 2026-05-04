@@ -29,7 +29,7 @@ const Inventory = () => {
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
-  const { currentRestaurant, isAdmin, getProducts, getProductById, addProduct, updateProduct, deleteProduct, addMovement, getSuppliers, refreshProductCache } = useAuth();
+  const { currentRestaurant, isAdmin, getProducts, addProduct, updateProduct, deleteProduct, addMovement, getSuppliers } = useAuth();
 
   useEffect(() => {
     fetchProducts();
@@ -39,7 +39,8 @@ const Inventory = () => {
   const fetchProducts = async () => {
     setIsLoadingProducts(true);
     try {
-      const data = await getProducts({ forceRefresh: false }); // usa caché
+      // forzar refresco al cambiar de restaurante evita caché sucia
+      const data = await getProducts({ forceRefresh: true });
       setProducts(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error:', error);
@@ -75,21 +76,20 @@ const Inventory = () => {
     setShowAddModal(true);
   };
 
-  const openEditModal = async (product) => {
+  // ✅ Edición sin cargar la imagen (instantáneo)
+  const openEditModal = (product) => {
     setEditingProduct(product);
-    // Cargar producto completo para obtener la imagen si existe
-    const fullProduct = await getProductById(product.id);
     setFormData({
-      name: fullProduct.name || '',
-      category: fullProduct.category || '',
-      stock: fullProduct.stock?.toString() || '',
-      unit: fullProduct.unit || 'unidad',
-      min_stock: fullProduct.min_stock?.toString() || '10',
-      expiry_date: fullProduct.expiry_date || '',
-      image: fullProduct.image || '',
-      barcode: fullProduct.barcode || '',
-      supplier_id: fullProduct.supplier_id ? fullProduct.supplier_id.toString() : '',
-      price: fullProduct.price?.toString() || ''
+      name: product.name || '',
+      category: product.category || '',
+      stock: product.stock?.toString() || '',
+      unit: product.unit || 'unidad',
+      min_stock: product.min_stock?.toString() || '10',
+      expiry_date: product.expiry_date || '',
+      image: '', // no precargamos la imagen, se conserva si no se sube una nueva
+      barcode: product.barcode || '',
+      supplier_id: product.supplier_id ? product.supplier_id.toString() : '',
+      price: product.price?.toString() || ''
     });
     setShowAddModal(true);
   };
@@ -104,7 +104,6 @@ const Inventory = () => {
         await addProduct(formData);
       }
       resetModal();
-      // Refrescar la caché y la lista (ya se hace dentro de addProduct/updateProduct)
       await fetchProducts();
     } catch (error) {
       alert('Error al guardar: ' + error.message);
@@ -273,7 +272,6 @@ const Inventory = () => {
             return (
               <div key={product.id} className="bg-white rounded-xl p-4 shadow-sm">
                 <div className="flex items-start gap-3">
-                  {/* Mostramos solo icono (sin imagen) para máxima velocidad */}
                   <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
                     <CameraIcon className="h-6 w-6 text-gray-400" />
                   </div>
