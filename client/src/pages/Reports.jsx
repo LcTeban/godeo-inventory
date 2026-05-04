@@ -1,13 +1,13 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const Reports = () => {
-  const { isAdmin, getProducts, getMovements, getTransfers, currentRestaurant, switchRestaurant } = useAuth();
+  const { isAdmin, currentRestaurant, switchRestaurant, getProducts, getMovements, getTransfers } = useAuth();
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState('summary');
-  const [allProducts, setAllProducts] = useState([]);   // productos de toda la cadena
+  const [allProducts, setAllProducts] = useState([]);
   const [movements, setMovements] = useState([]);
   const [transfers, setTransfers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,30 +18,32 @@ const Reports = () => {
     if (!isAdmin) navigate('/dashboard');
   }, [isAdmin, navigate]);
 
-  // Cargar datos solo una vez al montar (y cuando cambie currentRestaurant o período)
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [prods, movs, trans] = await Promise.all([
-        getProducts({ restaurant: null }),   // trae todos los productos (sin imagen)
-        getMovements({ restaurant: currentRestaurant, period }),
-        getTransfers(),
-      ]);
-      setAllProducts(Array.isArray(prods) ? prods : []);
-      setMovements(Array.isArray(movs) ? movs : []);
-      setTransfers(Array.isArray(trans) ? trans : []);
-    } catch (error) {
-      console.error('Error loading reports:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [getProducts, getMovements, getTransfers, currentRestaurant, period]);
-
+  // Cargar datos cuando cambia el restaurante o el período
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    if (!isAdmin) return;
 
-  // Cálculos financieros (usando price de cada producto)
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [prods, movs, trans] = await Promise.all([
+          getProducts({ restaurant: null }),   // todos los restaurantes para el resumen
+          getMovements({ restaurant: currentRestaurant, period }),
+          getTransfers(),
+        ]);
+        setAllProducts(Array.isArray(prods) ? prods : []);
+        setMovements(Array.isArray(movs) ? movs : []);
+        setTransfers(Array.isArray(trans) ? trans : []);
+      } catch (error) {
+        console.error('Error loading reports:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [currentRestaurant, period, isAdmin, getProducts, getMovements, getTransfers]);
+
+  // ===== Cálculos financieros =====
   const inventoryValueByRestaurant = () => {
     const map = {};
     allProducts.forEach(p => {
