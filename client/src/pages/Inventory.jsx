@@ -20,7 +20,7 @@ const Inventory = () => {
   const [showScanner, setShowScanner] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterCategory, setFilterCategory] = useState('all');
+  const [filterCategory, setFilterCategory] = useState(''); // '' = General (todos)
   const [formData, setFormData] = useState({
     name: '', category_id: '', stock: '', unit: 'unidad', min_stock: '10', 
     expiry_date: '', image: '', barcode: '', supplier_id: '', price: ''
@@ -30,13 +30,33 @@ const Inventory = () => {
   });
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [categoryTree, setCategoryTree] = useState([]); // para filtro de subcategorías
 
-  const { currentRestaurant, isAdmin, getProducts, addProduct, updateProduct, deleteProduct, addMovement, getSuppliers, getProductById, getProductImage } = useAuth();
+  const { currentRestaurant, isAdmin, getProducts, addProduct, updateProduct, deleteProduct, addMovement, getSuppliers, getProductById, getProductImage, getAllCategoriesFlat } = useAuth();
 
   useEffect(() => {
     fetchProducts();
     fetchSuppliers();
+    loadCategoryTree();
   }, [currentRestaurant]);
+
+  const loadCategoryTree = async () => {
+    const flat = await getAllCategoriesFlat();
+    setCategoryTree(flat || []);
+  };
+
+  // Obtener IDs de una categoría y todas sus subcategorías
+  const getCategoryAndChildrenIds = (categoryId) => {
+    const ids = new Set();
+    const addChildren = (parentId) => {
+      ids.add(Number(parentId));
+      categoryTree.filter(c => c.parent_id === Number(parentId)).forEach(child => {
+        addChildren(child.id);
+      });
+    };
+    if (categoryId) addChildren(categoryId);
+    return ids;
+  };
 
   const fetchProducts = async () => {
     setIsLoadingProducts(true);
@@ -201,11 +221,17 @@ const Inventory = () => {
     doc.save(`inventario_${currentRestaurant}_${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
+  // Filtrado de productos (incluye subcategorías)
   const filteredProducts = products.filter(p => {
     const matchesSearch = p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           p.barcode?.includes(searchTerm);
-    const matchesCategory = filterCategory === 'all' || p.category_id?.toString() === filterCategory;
-    return matchesSearch && matchesCategory;
+    if (filterCategory === '') {
+      // General: mostrar todos
+      return matchesSearch;
+    }
+    // Filtrar por categoría y subcategorías
+    const categoryIds = getCategoryAndChildrenIds(filterCategory);
+    return matchesSearch && categoryIds.has(p.category_id);
   });
 
   const openCamera = () => {
