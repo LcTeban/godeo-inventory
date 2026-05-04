@@ -7,7 +7,7 @@ const CategorySelect = ({ value, onChange, restaurant }) => {
   const [flatList, setFlatList] = useState([]);
   const [showAddInput, setShowAddInput] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
-  const [parentForNew, setParentForNew] = useState(null); // null = raíz
+  const [parentForNew, setParentForNew] = useState(null);
 
   useEffect(() => {
     loadCategories();
