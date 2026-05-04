@@ -6,6 +6,7 @@ import {
 } from '@heroicons/react/24/outline';
 import BarcodeScanner from '../components/BarcodeScanner';
 import LazyImage from '../components/LazyImage';
+import CategorySelect from '../components/CategorySelect';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -21,7 +22,7 @@ const Inventory = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
   const [formData, setFormData] = useState({
-    name: '', category: '', stock: '', unit: 'unidad', min_stock: '10', 
+    name: '', category_id: '', stock: '', unit: 'unidad', min_stock: '10', 
     expiry_date: '', image: '', barcode: '', supplier_id: '', price: ''
   });
   const [movementData, setMovementData] = useState({
@@ -62,7 +63,7 @@ const Inventory = () => {
     setShowAddModal(false);
     setEditingProduct(null);
     setFormData({
-      name: '', category: '', stock: '', unit: 'unidad', min_stock: '10',
+      name: '', category_id: '', stock: '', unit: 'unidad', min_stock: '10',
       expiry_date: '', image: '', barcode: '', supplier_id: '', price: ''
     });
   };
@@ -70,7 +71,7 @@ const Inventory = () => {
   const openAddModal = () => {
     setEditingProduct(null);
     setFormData({
-      name: '', category: '', stock: '', unit: 'unidad', min_stock: '10',
+      name: '', category_id: '', stock: '', unit: 'unidad', min_stock: '10',
       expiry_date: '', image: '', barcode: '', supplier_id: '', price: ''
     });
     setShowAddModal(true);
@@ -80,7 +81,7 @@ const Inventory = () => {
     setEditingProduct(product);
     setFormData({
       name: product.name || '',
-      category: product.category || '',
+      category_id: product.category_id ? product.category_id.toString() : '',
       stock: product.stock?.toString() || '',
       unit: product.unit || 'unidad',
       min_stock: product.min_stock?.toString() || '10',
@@ -91,7 +92,6 @@ const Inventory = () => {
       image: ''
     });
     setShowAddModal(true);
-
     if (product.id) {
       getProductById(product.id)
         .then(full => {
@@ -159,7 +159,7 @@ const Inventory = () => {
   const exportToExcel = () => {
     const data = filteredProducts.map(p => ({
       'Nombre': p.name,
-      'Categoría': p.category,
+      'Categoría': p.categories?.name || '',
       'Stock': p.stock,
       'Unidad': p.unit,
       'Stock Mínimo': p.min_stock,
@@ -181,9 +181,14 @@ const Inventory = () => {
     doc.setFontSize(10);
     doc.text(`Generado: ${new Date().toLocaleString('es')}`, 14, 28);
     const tableData = filteredProducts.map(p => [
-      p.name, p.category, `${p.stock} ${p.unit}`, p.min_stock,
+      p.name,
+      p.categories?.name || '',
+      `${p.stock} ${p.unit}`,
+      p.min_stock,
       p.expiry_date ? new Date(p.expiry_date).toLocaleDateString('es') : 'N/A',
-      p.barcode || 'N/A', p.suppliers?.name || '', `€${p.price || 0}`
+      p.barcode || 'N/A',
+      p.suppliers?.name || '',
+      `€${p.price || 0}`
     ]);
     doc.autoTable({
       head: [['Producto', 'Categoría', 'Stock', 'Mínimo', 'Caducidad', 'Código', 'Proveedor', 'Precio']],
@@ -195,11 +200,11 @@ const Inventory = () => {
     doc.save(`inventario_${currentRestaurant}_${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
-  const categories = [...new Set(products.map(p => p.category).filter(Boolean))];
+  const categories = [...new Set(products.map(p => p.categories?.name).filter(Boolean))];
   const filteredProducts = products.filter(p => {
     const matchesSearch = p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           p.barcode?.includes(searchTerm);
-    const matchesCategory = filterCategory === 'all' || p.category === filterCategory;
+    const matchesCategory = filterCategory === 'all' || p.categories?.name === filterCategory;
     return matchesSearch && matchesCategory;
   });
 
@@ -288,7 +293,9 @@ const Inventory = () => {
                       <span className={`text-xs px-2 py-0.5 rounded-full ${status.color}`}>{status.text}</span>
                       {isExpiring && <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800">⏰ Próximo</span>}
                     </div>
-                    <p className="text-sm text-gray-500">{product.category}</p>
+                    {product.categories?.name && (
+                      <p className="text-sm text-gray-500">📁 {product.categories.name}</p>
+                    )}
                     {product.suppliers?.name && <p className="text-xs text-gray-400">🏢 {product.suppliers.name}</p>}
                     {product.barcode && <p className="text-xs text-gray-400">🏷️ {product.barcode}</p>}
                     {isAdmin && product.price > 0 && <p className="text-xs text-gray-500">💰 €{product.price}</p>}
@@ -325,6 +332,7 @@ const Inventory = () => {
           <div className="bg-white rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-4">{editingProduct ? 'Editar Producto' : 'Nuevo Producto'}</h2>
             <form onSubmit={handleAddProduct} className="space-y-3">
+              {/* Foto */}
               <div>
                 <label className="block text-sm font-medium mb-2">📸 Foto del producto</label>
                 <div className="flex gap-2">
@@ -344,8 +352,14 @@ const Inventory = () => {
               </div>
 
               <input type="text" placeholder="Nombre*" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full p-3 border rounded-xl" required />
-              <input type="text" placeholder="Categoría*" value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})} className="w-full p-3 border rounded-xl" required />
               
+              {/* Selector de categoría + subcategoría */}
+              <CategorySelect
+                value={formData.category_id}
+                onChange={(val) => setFormData({...formData, category_id: val})}
+                restaurant={currentRestaurant}
+              />
+
               <div>
                 <label className="block text-sm font-medium mb-1">🏢 Proveedor</label>
                 <select value={formData.supplier_id} onChange={(e) => setFormData({...formData, supplier_id: e.target.value})} className="w-full p-3 border rounded-xl">
@@ -384,7 +398,7 @@ const Inventory = () => {
         </div>
       )}
 
-      {/* Modal Movimiento */}
+      {/* Modal Movimiento (sin cambios) */}
       {showMovementModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50">
           <div className="bg-white rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md">
