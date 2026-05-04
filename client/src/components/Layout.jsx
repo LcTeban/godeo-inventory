@@ -89,6 +89,7 @@ const Layout = () => {
               </div>
             )}
 
+            {/* Contenedor con scroll para el menú */}
             <nav className="flex-1 overflow-y-auto px-2 py-2">
               {navigation.map(item => {
                 if (item.adminOnly && !isAdmin) return null;
@@ -106,6 +107,7 @@ const Layout = () => {
               })}
             </nav>
 
+            {/* Botón de cerrar sesión siempre fijo abajo */}
             <div className="border-t p-4">
               <button
                 onClick={handleLogout}
@@ -142,7 +144,7 @@ const Layout = () => {
             )}
           </div>
           
-          {/* Nav con scroll si es necesario */}
+          {/* Menú con scroll */}
           <nav className="flex-1 overflow-y-auto px-3 py-2">
             {navigation.map(item => {
               if (item.adminOnly && !isAdmin) return null;
@@ -159,7 +161,7 @@ const Layout = () => {
             })}
           </nav>
           
-          {/* Botón de cerrar sesión siempre visible */}
+          {/* Cerrar sesión siempre visible */}
           <div className="border-t p-4">
             <button
               onClick={handleLogout}
@@ -172,7 +174,7 @@ const Layout = () => {
         </div>
       </div>
 
-      {/* Main content */}
+      {/* Contenido principal */}
       <div className="lg:pl-64">
         <div className="p-4 lg:p-6">
           <Outlet />
