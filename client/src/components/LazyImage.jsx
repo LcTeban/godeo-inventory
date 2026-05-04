@@ -21,12 +21,11 @@ const LazyImage = ({ productId, fetchImage }) => {
               })
               .catch(() => setError(true))
               .finally(() => setLoading(false));
-            // Dejar de observar una vez que se empieza a cargar
             observer.unobserve(entry.target);
           }
         });
       },
-      { rootMargin: '200px' } // empieza a cargar cuando esté a 200px de aparecer
+      { rootMargin: '200px' }
     );
 
     if (containerRef.current) {
