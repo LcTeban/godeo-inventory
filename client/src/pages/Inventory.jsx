@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { 
   PlusIcon, MinusIcon, TrashIcon, CameraIcon, QrCodeIcon,
-  DocumentArrowDownIcon, TableCellsIcon, PencilIcon 
+  DocumentArrowDownIcon, TableCellsIcon, PencilIcon,
+  FolderIcon, FolderOpenIcon, ArrowLeftIcon
 } from '@heroicons/react/24/outline';
 import BarcodeScanner from '../components/BarcodeScanner';
 import LazyImage from '../components/LazyImage';
-import CategorySelect from '../components/CategorySelect';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -20,7 +20,6 @@ const Inventory = () => {
   const [showScanner, setShowScanner] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterCategory, setFilterCategory] = useState(''); // '' = General (todos)
   const [formData, setFormData] = useState({
     name: '', category_id: '', stock: '', unit: 'unidad', min_stock: '10', 
     expiry_date: '', image: '', barcode: '', supplier_id: '', price: ''
@@ -30,31 +29,23 @@ const Inventory = () => {
   });
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [categoryTree, setCategoryTree] = useState([]);
+  
+  // Navegación por carpetas
+  const [currentFolderId, setCurrentFolderId] = useState(null); // null = raíz
+  const [folderPath, setFolderPath] = useState([]); // historial de IDs para volver
+  const [allCategories, setAllCategories] = useState([]);
 
   const { currentRestaurant, isAdmin, getProducts, addProduct, updateProduct, deleteProduct, addMovement, getSuppliers, getProductById, getProductImage, getAllCategoriesFlat } = useAuth();
 
   useEffect(() => {
     fetchProducts();
     fetchSuppliers();
-    loadCategoryTree();
+    loadCategories();
   }, [currentRestaurant]);
 
-  const loadCategoryTree = async () => {
+  const loadCategories = async () => {
     const flat = await getAllCategoriesFlat();
-    setCategoryTree(flat || []);
-  };
-
-  const getCategoryAndChildrenIds = (categoryId) => {
-    const ids = new Set();
-    const addChildren = (parentId) => {
-      ids.add(Number(parentId));
-      categoryTree.filter(c => c.parent_id === Number(parentId)).forEach(child => {
-        addChildren(child.id);
-      });
-    };
-    if (categoryId) addChildren(categoryId);
-    return ids;
+    setAllCategories(flat || []);
   };
 
   const fetchProducts = async () => {
@@ -87,10 +78,10 @@ const Inventory = () => {
     });
   };
 
-  const openAddModal = () => {
+  const openAddModal = (presetCategoryId = null) => {
     setEditingProduct(null);
     setFormData({
-      name: '', category_id: '', stock: '', unit: 'unidad', min_stock: '10',
+      name: '', category_id: presetCategoryId || '', stock: '', unit: 'unidad', min_stock: '10',
       expiry_date: '', image: '', barcode: '', supplier_id: '', price: ''
     });
     setShowAddModal(true);
@@ -176,8 +167,9 @@ const Inventory = () => {
     return { color: 'bg-green-100 text-green-800', text: 'OK' };
   };
 
+  // Exportaciones (usan los productos actualmente mostrados)
   const exportToExcel = () => {
-    const data = filteredProducts.map(p => ({
+    const data = displayedProducts.map(p => ({
       'Nombre': p.name,
       'Categoría': p.categories?.name || '',
       'Stock': p.stock,
@@ -197,10 +189,10 @@ const Inventory = () => {
   const exportToPDF = () => {
     const doc = new jsPDF();
     doc.setFontSize(16);
-    doc.text(`Inventario - Godeo ${currentRestaurant}`, 14, 20);
+    doc.text(`Inventario – Godeo ${currentRestaurant}`, 14, 20);
     doc.setFontSize(10);
     doc.text(`Generado: ${new Date().toLocaleString('es')}`, 14, 28);
-    const tableData = filteredProducts.map(p => [
+    const tableData = displayedProducts.map(p => [
       p.name,
       p.categories?.name || '',
       `${p.stock} ${p.unit}`,
@@ -220,13 +212,54 @@ const Inventory = () => {
     doc.save(`inventario_${currentRestaurant}_${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
-  const filteredProducts = products.filter(p => {
-    const matchesSearch = p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          p.barcode?.includes(searchTerm);
-    if (filterCategory === '') return matchesSearch;
-    const categoryIds = getCategoryAndChildrenIds(filterCategory);
-    return matchesSearch && categoryIds.has(p.category_id);
-  });
+  // Lógica de navegación de carpetas
+  const navigateToFolder = (folderId) => {
+    setFolderPath(prev => [...prev, currentFolderId]);
+    setCurrentFolderId(folderId);
+  };
+
+  const goBack = () => {
+    if (folderPath.length > 0) {
+      const previousId = folderPath[folderPath.length - 1];
+      setFolderPath(prev => prev.slice(0, -1));
+      setCurrentFolderId(previousId);
+    } else {
+      // Volver a raíz
+      setCurrentFolderId(null);
+    }
+  };
+
+  // Categorías a mostrar en el nivel actual
+  const currentCategories = (() => {
+    if (currentFolderId === null) {
+      return allCategories.filter(c => c.parent_id === null);
+    } else {
+      return allCategories.filter(c => c.parent_id === currentFolderId);
+    }
+  })();
+
+  // Productos de la carpeta actual (solo cuando no hay subcarpetas)
+  const isLeaf = currentCategories.length === 0 && currentFolderId !== null;
+  
+  const displayedProducts = (() => {
+    if (searchTerm.trim() !== '') {
+      // Búsqueda global: todos los productos que coincidan
+      return products.filter(p =>
+        p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.barcode?.includes(searchTerm)
+      );
+    }
+    if (isLeaf) {
+      return products.filter(p => p.category_id === currentFolderId);
+    }
+    // Si no es hoja y no hay búsqueda, no se muestran productos (solo carpetas)
+    return [];
+  })();
+
+  // Nombre de la carpeta actual para el título
+  const currentFolderName = currentFolderId 
+    ? (allCategories.find(c => c.id === currentFolderId)?.name || '') 
+    : '';
 
   const openCamera = () => {
     const input = document.createElement('input');
@@ -261,8 +294,18 @@ const Inventory = () => {
 
   return (
     <div className="space-y-4">
+      {/* Encabezado */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">Inventario</h1>
+        <div className="flex items-center gap-2">
+          {currentFolderId !== null && (
+            <button onClick={goBack} className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200" title="Volver">
+              <ArrowLeftIcon className="h-5 w-5 text-gray-600" />
+            </button>
+          )}
+          <h1 className="text-xl font-bold">
+            {currentFolderId ? currentFolderName : 'Inventario'}
+          </h1>
+        </div>
         <div className="flex items-center gap-2">
           <button onClick={exportToExcel} className="p-2 bg-green-100 text-green-700 rounded-lg" title="Excel">
             <TableCellsIcon className="h-5 w-5" />
@@ -271,91 +314,181 @@ const Inventory = () => {
             <DocumentArrowDownIcon className="h-5 w-5" />
           </button>
           {isAdmin && (
-            <button onClick={openAddModal} className="bg-blue-600 text-white p-3 rounded-full shadow-lg">
+            <button onClick={() => openAddModal(currentFolderId)} className="bg-blue-600 text-white p-3 rounded-full shadow-lg">
               <PlusIcon className="h-6 w-6" />
             </button>
           )}
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-2">
-        <div className="flex-1 relative">
-          <input type="text" placeholder="🔍 Buscar por nombre o código..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full p-3 border rounded-xl pl-10" />
-          <QrCodeIcon className="h-5 w-5 absolute left-3 top-3.5 text-gray-400" />
-        </div>
-        <div className="w-full sm:w-auto">
-          <CategorySelect
-            value={filterCategory}
-            onChange={(val) => setFilterCategory(val)}
-            restaurant={currentRestaurant}
-          />
-        </div>
+      {/* Barra de búsqueda (siempre visible) */}
+      <div className="relative">
+        <input
+          type="text"
+          placeholder="🔍 Buscar en todo el inventario..."
+          value={searchTerm}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            // Al empezar a buscar, podríamos salir de la navegación de carpetas (opcional)
+            if (e.target.value.trim() !== '') {
+              setCurrentFolderId(null);
+              setFolderPath([]);
+            }
+          }}
+          className="w-full p-3 border rounded-xl pl-10"
+        />
+        <QrCodeIcon className="h-5 w-5 absolute left-3 top-3.5 text-gray-400" />
       </div>
 
-      {isLoadingProducts && (
+      {/* Contenido principal */}
+      {isLoadingProducts ? (
         <div className="animate-pulse space-y-3">
           {[1,2,3,4,5].map(i => (
             <div key={i} className="h-20 bg-gray-200 rounded-xl"></div>
           ))}
         </div>
-      )}
-
-      {!isLoadingProducts && (
-        <div className="space-y-2">
-          {filteredProducts.map(product => {
-            const status = getStockStatus(product);
-            const isExpiring = product.expiry_date && (new Date(product.expiry_date) - new Date()) / (1000 * 60 * 60 * 24) <= 7;
-            return (
-              <div key={product.id} className="bg-white rounded-xl p-4 shadow-sm">
-                <div className="flex items-start gap-3">
-                  <LazyImage productId={product.id} fetchImage={getProductImage} />
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-semibold">{product.name}</h3>
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${status.color}`}>{status.text}</span>
-                      {isExpiring && <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800">⏰ Próximo</span>}
+      ) : searchTerm.trim() !== '' ? (
+        /* Vista de resultados de búsqueda */
+        <>
+          <p className="text-sm text-gray-500">
+            Resultados para «{searchTerm}» ({displayedProducts.length} producto{displayedProducts.length !== 1 ? 's' : ''})
+          </p>
+          <div className="space-y-2">
+            {displayedProducts.map(product => {
+              const status = getStockStatus(product);
+              const isExpiring = product.expiry_date && (new Date(product.expiry_date) - new Date()) / (1000 * 60 * 60 * 24) <= 7;
+              return (
+                <div key={product.id} className="bg-white rounded-xl p-4 shadow-sm">
+                  <div className="flex items-start gap-3">
+                    <LazyImage productId={product.id} fetchImage={getProductImage} />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="font-semibold">{product.name}</h3>
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${status.color}`}>{status.text}</span>
+                        {isExpiring && <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800">⏰ Próximo</span>}
+                      </div>
+                      {product.categories?.name && <p className="text-sm text-gray-500">📁 {product.categories.name}</p>}
+                      {product.suppliers?.name && <p className="text-xs text-gray-400">🏢 {product.suppliers.name}</p>}
+                      {product.barcode && <p className="text-xs text-gray-400">🏷️ {product.barcode}</p>}
+                      <div className="flex items-center justify-between mt-2">
+                        <div><span className="text-2xl font-bold">{product.stock}</span><span className="text-sm text-gray-500 ml-1">{product.unit}</span></div>
+                        {product.expiry_date && <div className="text-xs text-gray-500">Caduca: {new Date(product.expiry_date).toLocaleDateString('es')}</div>}
+                      </div>
                     </div>
-                    {product.categories?.name && (
-                      <p className="text-sm text-gray-500">📁 {product.categories.name}</p>
-                    )}
-                    {product.suppliers?.name && <p className="text-xs text-gray-400">🏢 {product.suppliers.name}</p>}
-                    {product.barcode && <p className="text-xs text-gray-400">🏷️ {product.barcode}</p>}
-                    {isAdmin && product.price > 0 && <p className="text-xs text-gray-500">💰 €{product.price}</p>}
-                    <div className="flex items-center justify-between mt-2">
-                      <div><span className="text-2xl font-bold">{product.stock}</span><span className="text-sm text-gray-500 ml-1">{product.unit}</span></div>
-                      {product.expiry_date && <div className="text-xs text-gray-500">Caduca: {new Date(product.expiry_date).toLocaleDateString('es')}</div>}
+                    <div className="flex flex-col gap-1">
+                      {isAdmin && (
+                        <button onClick={() => openEditModal(product)} className="p-2 bg-yellow-100 text-yellow-700 rounded-lg" title="Editar">
+                          <PencilIcon className="h-5 w-5" />
+                        </button>
+                      )}
+                      <button onClick={() => { setSelectedProduct(product); setMovementData({ type: 'entrada', quantity: '', reason: '' }); setShowMovementModal(true); }}
+                        className="p-2 bg-green-100 text-green-700 rounded-lg"><PlusIcon className="h-5 w-5" /></button>
+                      <button onClick={() => { setSelectedProduct(product); setMovementData({ type: 'salida', quantity: '', reason: '' }); setShowMovementModal(true); }}
+                        className="p-2 bg-red-100 text-red-700 rounded-lg" disabled={product.stock === 0}><MinusIcon className="h-5 w-5" /></button>
+                      {isAdmin && <button onClick={() => handleDelete(product.id)} className="p-2 bg-gray-100 text-gray-700 rounded-lg"><TrashIcon className="h-5 w-5" /></button>}
                     </div>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    {isAdmin && (
-                      <button onClick={() => openEditModal(product)} className="p-2 bg-yellow-100 text-yellow-700 rounded-lg" title="Editar">
-                        <PencilIcon className="h-5 w-5" />
-                      </button>
-                    )}
-                    <button onClick={() => { setSelectedProduct(product); setMovementData({ type: 'entrada', quantity: '', reason: '' }); setShowMovementModal(true); }}
-                      className="p-2 bg-green-100 text-green-700 rounded-lg"><PlusIcon className="h-5 w-5" /></button>
-                    <button onClick={() => { setSelectedProduct(product); setMovementData({ type: 'salida', quantity: '', reason: '' }); setShowMovementModal(true); }}
-                      className="p-2 bg-red-100 text-red-700 rounded-lg" disabled={product.stock === 0}><MinusIcon className="h-5 w-5" /></button>
-                    {isAdmin && <button onClick={() => handleDelete(product.id)} className="p-2 bg-gray-100 text-gray-700 rounded-lg"><TrashIcon className="h-5 w-5" /></button>}
                   </div>
                 </div>
-              </div>
+              );
+            })}
+            {displayedProducts.length === 0 && (
+              <div className="text-center py-8 text-gray-500">No se encontraron productos</div>
+            )}
+          </div>
+        </>
+      ) : isLeaf ? (
+        /* Vista de productos dentro de una carpeta hoja */
+        <>
+          <div className="space-y-2">
+            {displayedProducts.map(product => {
+              const status = getStockStatus(product);
+              const isExpiring = product.expiry_date && (new Date(product.expiry_date) - new Date()) / (1000 * 60 * 60 * 24) <= 7;
+              return (
+                <div key={product.id} className="bg-white rounded-xl p-4 shadow-sm">
+                  <div className="flex items-start gap-3">
+                    <LazyImage productId={product.id} fetchImage={getProductImage} />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="font-semibold">{product.name}</h3>
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${status.color}`}>{status.text}</span>
+                        {isExpiring && <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800">⏰ Próximo</span>}
+                      </div>
+                      {product.categories?.name && <p className="text-sm text-gray-500">📁 {product.categories.name}</p>}
+                      {product.suppliers?.name && <p className="text-xs text-gray-400">🏢 {product.suppliers.name}</p>}
+                      {product.barcode && <p className="text-xs text-gray-400">🏷️ {product.barcode}</p>}
+                      <div className="flex items-center justify-between mt-2">
+                        <div><span className="text-2xl font-bold">{product.stock}</span><span className="text-sm text-gray-500 ml-1">{product.unit}</span></div>
+                        {product.expiry_date && <div className="text-xs text-gray-500">Caduca: {new Date(product.expiry_date).toLocaleDateString('es')}</div>}
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      {isAdmin && (
+                        <button onClick={() => openEditModal(product)} className="p-2 bg-yellow-100 text-yellow-700 rounded-lg" title="Editar">
+                          <PencilIcon className="h-5 w-5" />
+                        </button>
+                      )}
+                      <button onClick={() => { setSelectedProduct(product); setMovementData({ type: 'entrada', quantity: '', reason: '' }); setShowMovementModal(true); }}
+                        className="p-2 bg-green-100 text-green-700 rounded-lg"><PlusIcon className="h-5 w-5" /></button>
+                      <button onClick={() => { setSelectedProduct(product); setMovementData({ type: 'salida', quantity: '', reason: '' }); setShowMovementModal(true); }}
+                        className="p-2 bg-red-100 text-red-700 rounded-lg" disabled={product.stock === 0}><MinusIcon className="h-5 w-5" /></button>
+                      {isAdmin && <button onClick={() => handleDelete(product.id)} className="p-2 bg-gray-100 text-gray-700 rounded-lg"><TrashIcon className="h-5 w-5" /></button>}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+            {displayedProducts.length === 0 && (
+              <div className="text-center py-8 text-gray-500">No hay productos en esta carpeta</div>
+            )}
+          </div>
+        </>
+      ) : (
+        /* Vista de carpetas (subcarpetas o raíz) */
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {currentCategories.map(cat => {
+            const hasChildren = allCategories.some(c => c.parent_id === cat.id);
+            return (
+              <button
+                key={cat.id}
+                onClick={() => navigateToFolder(cat.id)}
+                className="flex flex-col items-center p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow border border-gray-200 hover:border-blue-300 group"
+              >
+                {hasChildren ? (
+                  <FolderIcon className="h-16 w-16 text-yellow-500 mb-2 group-hover:scale-105 transition-transform" />
+                ) : (
+                  <FolderOpenIcon className="h-16 w-16 text-blue-500 mb-2 group-hover:scale-105 transition-transform" />
+                )}
+                <span className="text-sm font-medium text-gray-800 text-center leading-tight break-words">
+                  {cat.name}
+                </span>
+                {!hasChildren && (
+                  <span className="text-xs text-gray-500 mt-1">
+                    {products.filter(p => p.category_id === cat.id).length} producto(s)
+                  </span>
+                )}
+              </button>
             );
           })}
-          {filteredProducts.length === 0 && !isLoadingProducts && (
-            <div className="text-center py-8 text-gray-500">No hay productos</div>
+          {currentCategories.length === 0 && currentFolderId === null && (
+            <div className="col-span-full text-center py-10 text-gray-500">
+              <FolderIcon className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+              <p>No hay categorías creadas</p>
+              <p className="text-sm text-gray-400">Usa el botón + para agregar productos</p>
+            </div>
           )}
         </div>
       )}
 
-      {/* Modal Agregar/Editar Producto - Cierra al tocar fuera */}
+      {/* Modal de producto (se mantiene igual, solo que al abrir desde una carpeta se le pasa currentFolderId) */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end sm:items-center justify-center overflow-y-auto" onClick={resetModal}>
           <div className="bg-white rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <h2 className="text-xl font-bold mb-4">{editingProduct ? 'Editar Producto' : 'Nuevo Producto'}</h2>
             <form onSubmit={handleAddProduct} className="space-y-3">
-              {/* Foto */}
+              {/* ... (contenido del formulario sin cambios) ... */}
+              {/* Asegúrate de incluir el selector de categoría (puede ser el desplegable anterior o el nuevo) */}
+              {/* Para simplificar, puedes usar el selector simple que ya tenías, o el nuevo CategorySelect */}
+              {/* Aquí asumo que se mantiene el selector de categoría básico, puedes copiarlo del código anterior */}
               <div>
                 <label className="block text-sm font-medium mb-2">📸 Foto del producto</label>
                 <div className="flex gap-2">
@@ -376,11 +509,22 @@ const Inventory = () => {
 
               <input type="text" placeholder="Nombre*" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full p-3 border rounded-xl" required />
               
-              <CategorySelect
-                value={formData.category_id}
-                onChange={(val) => setFormData({...formData, category_id: val})}
-                restaurant={currentRestaurant}
-              />
+              {/* Selector de categoría simple (puedes reemplazar con el componente CategorySelect) */}
+              <div>
+                <label className="block text-sm font-medium mb-1">📁 Categoría</label>
+                <select
+                  value={formData.category_id}
+                  onChange={(e) => setFormData({...formData, category_id: e.target.value})}
+                  className="w-full p-3 border rounded-xl"
+                >
+                  <option value="">General</option>
+                  {allCategories.map(cat => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.label || cat.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
               <div>
                 <label className="block text-sm font-medium mb-1">🏢 Proveedor</label>
@@ -420,7 +564,7 @@ const Inventory = () => {
         </div>
       )}
 
-      {/* Modal Movimiento */}
+      {/* Modal Movimiento (sin cambios) */}
       {showMovementModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50" onClick={() => setShowMovementModal(false)}>
           <div className="bg-white rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
