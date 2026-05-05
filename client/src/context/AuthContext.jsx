@@ -217,7 +217,8 @@ export const AuthProvider = ({ children }) => {
     } catch { return null; }
   }, [apiCall]);
 
-  const addProduct = useCallback(async (data) => {
+  const addProduct = useCallback(async (data, targetRestaurant = null) => {
+    const restaurant = targetRestaurant || currentRestaurant;
     let finalData = { ...data };
     if (finalData.image && finalData.image.startsWith('data:image')) {
       try { finalData.image = await compressImage(finalData.image); } catch (e) { throw new Error('Error al procesar la imagen'); }
@@ -231,10 +232,10 @@ export const AuthProvider = ({ children }) => {
       price: parseFloat(data.price) || 0,
       supplier_id: supplierId,
       category_id: categoryId,
-      restaurant: currentRestaurant,
+      restaurant: restaurant,
       created_at: new Date().toISOString()
     });
-    await refreshProductCache(currentRestaurant);
+    await refreshProductCache(restaurant);
     return result;
   }, [apiCall, currentRestaurant, refreshProductCache]);
 
@@ -254,6 +255,24 @@ export const AuthProvider = ({ children }) => {
     await refreshProductCache(currentRestaurant);
     return result;
   }, [apiCall, currentRestaurant, refreshProductCache]);
+
+  const duplicateProduct = useCallback(async (productId, targetRestaurant) => {
+    const product = await getProductById(productId);
+    if (!product) throw new Error('Producto no encontrado');
+
+    return addProduct({
+      name: product.name,
+      category_id: product.category_id,
+      stock: product.stock,
+      unit: product.unit,
+      min_stock: product.min_stock,
+      expiry_date: product.expiry_date,
+      image: product.image,
+      barcode: product.barcode,
+      supplier_id: product.supplier_id,
+      price: product.price,
+    }, targetRestaurant);
+  }, [getProductById, addProduct]);
 
   // ========== MOVIMIENTOS ==========
   const getMovements = useCallback(async (options = {}) => {
@@ -459,7 +478,7 @@ export const AuthProvider = ({ children }) => {
     isAdmin: user?.role === 'ADMIN',
     restaurantName: restaurantNames[currentRestaurant],
     getProducts, getProductById, getProductImage, refreshProductCache,
-    addProduct, updateProduct, deleteProduct,
+    addProduct, updateProduct, deleteProduct, duplicateProduct,
     getMovements, addMovement,
     getTransfers, addTransfer, completeTransfer,
     getRequests, addRequest, updateRequest,
