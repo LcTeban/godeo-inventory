@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import {
   PlusIcon, MinusIcon, TrashIcon, CameraIcon, QrCodeIcon,
   DocumentArrowDownIcon, TableCellsIcon, PencilIcon,
-  FolderIcon, FolderOpenIcon, ArrowLeftIcon
+  FolderIcon, FolderOpenIcon, ArrowLeftIcon, DocumentDuplicateIcon
 } from '@heroicons/react/24/outline';
 import BarcodeScanner from '../components/BarcodeScanner';
 import LazyImage from '../components/LazyImage';
@@ -18,6 +18,7 @@ const Inventory = () => {
   const [editingProduct, setEditingProduct] = useState(null);
   const [showMovementModal, setShowMovementModal] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
+  const [showCopyModal, setShowCopyModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState({
@@ -29,6 +30,8 @@ const Inventory = () => {
   });
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [copyTarget, setCopyTarget] = useState('');
+  const [isCopying, setIsCopying] = useState(false);
 
   const [currentFolderId, setCurrentFolderId] = useState(null);
   const [folderPath, setFolderPath] = useState([]);
@@ -36,7 +39,8 @@ const Inventory = () => {
 
   const {
     currentRestaurant, isAdmin, getProducts, addProduct, updateProduct, deleteProduct,
-    addMovement, getSuppliers, getProductById, getProductImage, getAllCategoriesFlat
+    addMovement, getSuppliers, getProductById, getProductImage, getAllCategoriesFlat,
+    duplicateProduct
   } = useAuth();
 
   useEffect(() => {
@@ -161,6 +165,30 @@ const Inventory = () => {
         alert('Error al eliminar');
       }
     }
+  };
+
+  const handleCopyProduct = async () => {
+    if (!copyTarget || copyTarget === currentRestaurant) {
+      alert('Selecciona un restaurante de destino diferente al actual.');
+      return;
+    }
+    setIsCopying(true);
+    try {
+      await duplicateProduct(selectedProduct.id, copyTarget);
+      setShowCopyModal(false);
+      setCopyTarget('');
+      alert('✅ Producto copiado con éxito.');
+    } catch (error) {
+      alert('Error al copiar: ' + error.message);
+    } finally {
+      setIsCopying(false);
+    }
+  };
+
+  const openCopyModal = (product) => {
+    setSelectedProduct(product);
+    setCopyTarget('');
+    setShowCopyModal(true);
   };
 
   const getStockStatus = (product) => {
@@ -314,9 +342,14 @@ const Inventory = () => {
                   {/* Iconos de acción agrupados */}
                   <div className="flex items-center gap-1 ml-2 flex-shrink-0">
                     {isAdmin && (
-                      <button onClick={() => openEditModal(product)} className="p-1.5 text-yellow-600 hover:bg-yellow-100 rounded-lg" title="Editar">
-                        <PencilIcon className="h-4 w-4" />
-                      </button>
+                      <>
+                        <button onClick={() => openEditModal(product)} className="p-1.5 text-yellow-600 hover:bg-yellow-100 rounded-lg" title="Editar">
+                          <PencilIcon className="h-4 w-4" />
+                        </button>
+                        <button onClick={() => openCopyModal(product)} className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-lg" title="Copiar a otro restaurante">
+                          <DocumentDuplicateIcon className="h-4 w-4" />
+                        </button>
+                      </>
                     )}
                     <button onClick={() => { setSelectedProduct(product); setMovementData({ type: 'entrada', quantity: '', reason: '' }); setShowMovementModal(true); }}
                       className="p-1.5 text-green-600 hover:bg-green-100 rounded-lg" title="Entrada">
@@ -582,6 +615,47 @@ const Inventory = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Copiar Producto */}
+      {showCopyModal && selectedProduct && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end sm:items-center justify-center" onClick={() => setShowCopyModal(false)}>
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
+            <h2 className="text-xl font-bold mb-4">📋 Copiar Producto</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Copiarás <strong>{selectedProduct.name}</strong> a otro restaurante.
+            </p>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium mb-1">🏢 Restaurante destino</label>
+                <select
+                  value={copyTarget}
+                  onChange={(e) => setCopyTarget(e.target.value)}
+                  className="w-full p-3 border rounded-xl"
+                >
+                  <option value="">Seleccionar destino</option>
+                  {['POZOBLANCO', 'FUERTEVENTURA', 'GRAN_CAPITAN']
+                    .filter(r => r !== currentRestaurant)
+                    .map(r => (
+                      <option key={r} value={r}>
+                        {r === 'POZOBLANCO' ? '🍽️ Pozoblanco' : r === 'FUERTEVENTURA' ? '🏖️ Fuerteventura' : '🏛️ Gran Capitán'}
+                      </option>
+                    ))}
+                </select>
+              </div>
+              <div className="flex gap-2 pt-2">
+                <button onClick={() => setShowCopyModal(false)} className="flex-1 p-3 border rounded-xl">Cancelar</button>
+                <button
+                  onClick={handleCopyProduct}
+                  disabled={isCopying || !copyTarget}
+                  className="flex-1 p-3 bg-blue-600 text-white rounded-xl disabled:opacity-50"
+                >
+                  {isCopying ? 'Copiando...' : 'Copiar'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
