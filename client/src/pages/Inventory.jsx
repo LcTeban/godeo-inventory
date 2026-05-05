@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { 
+import {
   PlusIcon, MinusIcon, TrashIcon, CameraIcon, QrCodeIcon,
   DocumentArrowDownIcon, TableCellsIcon, PencilIcon,
   FolderIcon, FolderOpenIcon, ArrowLeftIcon
@@ -21,7 +21,7 @@ const Inventory = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState({
-    name: '', category_id: '', stock: '', unit: 'unidad', min_stock: '10', 
+    name: '', category_id: '', stock: '', unit: 'unidad', min_stock: '10',
     expiry_date: '', image: '', barcode: '', supplier_id: '', price: ''
   });
   const [movementData, setMovementData] = useState({
@@ -29,13 +29,15 @@ const Inventory = () => {
   });
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  
-  // Navegación por carpetas
-  const [currentFolderId, setCurrentFolderId] = useState(null); // null = raíz
+
+  const [currentFolderId, setCurrentFolderId] = useState(null);
   const [folderPath, setFolderPath] = useState([]);
   const [allCategories, setAllCategories] = useState([]);
 
-  const { currentRestaurant, isAdmin, getProducts, addProduct, updateProduct, deleteProduct, addMovement, getSuppliers, getProductById, getProductImage, getAllCategoriesFlat } = useAuth();
+  const {
+    currentRestaurant, isAdmin, getProducts, addProduct, updateProduct, deleteProduct,
+    addMovement, getSuppliers, getProductById, getProductImage, getAllCategoriesFlat
+  } = useAuth();
 
   useEffect(() => {
     fetchProducts();
@@ -167,7 +169,6 @@ const Inventory = () => {
     return { color: 'bg-green-100 text-green-800', text: 'OK' };
   };
 
-  // Exportaciones (usan los productos actualmente visibles en el contexto de carpeta o búsqueda)
   const getDisplayedProducts = () => {
     if (searchTerm.trim() !== '') {
       return products.filter(p =>
@@ -175,14 +176,10 @@ const Inventory = () => {
         p.barcode?.includes(searchTerm)
       );
     }
-    // Si estamos en una carpeta (incluye raíz y cualquier nivel)
     if (currentFolderId === null) {
-      // Raíz: todos los productos sin categoría (general) y los de las carpetas (no se muestran aquí, solo las sin categoría)
       return products.filter(p => !p.category_id);
-    } else {
-      // Productos directamente en esta carpeta (ignorando subcarpetas)
-      return products.filter(p => p.category_id === currentFolderId);
     }
+    return products.filter(p => p.category_id === currentFolderId);
   };
 
   const displayedProducts = getDisplayedProducts();
@@ -231,7 +228,6 @@ const Inventory = () => {
     doc.save(`inventario_${currentRestaurant}_${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
-  // Navegación de carpetas
   const navigateToFolder = (folderId) => {
     setFolderPath(prev => [...prev, currentFolderId]);
     setCurrentFolderId(folderId);
@@ -247,31 +243,24 @@ const Inventory = () => {
     }
   };
 
-  // Categorías a mostrar en el nivel actual
   const currentCategories = (() => {
     if (currentFolderId === null) {
       return allCategories.filter(c => c.parent_id === null);
-    } else {
-      return allCategories.filter(c => c.parent_id === currentFolderId);
     }
+    return allCategories.filter(c => c.parent_id === currentFolderId);
   })();
 
-  // Productos que pertenecen directamente a la carpeta actual (sin contar subcarpetas)
   const currentProductsInFolder = (() => {
-    if (currentFolderId === null) {
-      return []; // los productos sin categoría se muestran aparte
-    } else {
-      return products.filter(p => p.category_id === currentFolderId);
-    }
+    if (currentFolderId === null) return [];
+    return products.filter(p => p.category_id === currentFolderId);
   })();
 
-  // Productos sin categoría en la raíz (cuando no hay búsqueda)
   const uncategorizedProducts = (searchTerm.trim() === '' && currentFolderId === null)
     ? products.filter(p => !p.category_id)
     : [];
 
-  const currentFolderName = currentFolderId 
-    ? (allCategories.find(c => c.id === currentFolderId)?.name || '') 
+  const currentFolderName = currentFolderId
+    ? (allCategories.find(c => c.id === currentFolderId)?.name || '')
     : '';
 
   const openCamera = () => {
@@ -304,6 +293,66 @@ const Inventory = () => {
     };
     input.click();
   };
+
+  // Componente de lista de productos con diseño compacto
+  const ProductList = ({ products }) => (
+    <div className="space-y-2">
+      {products.map(product => {
+        const status = getStockStatus(product);
+        const isExpiring = product.expiry_date && (new Date(product.expiry_date) - new Date()) / (1000 * 60 * 60 * 24) <= 7;
+        return (
+          <div key={product.id} className="bg-white rounded-xl p-3 shadow-sm">
+            <div className="flex items-start gap-3">
+              <LazyImage productId={product.id} fetchImage={getProductImage} />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="font-semibold text-sm truncate">{product.name}</h3>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${status.color}`}>{status.text}</span>
+                    {isExpiring && <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800">⏰ Próximo</span>}
+                  </div>
+                  {/* Iconos de acción agrupados */}
+                  <div className="flex items-center gap-1 ml-2 flex-shrink-0">
+                    {isAdmin && (
+                      <button onClick={() => openEditModal(product)} className="p-1.5 text-yellow-600 hover:bg-yellow-100 rounded-lg" title="Editar">
+                        <PencilIcon className="h-4 w-4" />
+                      </button>
+                    )}
+                    <button onClick={() => { setSelectedProduct(product); setMovementData({ type: 'entrada', quantity: '', reason: '' }); setShowMovementModal(true); }}
+                      className="p-1.5 text-green-600 hover:bg-green-100 rounded-lg" title="Entrada">
+                      <PlusIcon className="h-4 w-4" />
+                    </button>
+                    <button onClick={() => { setSelectedProduct(product); setMovementData({ type: 'salida', quantity: '', reason: '' }); setShowMovementModal(true); }}
+                      className="p-1.5 text-red-600 hover:bg-red-100 rounded-lg" disabled={product.stock === 0} title="Salida">
+                      <MinusIcon className="h-4 w-4" />
+                    </button>
+                    {isAdmin && (
+                      <button onClick={() => handleDelete(product.id)} className="p-1.5 text-gray-500 hover:bg-gray-200 rounded-lg" title="Eliminar">
+                        <TrashIcon className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+                {/* Info secundaria en una línea */}
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs text-gray-500">
+                  {product.categories?.name && <span>📁 {product.categories.name}</span>}
+                  {product.suppliers?.name && <span>🏢 {product.suppliers.name}</span>}
+                  {product.barcode && <span>🏷️ {product.barcode}</span>}
+                  {isAdmin && product.price > 0 && <span>💰 €{product.price}</span>}
+                  {product.expiry_date && <span>📅 Caduca: {new Date(product.expiry_date).toLocaleDateString('es')}</span>}
+                </div>
+                {/* Stock destacado */}
+                <div className="mt-2">
+                  <span className="text-xl font-bold">{product.stock}</span>
+                  <span className="text-sm text-gray-500 ml-1">{product.unit}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
 
   return (
     <div className="space-y-4">
@@ -360,26 +409,15 @@ const Inventory = () => {
           ))}
         </div>
       ) : searchTerm.trim() !== '' ? (
-        /* Vista de resultados de búsqueda */
         <>
           <p className="text-sm text-gray-500">
             Resultados para «{searchTerm}» ({displayedProducts.length} producto{displayedProducts.length !== 1 ? 's' : ''})
           </p>
-          <ProductList
-            products={displayedProducts}
-            getProductImage={getProductImage}
-            isAdmin={isAdmin}
-            openEditModal={openEditModal}
-            setSelectedProduct={setSelectedProduct}
-            setMovementData={setMovementData}
-            setShowMovementModal={setShowMovementModal}
-            handleDelete={handleDelete}
-            getStockStatus={getStockStatus}
-          />
+          <ProductList products={displayedProducts} />
         </>
       ) : (
         <>
-          {/* Carpeta actual: subcarpetas + productos directos */}
+          {/* Carpetas */}
           {currentCategories.length > 0 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
               {currentCategories.map(cat => {
@@ -409,45 +447,25 @@ const Inventory = () => {
             </div>
           )}
 
-          {/* Productos directamente en esta carpeta */}
+          {/* Productos en carpeta actual */}
           {currentProductsInFolder.length > 0 && (
             <div className="mt-4">
               {currentFolderId && (
                 <h2 className="text-sm font-semibold text-gray-600 mb-2">Productos en {currentFolderName}</h2>
               )}
-              <ProductList
-                products={currentProductsInFolder}
-                getProductImage={getProductImage}
-                isAdmin={isAdmin}
-                openEditModal={openEditModal}
-                setSelectedProduct={setSelectedProduct}
-                setMovementData={setMovementData}
-                setShowMovementModal={setShowMovementModal}
-                handleDelete={handleDelete}
-                getStockStatus={getStockStatus}
-              />
+              <ProductList products={currentProductsInFolder} />
             </div>
           )}
 
-          {/* Productos sin categoría (solo en raíz y sin subcarpetas mostradas) */}
+          {/* Productos sin categoría (solo en raíz) */}
           {uncategorizedProducts.length > 0 && currentCategories.length === 0 && (
             <div>
               <h2 className="text-sm font-semibold text-gray-600 mb-2">📂 Productos sin categoría</h2>
-              <ProductList
-                products={uncategorizedProducts}
-                getProductImage={getProductImage}
-                isAdmin={isAdmin}
-                openEditModal={openEditModal}
-                setSelectedProduct={setSelectedProduct}
-                setMovementData={setMovementData}
-                setShowMovementModal={setShowMovementModal}
-                handleDelete={handleDelete}
-                getStockStatus={getStockStatus}
-              />
+              <ProductList products={uncategorizedProducts} />
             </div>
           )}
 
-          {/* Estado vacío total */}
+          {/* Estado vacío */}
           {currentCategories.length === 0 && currentProductsInFolder.length === 0 && uncategorizedProducts.length === 0 && (
             <div className="text-center py-10 text-gray-500">
               <FolderIcon className="h-12 w-12 mx-auto mb-3 text-gray-300" />
@@ -571,52 +589,6 @@ const Inventory = () => {
       {showScanner && (
         <BarcodeScanner onScan={(code) => { setFormData({...formData, barcode: code}); setShowScanner(false); }} onClose={() => setShowScanner(false)} />
       )}
-    </div>
-  );
-};
-
-// Componente auxiliar para listar productos (evita repetir código)
-const ProductList = ({ products, getProductImage, isAdmin, openEditModal, setSelectedProduct, setMovementData, setShowMovementModal, handleDelete, getStockStatus }) => {
-  return (
-    <div className="space-y-2">
-      {products.map(product => {
-        const status = getStockStatus(product);
-        const isExpiring = product.expiry_date && (new Date(product.expiry_date) - new Date()) / (1000 * 60 * 60 * 24) <= 7;
-        return (
-          <div key={product.id} className="bg-white rounded-xl p-4 shadow-sm">
-            <div className="flex items-start gap-3">
-              <LazyImage productId={product.id} fetchImage={getProductImage} />
-              <div className="flex-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="font-semibold">{product.name}</h3>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${status.color}`}>{status.text}</span>
-                  {isExpiring && <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800">⏰ Próximo</span>}
-                </div>
-                {product.categories?.name && <p className="text-sm text-gray-500">📁 {product.categories.name}</p>}
-                {product.suppliers?.name && <p className="text-xs text-gray-400">🏢 {product.suppliers.name}</p>}
-                {product.barcode && <p className="text-xs text-gray-400">🏷️ {product.barcode}</p>}
-                {isAdmin && product.price > 0 && <p className="text-xs text-gray-500">💰 €{product.price}</p>}
-                <div className="flex items-center justify-between mt-2">
-                  <div><span className="text-2xl font-bold">{product.stock}</span><span className="text-sm text-gray-500 ml-1">{product.unit}</span></div>
-                  {product.expiry_date && <div className="text-xs text-gray-500">Caduca: {new Date(product.expiry_date).toLocaleDateString('es')}</div>}
-                </div>
-              </div>
-              <div className="flex flex-col gap-1">
-                {isAdmin && (
-                  <button onClick={() => openEditModal(product)} className="p-2 bg-yellow-100 text-yellow-700 rounded-lg" title="Editar">
-                    <PencilIcon className="h-5 w-5" />
-                  </button>
-                )}
-                <button onClick={() => { setSelectedProduct(product); setMovementData({ type: 'entrada', quantity: '', reason: '' }); setShowMovementModal(true); }}
-                  className="p-2 bg-green-100 text-green-700 rounded-lg"><PlusIcon className="h-5 w-5" /></button>
-                <button onClick={() => { setSelectedProduct(product); setMovementData({ type: 'salida', quantity: '', reason: '' }); setShowMovementModal(true); }}
-                  className="p-2 bg-red-100 text-red-700 rounded-lg" disabled={product.stock === 0}><MinusIcon className="h-5 w-5" /></button>
-                {isAdmin && <button onClick={() => handleDelete(product.id)} className="p-2 bg-gray-100 text-gray-700 rounded-lg"><TrashIcon className="h-5 w-5" /></button>}
-              </div>
-            </div>
-          </div>
-        );
-      })}
     </div>
   );
 };
