@@ -575,7 +575,7 @@ export const AuthProvider = ({ children }) => {
     user, login, logout, switchRestaurant, currentRestaurant,
     isAdmin: user?.role === 'ADMIN',
     restaurantName: restaurantNames[currentRestaurant],
-    notificationsEnabled: Notification.permission === 'granted',
+    notificationsEnabled: (typeof Notification !== 'undefined' && Notification.permission === 'granted'),
     enableNotifications,
     getProducts, getProductById, getProductImage, refreshProductCache,
     addProduct, updateProduct, deleteProduct, duplicateProduct,
