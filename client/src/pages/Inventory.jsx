@@ -320,7 +320,6 @@ const Inventory = () => {
     input.click();
   };
 
-  // Componente ProductList con iconos en la parte inferior derecha
   const ProductList = ({ products }) => (
     <div className="space-y-2">
       {products.map(product => {
@@ -337,7 +336,20 @@ const Inventory = () => {
                     <span className={`text-xs px-2 py-0.5 rounded-full ${status.color}`}>{status.text}</span>
                     {isExpiring && <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800">⏰ Próximo</span>}
                   </div>
-                  <div className="flex items-center gap-1 ml-2 flex-shrink-0">
+                </div>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs text-gray-500">
+                  {product.categories?.name && <span>📁 {product.categories.name}</span>}
+                  {product.suppliers?.name && <span>🏢 {product.suppliers.name}</span>}
+                  {product.barcode && <span>🏷️ {product.barcode}</span>}
+                  {isAdmin && product.price > 0 && <span>💰 €{product.price}</span>}
+                  {product.expiry_date && <span>📅 Caduca: {new Date(product.expiry_date).toLocaleDateString('es')}</span>}
+                </div>
+                <div className="flex items-end justify-between mt-2">
+                  <div>
+                    <span className="text-xl font-bold">{product.stock}</span>
+                    <span className="text-sm text-gray-500 ml-1">{product.unit}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
                     {isAdmin && (
                       <>
                         <button onClick={() => openEditModal(product)} className="p-1.5 text-yellow-600 hover:bg-yellow-100 rounded-lg" title="Editar">
@@ -362,17 +374,6 @@ const Inventory = () => {
                       </button>
                     )}
                   </div>
-                </div>
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs text-gray-500">
-                  {product.categories?.name && <span>📁 {product.categories.name}</span>}
-                  {product.suppliers?.name && <span>🏢 {product.suppliers.name}</span>}
-                  {product.barcode && <span>🏷️ {product.barcode}</span>}
-                  {isAdmin && product.price > 0 && <span>💰 €{product.price}</span>}
-                  {product.expiry_date && <span>📅 Caduca: {new Date(product.expiry_date).toLocaleDateString('es')}</span>}
-                </div>
-                <div className="mt-2">
-                  <span className="text-xl font-bold">{product.stock}</span>
-                  <span className="text-sm text-gray-500 ml-1">{product.unit}</span>
                 </div>
               </div>
             </div>
