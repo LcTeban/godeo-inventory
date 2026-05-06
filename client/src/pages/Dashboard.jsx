@@ -5,23 +5,12 @@ import {
   ExclamationTriangleIcon,
   ClockIcon
 } from '@heroicons/react/24/outline';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Cell
-} from 'recharts';
 
 const Dashboard = () => {
   const { currentRestaurant, isAdmin, getDashboard, getMovements, getRequests } = useAuth();
   const [stats, setStats] = useState({ restaurants: {}, pendingTransfers: 0 });
   const [recentMovements, setRecentMovements] = useState([]);
   const [pendingRequests, setPendingRequests] = useState([]);
-  const [consumptionData, setConsumptionData] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,7 +22,7 @@ const Dashboard = () => {
     try {
       const [dashboardData, movements, requests] = await Promise.all([
         getDashboard(),
-        getMovements({ period: 'week' }),
+        getMovements({ limit: 5 }),
         isAdmin ? getRequests() : Promise.resolve([])
       ]);
 
@@ -42,24 +31,6 @@ const Dashboard = () => {
       if (isAdmin) {
         setPendingRequests((requests || []).filter(r => r.status === 'pendiente'));
       }
-
-      // Calcular consumo semanal (top 5 productos)
-      const weeklyMovements = movements || [];
-      const consumptionMap = {};
-
-      weeklyMovements
-        .filter(m => m.type === 'salida')
-        .forEach(m => {
-          const productName = m.products?.name || 'Desconocido';
-          consumptionMap[productName] = (consumptionMap[productName] || 0) + (m.quantity || 0);
-        });
-
-      const sorted = Object.entries(consumptionMap)
-        .map(([name, value]) => ({ name, consumo: value }))
-        .sort((a, b) => b.consumo - a.consumo)
-        .slice(0, 5);
-
-      setConsumptionData(sorted);
     } catch (error) {
       console.error('Error cargando dashboard:', error);
     } finally {
@@ -68,13 +39,12 @@ const Dashboard = () => {
   };
 
   const restaurants = [
-    { id: 'POZOBLANCO', name: 'Pozoblanco', icon: '🍽️', color: 'from-orange-400 to-orange-600', bg: 'bg-orange-50', barColor: '#f97316' },
-    { id: 'FUERTEVENTURA', name: 'Fuerteventura', icon: '🏖️', color: 'from-blue-400 to-blue-600', bg: 'bg-blue-50', barColor: '#3b82f6' },
-    { id: 'GRAN_CAPITAN', name: 'Gran Capitán', icon: '🏛️', color: 'from-purple-400 to-purple-600', bg: 'bg-purple-50', barColor: '#8b5cf6' }
+    { id: 'POZOBLANCO', name: 'Pozoblanco', icon: '🍽️', color: 'from-orange-400 to-orange-600', bg: 'bg-orange-50' },
+    { id: 'FUERTEVENTURA', name: 'Fuerteventura', icon: '🏖️', color: 'from-blue-400 to-blue-600', bg: 'bg-blue-50' },
+    { id: 'GRAN_CAPITAN', name: 'Gran Capitán', icon: '🏛️', color: 'from-purple-400 to-purple-600', bg: 'bg-purple-50' }
   ];
 
   const currentRest = restaurants.find(r => r.id === currentRestaurant);
-  const barColor = currentRest?.barColor || '#3b82f6';
 
   if (loading) {
     return (
@@ -85,7 +55,6 @@ const Dashboard = () => {
           <div className="h-20 bg-gray-200 rounded-xl"></div>
           <div className="h-20 bg-gray-200 rounded-xl"></div>
         </div>
-        <div className="h-60 bg-gray-200 rounded-xl"></div>
         <div className="h-40 bg-gray-200 rounded-xl"></div>
       </div>
     );
@@ -184,36 +153,6 @@ const Dashboard = () => {
           )}
         </>
       )}
-
-      {/* Gráfico de consumo semanal */}
-      <div className="bg-white rounded-xl p-4 shadow-sm">
-        <h3 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
-          📊 Top 5 productos consumidos esta semana
-        </h3>
-        {consumptionData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart
-              data={consumptionData}
-              layout="vertical"
-              margin={{ top: 5, right: 30, left: 60, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-              <XAxis type="number" />
-              <YAxis type="category" dataKey="name" tick={{ fontSize: 12 }} width={100} />
-              <Tooltip />
-              <Bar dataKey="consumo" fill={barColor} radius={[0, 4, 4, 0]}>
-                {consumptionData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={barColor} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        ) : (
-          <p className="text-gray-500 text-sm text-center py-8">
-            No hay datos de consumo esta semana
-          </p>
-        )}
-      </div>
 
       {/* Actividad reciente */}
       <div className="bg-white rounded-xl p-4 shadow-sm">
