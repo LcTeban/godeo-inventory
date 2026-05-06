@@ -1,10 +1,13 @@
 import { createContext, useState, useContext, useEffect, useCallback } from 'react';
+import { createClient } from '@supabase/supabase-js';
 
 const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
 
 const SUPABASE_URL = 'https://fshypzqmuyctllmbzdnh.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzaHlwenFtdXljdGxsbWJ6ZG5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0OTQ1NDMsImV4cCI6MjA5MzA3MDU0M30.m4c4A6J7K8JvGI69eHBpfUtGMMdD4jVGvfjz_NmQdHE';
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const compressImage = (base64Str, maxWidth = 400) => {
   return new Promise((resolve, reject) => {
@@ -33,30 +36,100 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [currentRestaurant, setCurrentRestaurant] = useState(null);
   const [cachedProducts, setCachedProducts] = useState([]);
+  const [supabaseToken, setSupabaseToken] = useState(null);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
-    if (token && userData) {
-      const parsedUser = JSON.parse(userData);
-      setUser(parsedUser);
-      // Recuperar el último restaurante seleccionado si el usuario es admin
-      if (parsedUser.role === 'ADMIN') {
-        const savedRestaurant = localStorage.getItem('selectedRestaurant');
-        setCurrentRestaurant(savedRestaurant || parsedUser.restaurant);
-      } else {
-        setCurrentRestaurant(parsedUser.restaurant);
+    const checkSession = async () => {
+      // Intentar recuperar sesión de Supabase Auth
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        await loadUserFromSupabase(session);
+        setLoading(false);
+        return;
       }
-    }
-    setLoading(false);
+
+      // Si no hay sesión de Supabase, usar el sistema antiguo
+      const token = localStorage.getItem('token');
+      const userData = localStorage.getItem('user');
+      if (token && userData) {
+        const parsedUser = JSON.parse(userData);
+        setUser(parsedUser);
+        if (parsedUser.role === 'ADMIN') {
+          const savedRestaurant = localStorage.getItem('selectedRestaurant');
+          setCurrentRestaurant(savedRestaurant || parsedUser.restaurant);
+        } else {
+          setCurrentRestaurant(parsedUser.restaurant);
+        }
+      }
+      setLoading(false);
+    };
+    checkSession();
+
+    const { data: listener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        await loadUserFromSupabase(session);
+      } else {
+        // Si se cierra sesión en Supabase, volver al sistema antiguo si existe
+        const oldToken = localStorage.getItem('token');
+        if (!oldToken) {
+          setUser(null);
+          setCurrentRestaurant(null);
+        }
+      }
+    });
+
+    return () => listener.subscription.unsubscribe();
   }, []);
+
+  const loadUserFromSupabase = async (session) => {
+    try {
+      setSupabaseToken(session.access_token);
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('name, role, restaurant')
+        .eq('id', session.user.id)
+        .single();
+
+      if (error) throw error;
+
+      const userData = {
+        id: session.user.id,
+        email: session.user.email,
+        name: data.name,
+        role: data.role,
+        restaurant: data.restaurant
+      };
+
+      setUser(userData);
+      localStorage.setItem('user', JSON.stringify(userData));
+      localStorage.setItem('supabaseToken', session.access_token);
+
+      if (userData.role === 'ADMIN') {
+        const saved = localStorage.getItem('selectedRestaurant');
+        setCurrentRestaurant(saved || userData.restaurant);
+      } else {
+        setCurrentRestaurant(userData.restaurant);
+      }
+    } catch (error) {
+      console.error('Error al cargar perfil de Supabase:', error);
+      await supabase.auth.signOut();
+      setSupabaseToken(null);
+    }
+  };
 
   const apiCall = useCallback(async (table, method, data = null, filters = {}) => {
     const headers = {
       'Content-Type': 'application/json',
       'apikey': SUPABASE_KEY,
-      'Authorization': `Bearer ${SUPABASE_KEY}`
     };
+
+    // Usar token de Supabase si está disponible, si no, usar la API key como antes
+    if (supabaseToken) {
+      headers['Authorization'] = `Bearer ${supabaseToken}`;
+    } else {
+      headers['Authorization'] = `Bearer ${SUPABASE_KEY}`;
+    }
 
     let url = `${SUPABASE_URL}/rest/v1/${table}`;
     const queryParams = new URLSearchParams();
@@ -97,10 +170,22 @@ export const AuthProvider = ({ children }) => {
     }
     if (response.status === 204 || method === 'DELETE') return { success: true };
     try { return await response.json(); } catch (e) { return { success: true }; }
-  }, []);
+  }, [supabaseToken]);
 
-  // Login simple con la tabla 'users'
+  // Login que prueba primero Supabase Auth, luego el sistema antiguo
   const login = async (email, password) => {
+    try {
+      // Intentar login con Supabase Auth
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (!error && data.session) {
+        return { success: true };
+      }
+      console.log('Supabase Auth falló, usando sistema antiguo:', error?.message);
+    } catch (e) {
+      console.log('Error en Supabase Auth:', e);
+    }
+
+    // Fallback al sistema antiguo
     try {
       const users = await apiCall('users', 'GET', null, {
         select: '*',
@@ -133,12 +218,15 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut();
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     localStorage.removeItem('selectedRestaurant');
+    localStorage.removeItem('supabaseToken');
     setUser(null);
     setCurrentRestaurant(null);
+    setSupabaseToken(null);
   };
 
   const switchRestaurant = (r) => {
@@ -322,7 +410,7 @@ export const AuthProvider = ({ children }) => {
     }, targetRestaurant);
   }, [getProductById, addProduct]);
 
-  // ========== MOVIMIENTOS (con notificaciones locales) ==========
+  // ========== MOVIMIENTOS ==========
   const getMovements = useCallback(async (options = {}) => {
     const { restaurant, period } = options;
     const filterRestaurant = restaurant !== undefined ? restaurant : currentRestaurant;
