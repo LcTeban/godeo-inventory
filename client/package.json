@@ -17,35 +17,6 @@
     "xlsx": "0.18.5",
     "jspdf": "2.5.1",
     "jspdf-autotable": "3.8.2",
-    "recharts": "2.10.3"
-  },
-  "devDependencies": {
-    "@vitejs/plugin-react": "4.2.1",
-    "vite": "5.0.8",
-    "tailwindcss": "3.4.0",
-    "autoprefixer": "10.4.16",
-    "postcss": "8.4.32"
-  }
-}
-{
-  "name": "godeo-client",
-  "version": "1.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build"
-  },
-  "dependencies": {
-    "react": "18.2.0",
-    "react-dom": "18.2.0",
-    "react-router-dom": "6.20.1",
-    "axios": "1.6.2",
-    "date-fns": "3.0.6",
-    "@heroicons/react": "2.0.18",
-    "html5-qrcode": "2.3.8",
-    "xlsx": "0.18.5",
-    "jspdf": "2.5.1",
-    "jspdf-autotable": "3.8.2",
     "recharts": "2.10.3",
     "firebase": "10.7.1"
   },
