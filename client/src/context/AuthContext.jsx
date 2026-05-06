@@ -1,5 +1,4 @@
 import { createContext, useState, useContext, useEffect, useCallback } from 'react';
-import { requestNotificationPermission } from '../firebase';
 
 const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
@@ -119,6 +118,8 @@ export const AuthProvider = ({ children }) => {
 
   const enableNotifications = useCallback(async () => {
     try {
+      // Importación dinámica para que falle silenciosamente si no hay Firebase
+      const { requestNotificationPermission } = await import('../firebase');
       const result = await requestNotificationPermission();
       if (result.success && result.token) {
         setFcmToken(result.token);
@@ -133,7 +134,8 @@ export const AuthProvider = ({ children }) => {
       }
       return { success: false, error: result.error };
     } catch (error) {
-      return { success: false, error: error.message };
+      console.error('Error enabling notifications:', error);
+      return { success: false, error: 'No se pudo activar notificaciones' };
     }
   }, [user, apiCall]);
 
