@@ -18,7 +18,8 @@
     "jspdf": "2.5.1",
     "jspdf-autotable": "3.8.2",
     "recharts": "2.10.3",
-    "firebase": "10.7.1"
+    "firebase": "10.7.1",
+    "@supabase/supabase-js": "2.39.7"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "4.2.1",
