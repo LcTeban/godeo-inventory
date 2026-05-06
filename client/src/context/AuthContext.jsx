@@ -4,7 +4,6 @@ import { createClient } from '@supabase/supabase-js';
 const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
 
-// Conexión a Supabase
 const supabase = createClient(
   'https://fshypzqmuyctllmbzdnh.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzaHlwenFtdXljdGxsbWJ6ZG5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0OTQ1NDMsImV4cCI6MjA5MzA3MDU0M30.m4c4A6J7K8JvGI69eHBpfUtGMMdD4jVGvfjz_NmQdHE'
@@ -90,13 +89,11 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // ✅ apiCall corregido: obtiene el token de varias fuentes
+  // apiCall corregido: obtiene el token de la sesión o del localStorage
   const apiCall = useCallback(async (table, method, data = null, filters = {}) => {
-    // Obtener token de la sesión actual
     const { data: { session } } = await supabase.auth.getSession();
     let token = session?.access_token;
 
-    // Si no hay sesión activa, intentar recuperar el token del localStorage
     if (!token) {
       const rawToken = localStorage.getItem('sb-fshypzqmuyctllmbzdnh-auth-token');
       if (rawToken) {
@@ -158,7 +155,7 @@ export const AuthProvider = ({ children }) => {
 
   // Login con Supabase Auth
   const login = async (email, password) => {
-    await supabase.auth.signOut(); // cierra cualquier sesión anterior
+    await supabase.auth.signOut();
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) return { success: false, error: error.message };
     if (!data.session) return { success: false, error: 'Error de autenticación' };
@@ -180,9 +177,9 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Notificación local
+  // Notificación local protegida
   const showLocalNotification = (title, body, url = '/') => {
-    if (Notification.permission === 'granted') {
+    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
       new Notification(title, { body, icon: '/godeo-inventory/icon-192.png', data: { url } });
     }
   };
@@ -204,6 +201,7 @@ export const AuthProvider = ({ children }) => {
 
   const enableNotifications = useCallback(async () => {
     try {
+      if (typeof Notification === 'undefined') return { success: false, error: 'Notificaciones no soportadas' };
       const permission = await Notification.requestPermission();
       return permission === 'granted' ? { success: true } : { success: false, error: 'Permiso denegado' };
     } catch (error) {
