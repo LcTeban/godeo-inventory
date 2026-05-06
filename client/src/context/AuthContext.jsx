@@ -40,7 +40,13 @@ export const AuthProvider = ({ children }) => {
     if (token && userData) {
       const parsedUser = JSON.parse(userData);
       setUser(parsedUser);
-      setCurrentRestaurant(parsedUser.restaurant);
+      // Recuperar el último restaurante seleccionado si el usuario es admin
+      if (parsedUser.role === 'ADMIN') {
+        const savedRestaurant = localStorage.getItem('selectedRestaurant');
+        setCurrentRestaurant(savedRestaurant || parsedUser.restaurant);
+      } else {
+        setCurrentRestaurant(parsedUser.restaurant);
+      }
     }
     setLoading(false);
   }, []);
@@ -115,7 +121,12 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(userData));
       setUser(userData);
-      setCurrentRestaurant(userData.restaurant);
+      if (userData.role === 'ADMIN') {
+        const saved = localStorage.getItem('selectedRestaurant');
+        setCurrentRestaurant(saved || userData.restaurant);
+      } else {
+        setCurrentRestaurant(userData.restaurant);
+      }
       return { success: true };
     } catch (error) {
       return { success: false, error: error.message };
