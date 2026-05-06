@@ -11,6 +11,7 @@ const Requests = () => {
     notes: ''
   });
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(null);
+  const [productExists, setProductExists] = useState({}); // Estado para saber si un producto existe en inventario
   const { isAdmin, user, getRequests, addRequest, updateRequest, getProducts } = useAuth();
 
   useEffect(() => {
@@ -55,10 +56,17 @@ const Requests = () => {
       const newItems = [...prev.items];
       newItems[index] = { ...newItems[index], [field]: value };
       
-      if (field === 'productName' && value) {
-        const selectedProduct = products.find(p => p.name === value || p.id?.toString() === value);
-        if (selectedProduct) {
-          newItems[index].unit = selectedProduct.unit || 'unidad';
+      if (field === 'productName') {
+        // Verificar si el producto existe en el inventario
+        const exists = products.some(p => p.name.toLowerCase() === value.toLowerCase());
+        setProductExists(prev => ({ ...prev, [index]: exists }));
+        
+        // Auto-rellenar unidad si se selecciona producto existente
+        if (exists) {
+          const selectedProduct = products.find(p => p.name.toLowerCase() === value.toLowerCase());
+          if (selectedProduct) {
+            newItems[index].unit = selectedProduct.unit || 'unidad';
+          }
         }
       }
       
@@ -80,6 +88,7 @@ const Requests = () => {
       };
       return { ...prev, items: newItems };
     });
+    setProductExists(prev => ({ ...prev, [index]: true }));
     setActiveSuggestionIndex(null);
   };
 
@@ -105,6 +114,7 @@ const Requests = () => {
       setShowModal(false);
       setFormData({ items: [{ productName: '', quantity: '', unit: 'unidad' }], notes: '' });
       setActiveSuggestionIndex(null);
+      setProductExists({});
       fetchRequests();
       
       if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
@@ -270,6 +280,7 @@ const Requests = () => {
                   setShowModal(false);
                   setFormData({ items: [{ productName: '', quantity: '', unit: 'unidad' }], notes: '' });
                   setActiveSuggestionIndex(null);
+                  setProductExists({});
                 }}
                 className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition"
               >
@@ -308,6 +319,21 @@ const Requests = () => {
                         className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                         autoComplete="off"
                       />
+                      
+                      {/* Indicador de producto nuevo o existente */}
+                      {item.productName && (
+                        <div className="mt-1">
+                          {productExists[index] ? (
+                            <span className="text-xs text-green-600 flex items-center gap-1">
+                              ✓ Producto del inventario
+                            </span>
+                          ) : (
+                            <span className="text-xs text-amber-600 flex items-center gap-1">
+                              ⚠️ Producto nuevo (se agregará al aprobar)
+                            </span>
+                          )}
+                        </div>
+                      )}
                       
                       {/* Sugerencias */}
                       {activeSuggestionIndex === index && getSuggestions(item.productName).length > 0 && (
@@ -401,6 +427,7 @@ const Requests = () => {
                     setShowModal(false);
                     setFormData({ items: [{ productName: '', quantity: '', unit: 'unidad' }], notes: '' });
                     setActiveSuggestionIndex(null);
+                    setProductExists({});
                   }}
                   className="flex-1 py-2.5 border border-gray-200 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-50 transition"
                 >
