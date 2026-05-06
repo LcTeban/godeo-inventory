@@ -45,7 +45,6 @@ export const AuthProvider = ({ children }) => {
       setUser(parsedUser);
       setCurrentRestaurant(parsedUser.restaurant);
     }
-    // Recuperar token de notificaciones si existe
     const savedFcmToken = localStorage.getItem('fcmToken');
     if (savedFcmToken) {
       setFcmToken(savedFcmToken);
@@ -54,7 +53,6 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  // Función centralizada para llamadas a la API de Supabase (sin cambios)
   const apiCall = useCallback(async (table, method, data = null, filters = {}) => {
     const headers = {
       'Content-Type': 'application/json',
@@ -102,7 +100,6 @@ export const AuthProvider = ({ children }) => {
     try { return await response.json(); } catch (e) { return { success: true }; }
   }, []);
 
-  // Función para enviar notificaciones (almacena en tabla notifications)
   const sendPushNotification = useCallback(async (payload) => {
     if (!fcmToken) return;
     try {
@@ -120,7 +117,6 @@ export const AuthProvider = ({ children }) => {
     }
   }, [fcmToken, user, apiCall]);
 
-  // Activar notificaciones
   const enableNotifications = useCallback(async () => {
     try {
       const result = await requestNotificationPermission();
@@ -128,7 +124,6 @@ export const AuthProvider = ({ children }) => {
         setFcmToken(result.token);
         setNotificationsEnabled(true);
         localStorage.setItem('fcmToken', result.token);
-        // Guardar token en Supabase
         await apiCall('user_tokens', 'POST', {
           user_id: user?.id,
           token: result.token,
@@ -228,7 +223,7 @@ export const AuthProvider = ({ children }) => {
   }, [cachedProducts, currentRestaurant, refreshProductCache]);
 
   const getProductById = useCallback(async (id) => {
-    const prods = await apiCall('products', 'GET', null, { select: '*,categories!products_category_id_fkey(name,parent_id)', id: `eq.${id}` });
+    const prods = await apiCall('products', 'GET', null, { select: '*,categories!(name,parent_id)', id: `eq.${id}` });
     return Array.isArray(prods) ? prods[0] : null;
   }, [apiCall]);
 
@@ -284,7 +279,7 @@ export const AuthProvider = ({ children }) => {
     }, targetRestaurant);
   }, [getProductById, addProduct]);
 
-  // ========== MOVIMIENTOS (con notificación de stock bajo y movimiento) ==========
+  // ========== MOVIMIENTOS (con notificaciones) ==========
   const getMovements = useCallback(async (options = {}) => {
     const { restaurant, period } = options;
     const filterRestaurant = restaurant !== undefined ? restaurant : currentRestaurant;
@@ -314,16 +309,14 @@ export const AuthProvider = ({ children }) => {
       created_at: new Date().toISOString()
     });
 
-    // Notificar al admin sobre el movimiento
     if (user?.role !== 'ADMIN') {
       await sendPushNotification({
         title: '🔄 Movimiento Realizado',
-        body: `${user?.name} registró ${data.type} de ${data.quantity} ${product.unit || ''} de ${product.name}`,
+        body: `${user?.name} registró ${data.type === 'entrada' ? 'entrada' : 'salida'} de ${data.quantity} ${product.unit || ''} de ${product.name}`,
         url: '/movements'
       });
     }
 
-    // Verificar si el stock quedó bajo y notificar
     if (newStock <= product.min_stock && product.min_stock > 0) {
       await sendPushNotification({
         title: '⚠️ Stock Bajo',
@@ -427,19 +420,16 @@ export const AuthProvider = ({ children }) => {
     const result = await apiCall('requests', 'POST', {
       ...data, user_id: user?.id, restaurant: currentRestaurant, status: 'pendiente', created_at: new Date().toISOString()
     });
-
     await sendPushNotification({
       title: '📋 Nuevo Pedido',
       body: `${user?.name} solicitó ${data.quantity} ${data.unit} de ${data.productName}`,
       url: '/requests'
     });
-
     return result;
   }, [apiCall, currentRestaurant, user, sendPushNotification]);
 
   const updateRequest = useCallback(async (id, status) => {
     const result = await apiCall('requests', 'PATCH', { status }, { id: `eq.${id}` });
-
     const request = await apiCall('requests', 'GET', null, { select: '*', id: `eq.${id}` });
     if (request?.[0]) {
       await sendPushNotification({
@@ -448,7 +438,6 @@ export const AuthProvider = ({ children }) => {
         url: '/requests'
       });
     }
-
     return result;
   }, [apiCall, sendPushNotification]);
 
