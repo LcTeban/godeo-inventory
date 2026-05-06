@@ -1,28 +1,21 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { PlusIcon, PencilIcon, TrashIcon, FolderIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, PencilIcon, TrashIcon, FolderIcon, GlobeAltIcon } from '@heroicons/react/24/outline';
 
 const TreeNode = ({ category, allCategories, onEdit, onDelete, onAddChild }) => {
   const [expanded, setExpanded] = useState(false);
   const children = allCategories.filter(c => c.parent_id === category.id);
 
-  // Manejador único para expandir/colapsar
-  const toggleExpand = () => setExpanded(!expanded);
-
   return (
     <div className="ml-3 sm:ml-4">
-      {/* Fila completa ahora es cliqueable para expandir */}
-      <div 
-        className="flex items-center gap-2 py-1.5 px-2 hover:bg-gray-100 rounded-lg cursor-pointer flex-wrap"
-        onClick={toggleExpand}
-      >
-        <button 
-          onClick={(e) => { e.stopPropagation(); toggleExpand(); }} 
-          className="p-1 flex-shrink-0"
-        >
+      <div className="flex items-center gap-2 py-1.5 px-2 hover:bg-gray-100 rounded-lg cursor-pointer flex-wrap" onClick={() => setExpanded(!expanded)}>
+        <button onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }} className="p-1 flex-shrink-0">
           <FolderIcon className={`h-5 w-5 ${children.length > 0 ? 'text-yellow-500' : 'text-gray-400'}`} />
         </button>
-        <span className="flex-1 font-medium text-sm sm:text-base break-words">{category.name}</span>
+        <span className="flex-1 font-medium text-sm sm:text-base break-words">
+          {category.name}
+          {!category.restaurant && <GlobeAltIcon className="h-4 w-4 inline ml-1 text-blue-500" title="Global" />}
+        </span>
         <div className="flex gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
           <button onClick={() => onAddChild(category.id)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg" title="Añadir subcategoría">
             <PlusIcon className="h-4 w-4" />
@@ -54,6 +47,8 @@ const Categories = () => {
   const [newName, setNewName] = useState('');
   const [parentForNew, setParentForNew] = useState(null);
   const [showAddRoot, setShowAddRoot] = useState(false);
+  const [isGlobal, setIsGlobal] = useState(false);
+  const [editIsGlobal, setEditIsGlobal] = useState(false);
 
   useEffect(() => { loadCategories(); }, []);
 
@@ -64,18 +59,20 @@ const Categories = () => {
 
   const handleAddSub = async (parentId) => {
     if (!newName.trim()) return;
-    await addCategory(newName, parentId);
+    await addCategory(newName, parentId, isGlobal);
     setNewName('');
     setParentForNew(null);
+    setIsGlobal(false);
     loadCategories();
   };
 
   const handleEdit = async () => {
     if (editId && editName.trim()) {
-      const { parent_id } = categories.find(c => c.id === editId) || {};
-      await updateCategory(editId, editName, parent_id);
+      const cat = categories.find(c => c.id === editId);
+      await updateCategory(editId, editName, cat?.parent_id || null, editIsGlobal);
       setEditId(null);
       setEditName('');
+      setEditIsGlobal(false);
       loadCategories();
     }
   };
@@ -96,7 +93,7 @@ const Categories = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <h1 className="text-xl font-bold text-gray-800">📁 Gestión de Categorías</h1>
         <button
-          onClick={() => { setShowAddRoot(true); setParentForNew(null); setEditId(null); }}
+          onClick={() => { setShowAddRoot(true); setParentForNew(null); setEditId(null); setIsGlobal(false); }}
           className="w-full sm:w-auto bg-blue-600 text-white px-4 py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-1.5 hover:bg-blue-700 transition"
         >
           <PlusIcon className="h-4 w-4" /> Nueva Carpeta Raíz
@@ -117,16 +114,26 @@ const Categories = () => {
               className="flex-1 p-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               autoFocus
             />
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
+              {/* Checkbox global */}
+              <label className="flex items-center gap-1 text-sm text-gray-700 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={editId ? editIsGlobal : isGlobal}
+                  onChange={(e) => editId ? setEditIsGlobal(e.target.checked) : setIsGlobal(e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500"
+                />
+                🌍 Global
+              </label>
               <button
                 onClick={editId ? handleEdit : () => handleAddSub(parentForNew)}
-                className="flex-1 sm:flex-none px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition"
+                className="px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition"
               >
                 {editId ? 'Guardar' : 'Crear'}
               </button>
               <button
-                onClick={() => { setShowAddRoot(false); setParentForNew(null); setEditId(null); setEditName(''); setNewName(''); }}
-                className="flex-1 sm:flex-none px-4 py-2.5 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-100 transition"
+                onClick={() => { setShowAddRoot(false); setParentForNew(null); setEditId(null); setEditName(''); setNewName(''); setIsGlobal(false); }}
+                className="px-4 py-2.5 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-100 transition"
               >
                 Cancelar
               </button>
@@ -140,7 +147,6 @@ const Categories = () => {
           <div className="text-center py-10">
             <FolderIcon className="h-12 w-12 text-gray-300 mx-auto mb-3" />
             <p className="text-gray-500 text-sm">No hay categorías creadas</p>
-            <p className="text-gray-400 text-xs mt-1">Crea la primera carpeta para organizar tu inventario</p>
           </div>
         )}
         {roots.map(root => (
@@ -148,11 +154,18 @@ const Categories = () => {
             key={root.id}
             category={root}
             allCategories={categories}
-            onEdit={(cat) => { setEditId(cat.id); setEditName(cat.name); setShowAddRoot(false); setParentForNew(null); }}
+            onEdit={(cat) => {
+              setEditId(cat.id);
+              setEditName(cat.name);
+              setEditIsGlobal(!cat.restaurant);
+              setShowAddRoot(false);
+              setParentForNew(null);
+            }}
             onDelete={handleDelete}
             onAddChild={(parentId) => {
               setParentForNew(parentId);
               setNewName('');
+              setIsGlobal(false);
               setShowAddRoot(false);
               setEditId(null);
             }}
