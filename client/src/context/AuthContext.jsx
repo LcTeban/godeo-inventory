@@ -1,4 +1,5 @@
 import { createContext, useState, useContext, useEffect, useCallback } from 'react';
+import { requestNotificationPermission } from '../firebase';
 
 const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
@@ -33,6 +34,8 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [currentRestaurant, setCurrentRestaurant] = useState(null);
   const [cachedProducts, setCachedProducts] = useState([]);
+  const [fcmToken, setFcmToken] = useState(null);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -42,9 +45,16 @@ export const AuthProvider = ({ children }) => {
       setUser(parsedUser);
       setCurrentRestaurant(parsedUser.restaurant);
     }
+    // Recuperar token de notificaciones si existe
+    const savedFcmToken = localStorage.getItem('fcmToken');
+    if (savedFcmToken) {
+      setFcmToken(savedFcmToken);
+      setNotificationsEnabled(true);
+    }
     setLoading(false);
   }, []);
 
+  // Función centralizada para llamadas a la API de Supabase (sin cambios)
   const apiCall = useCallback(async (table, method, data = null, filters = {}) => {
     const headers = {
       'Content-Type': 'application/json',
@@ -92,6 +102,46 @@ export const AuthProvider = ({ children }) => {
     try { return await response.json(); } catch (e) { return { success: true }; }
   }, []);
 
+  // Función para enviar notificaciones (almacena en tabla notifications)
+  const sendPushNotification = useCallback(async (payload) => {
+    if (!fcmToken) return;
+    try {
+      await apiCall('notifications', 'POST', {
+        user_id: user?.id,
+        title: payload.title,
+        body: payload.body,
+        icon: payload.icon || '/godeo-inventory/icon-192.png',
+        url: payload.url || '/dashboard',
+        read: false,
+        created_at: new Date().toISOString()
+      });
+    } catch (e) {
+      console.error('Error sending notification:', e);
+    }
+  }, [fcmToken, user, apiCall]);
+
+  // Activar notificaciones
+  const enableNotifications = useCallback(async () => {
+    try {
+      const result = await requestNotificationPermission();
+      if (result.success && result.token) {
+        setFcmToken(result.token);
+        setNotificationsEnabled(true);
+        localStorage.setItem('fcmToken', result.token);
+        // Guardar token en Supabase
+        await apiCall('user_tokens', 'POST', {
+          user_id: user?.id,
+          token: result.token,
+          created_at: new Date().toISOString()
+        });
+        return { success: true };
+      }
+      return { success: false, error: result.error };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }, [user, apiCall]);
+
   // ========== AUTENTICACIÓN ==========
   const login = async (email, password) => {
     const users = await apiCall('users', 'GET', null, { select: '*', email: `eq.${email}` });
@@ -112,11 +162,8 @@ export const AuthProvider = ({ children }) => {
   // ========== CATEGORÍAS ==========
   const getCategories = useCallback(async (parentId = null) => {
     const filters = { select: '*', restaurant: `eq.${currentRestaurant}`, order: 'name.asc' };
-    if (parentId === null) {
-      filters.parent_id = 'is.null';
-    } else {
-      filters.parent_id = `eq.${parentId}`;
-    }
+    if (parentId === null) filters.parent_id = 'is.null';
+    else filters.parent_id = `eq.${parentId}`;
     return apiCall('categories', 'GET', null, filters);
   }, [apiCall, currentRestaurant]);
 
@@ -126,9 +173,7 @@ export const AuthProvider = ({ children }) => {
     const addPath = (cat, depth = 0) => {
       const children = categories.filter(c => c.parent_id === cat.id);
       const result = [{ ...cat, depth, label: ' '.repeat(depth) + cat.name }];
-      children.forEach(child => {
-        result.push(...addPath(child, depth + 1));
-      });
+      children.forEach(child => { result.push(...addPath(child, depth + 1)); });
       return result;
     };
     const roots = categories.filter(c => c.parent_id === null);
@@ -139,12 +184,7 @@ export const AuthProvider = ({ children }) => {
 
   const addCategory = useCallback(async (name, parentId = null) => {
     if (user?.role !== 'ADMIN') throw new Error('Solo administradores');
-    return apiCall('categories', 'POST', {
-      name,
-      parent_id: parentId,
-      restaurant: currentRestaurant,
-      created_at: new Date().toISOString()
-    });
+    return apiCall('categories', 'POST', { name, parent_id: parentId, restaurant: currentRestaurant, created_at: new Date().toISOString() });
   }, [apiCall, currentRestaurant, user]);
 
   const updateCategory = useCallback(async (id, name, parentId) => {
@@ -156,20 +196,6 @@ export const AuthProvider = ({ children }) => {
     if (user?.role !== 'ADMIN') throw new Error('Solo administradores');
     return apiCall('categories', 'DELETE', null, { id: `eq.${id}` });
   }, [apiCall, user]);
-
-  const getCategoryPath = useCallback(async (categoryId) => {
-    if (!categoryId) return '';
-    let path = [];
-    let currentId = categoryId;
-    while (currentId) {
-      const result = await apiCall('categories', 'GET', null, { select: 'id,name,parent_id', id: `eq.${currentId}` });
-      const cat = result?.[0];
-      if (!cat) break;
-      path.unshift(cat.name);
-      currentId = cat.parent_id;
-    }
-    return path.join(' > ');
-  }, [apiCall]);
 
   // ========== PRODUCTOS ==========
   const fetchProductsMeta = useCallback(async (restaurant) => {
@@ -202,10 +228,7 @@ export const AuthProvider = ({ children }) => {
   }, [cachedProducts, currentRestaurant, refreshProductCache]);
 
   const getProductById = useCallback(async (id) => {
-    const prods = await apiCall('products', 'GET', null, {
-      select: '*,categories!products_category_id_fkey(name,parent_id)',
-      id: `eq.${id}`
-    });
+    const prods = await apiCall('products', 'GET', null, { select: '*,categories!products_category_id_fkey(name,parent_id)', id: `eq.${id}` });
     return Array.isArray(prods) ? prods[0] : null;
   }, [apiCall]);
 
@@ -227,13 +250,8 @@ export const AuthProvider = ({ children }) => {
     const expiry = finalData.expiry_date && finalData.expiry_date.trim() !== '' ? finalData.expiry_date : null;
     const categoryId = finalData.category_id ? parseInt(finalData.category_id, 10) : null;
     const result = await apiCall('products', 'POST', {
-      ...finalData,
-      expiry_date: expiry,
-      price: parseFloat(data.price) || 0,
-      supplier_id: supplierId,
-      category_id: categoryId,
-      restaurant: restaurant,
-      created_at: new Date().toISOString()
+      ...finalData, expiry_date: expiry, price: parseFloat(data.price) || 0,
+      supplier_id: supplierId, category_id: categoryId, restaurant: restaurant, created_at: new Date().toISOString()
     });
     await refreshProductCache(restaurant);
     return result;
@@ -259,22 +277,14 @@ export const AuthProvider = ({ children }) => {
   const duplicateProduct = useCallback(async (productId, targetRestaurant) => {
     const product = await getProductById(productId);
     if (!product) throw new Error('Producto no encontrado');
-
     return addProduct({
-      name: product.name,
-      category_id: product.category_id,
-      stock: product.stock,
-      unit: product.unit,
-      min_stock: product.min_stock,
-      expiry_date: product.expiry_date,
-      image: product.image,
-      barcode: product.barcode,
-      supplier_id: product.supplier_id,
-      price: product.price,
+      name: product.name, category_id: product.category_id, stock: product.stock,
+      unit: product.unit, min_stock: product.min_stock, expiry_date: product.expiry_date,
+      image: product.image, barcode: product.barcode, supplier_id: product.supplier_id, price: product.price
     }, targetRestaurant);
   }, [getProductById, addProduct]);
 
-  // ========== MOVIMIENTOS ==========
+  // ========== MOVIMIENTOS (con notificación de stock bajo y movimiento) ==========
   const getMovements = useCallback(async (options = {}) => {
     const { restaurant, period } = options;
     const filterRestaurant = restaurant !== undefined ? restaurant : currentRestaurant;
@@ -285,7 +295,7 @@ export const AuthProvider = ({ children }) => {
   }, [apiCall, currentRestaurant]);
 
   const addMovement = useCallback(async (data) => {
-    const products = await apiCall('products', 'GET', null, { select: 'stock', id: `eq.${data.productId}` });
+    const products = await apiCall('products', 'GET', null, { select: 'stock,min_stock,name,unit', id: `eq.${data.productId}` });
     const product = Array.isArray(products) ? products[0] : null;
     if (!product) throw new Error('Producto no encontrado');
 
@@ -299,17 +309,32 @@ export const AuthProvider = ({ children }) => {
     await apiCall('products', 'PATCH', { stock: newStock }, { id: `eq.${data.productId}` });
 
     const result = await apiCall('movements', 'POST', {
-      type: data.type,
-      quantity: parseFloat(data.quantity),
-      reason: data.reason || null,
-      product_id: data.productId,
-      restaurant: currentRestaurant,
-      user_id: user?.id,
+      type: data.type, quantity: parseFloat(data.quantity), reason: data.reason || null,
+      product_id: data.productId, restaurant: currentRestaurant, user_id: user?.id,
       created_at: new Date().toISOString()
     });
+
+    // Notificar al admin sobre el movimiento
+    if (user?.role !== 'ADMIN') {
+      await sendPushNotification({
+        title: '🔄 Movimiento Realizado',
+        body: `${user?.name} registró ${data.type} de ${data.quantity} ${product.unit || ''} de ${product.name}`,
+        url: '/movements'
+      });
+    }
+
+    // Verificar si el stock quedó bajo y notificar
+    if (newStock <= product.min_stock && product.min_stock > 0) {
+      await sendPushNotification({
+        title: '⚠️ Stock Bajo',
+        body: `${product.name} tiene solo ${newStock} ${product.unit} (mín: ${product.min_stock})`,
+        url: '/inventory'
+      });
+    }
+
     await refreshProductCache(currentRestaurant);
     return result;
-  }, [apiCall, currentRestaurant, user, refreshProductCache]);
+  }, [apiCall, currentRestaurant, user, refreshProductCache, sendPushNotification]);
 
   // ========== TRANSFERENCIAS ==========
   const getTransfers = useCallback(() => {
@@ -323,32 +348,30 @@ export const AuthProvider = ({ children }) => {
     if (product.stock < data.quantity) throw new Error('Stock insuficiente');
 
     const transfer = await apiCall('transfers', 'POST', {
-      product_id: data.productId,
-      quantity: data.quantity,
-      to_restaurant: data.toRestaurant,
-      reason: data.reason || null,
-      from_restaurant: currentRestaurant,
-      user_id: user?.id,
-      status: 'pendiente',
-      created_at: new Date().toISOString()
+      product_id: data.productId, quantity: data.quantity, to_restaurant: data.toRestaurant,
+      reason: data.reason || null, from_restaurant: currentRestaurant, user_id: user?.id,
+      status: 'pendiente', created_at: new Date().toISOString()
     });
 
     const newStock = product.stock - data.quantity;
     await apiCall('products', 'PATCH', { stock: newStock }, { id: `eq.${data.productId}` });
 
     await apiCall('movements', 'POST', {
-      type: 'salida',
-      quantity: data.quantity,
+      type: 'salida', quantity: data.quantity,
       reason: `Transferencia a ${data.toRestaurant}${data.reason ? ': ' + data.reason : ''}`,
-      product_id: data.productId,
-      restaurant: currentRestaurant,
-      user_id: user?.id,
+      product_id: data.productId, restaurant: currentRestaurant, user_id: user?.id,
       created_at: new Date().toISOString()
+    });
+
+    await sendPushNotification({
+      title: '🚚 Transferencia Pendiente',
+      body: `${user?.name} envió ${data.quantity} ${product.unit} de ${product.name} a ${data.toRestaurant}`,
+      url: '/transfers'
     });
 
     await refreshProductCache(currentRestaurant);
     return transfer;
-  }, [apiCall, currentRestaurant, user, refreshProductCache]);
+  }, [apiCall, currentRestaurant, user, refreshProductCache, sendPushNotification]);
 
   const completeTransfer = useCallback(async (id) => {
     const transfers = await apiCall('transfers', 'GET', null, { select: '*', id: `eq.${id}` });
@@ -361,9 +384,7 @@ export const AuthProvider = ({ children }) => {
     if (!product) throw new Error('Producto original no encontrado');
 
     const destProducts = await apiCall('products', 'GET', null, {
-      select: '*',
-      name: `eq.${product.name}`,
-      restaurant: `eq.${transfer.to_restaurant}`
+      select: '*', name: `eq.${product.name}`, restaurant: `eq.${transfer.to_restaurant}`
     });
     const destProduct = Array.isArray(destProducts) ? destProducts[0] : null;
 
@@ -371,48 +392,65 @@ export const AuthProvider = ({ children }) => {
       await apiCall('products', 'PATCH', { stock: destProduct.stock + transfer.quantity }, { id: `eq.${destProduct.id}` });
     } else {
       await apiCall('products', 'POST', {
-        name: product.name,
-        category_id: product.category_id,
-        stock: transfer.quantity,
-        unit: product.unit,
-        min_stock: product.min_stock,
-        expiry_date: product.expiry_date || null,
-        restaurant: transfer.to_restaurant,
-        image: product.image,
-        barcode: product.barcode,
-        price: product.price,
-        supplier_id: product.supplier_id,
-        created_at: new Date().toISOString()
+        name: product.name, category_id: product.category_id, stock: transfer.quantity,
+        unit: product.unit, min_stock: product.min_stock, expiry_date: product.expiry_date || null,
+        restaurant: transfer.to_restaurant, image: product.image, barcode: product.barcode,
+        price: product.price, supplier_id: product.supplier_id, created_at: new Date().toISOString()
       });
     }
 
     await apiCall('movements', 'POST', {
-      type: 'entrada',
-      quantity: transfer.quantity,
+      type: 'entrada', quantity: transfer.quantity,
       reason: `Transferencia desde ${transfer.from_restaurant}`,
-      product_id: destProduct ? destProduct.id : product.id,
-      restaurant: transfer.to_restaurant,
-      user_id: user?.id,
-      created_at: new Date().toISOString()
+      product_id: destProduct ? destProduct.id : product.id, restaurant: transfer.to_restaurant,
+      user_id: user?.id, created_at: new Date().toISOString()
     });
 
     await apiCall('transfers', 'PATCH', { status: 'completado', completed_at: new Date().toISOString() }, { id: `eq.${id}` });
+
+    await sendPushNotification({
+      title: '✅ Transferencia Completada',
+      body: `Se recibió ${product.name} (${transfer.quantity} ${product.unit})`,
+      url: '/transfers'
+    });
+
     await refreshProductCache(currentRestaurant);
     return { success: true };
-  }, [apiCall, user, refreshProductCache, currentRestaurant]);
+  }, [apiCall, user, refreshProductCache, currentRestaurant, sendPushNotification]);
 
   // ========== SOLICITUDES ==========
   const getRequests = useCallback(() => {
     return apiCall('requests', 'GET', null, { select: '*,users(name)', order: 'created_at.desc' });
   }, [apiCall]);
 
-  const addRequest = useCallback((data) => {
-    return apiCall('requests', 'POST', { ...data, user_id: user?.id, restaurant: currentRestaurant, status: 'pendiente', created_at: new Date().toISOString() });
-  }, [apiCall, currentRestaurant, user]);
+  const addRequest = useCallback(async (data) => {
+    const result = await apiCall('requests', 'POST', {
+      ...data, user_id: user?.id, restaurant: currentRestaurant, status: 'pendiente', created_at: new Date().toISOString()
+    });
 
-  const updateRequest = useCallback((id, status) => {
-    return apiCall('requests', 'PATCH', { status }, { id: `eq.${id}` });
-  }, [apiCall]);
+    await sendPushNotification({
+      title: '📋 Nuevo Pedido',
+      body: `${user?.name} solicitó ${data.quantity} ${data.unit} de ${data.productName}`,
+      url: '/requests'
+    });
+
+    return result;
+  }, [apiCall, currentRestaurant, user, sendPushNotification]);
+
+  const updateRequest = useCallback(async (id, status) => {
+    const result = await apiCall('requests', 'PATCH', { status }, { id: `eq.${id}` });
+
+    const request = await apiCall('requests', 'GET', null, { select: '*', id: `eq.${id}` });
+    if (request?.[0]) {
+      await sendPushNotification({
+        title: status === 'aprobado' ? '✅ Pedido Aprobado' : '❌ Pedido Rechazado',
+        body: `Tu solicitud de ${request[0].product_name} ha sido ${status}`,
+        url: '/requests'
+      });
+    }
+
+    return result;
+  }, [apiCall, sendPushNotification]);
 
   // ========== DASHBOARD ==========
   const getDashboard = useCallback(async () => {
@@ -421,10 +459,7 @@ export const AuthProvider = ({ children }) => {
     const stats = {};
     for (const rest of restaurants) {
       const filtered = allProducts.filter(p => p.restaurant === rest);
-      stats[rest] = {
-        totalProducts: filtered.length,
-        lowStock: filtered.filter(p => p.stock <= p.min_stock).length
-      };
+      stats[rest] = { totalProducts: filtered.length, lowStock: filtered.filter(p => p.stock <= p.min_stock).length };
     }
     const pending = await apiCall('transfers', 'GET', null, { select: 'id', status: 'eq.pendiente' });
     return { restaurants: stats, pendingTransfers: pending.length };
@@ -477,6 +512,7 @@ export const AuthProvider = ({ children }) => {
     user, login, logout, switchRestaurant, currentRestaurant,
     isAdmin: user?.role === 'ADMIN',
     restaurantName: restaurantNames[currentRestaurant],
+    notificationsEnabled, enableNotifications,
     getProducts, getProductById, getProductImage, refreshProductCache,
     addProduct, updateProduct, deleteProduct, duplicateProduct,
     getMovements, addMovement,
