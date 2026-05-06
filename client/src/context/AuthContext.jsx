@@ -118,7 +118,6 @@ export const AuthProvider = ({ children }) => {
 
   const enableNotifications = useCallback(async () => {
     try {
-      // Importación dinámica para que falle silenciosamente si no hay Firebase
       const { requestNotificationPermission } = await import('../firebase');
       const result = await requestNotificationPermission();
       if (result.success && result.token) {
@@ -194,6 +193,21 @@ export const AuthProvider = ({ children }) => {
     return apiCall('categories', 'DELETE', null, { id: `eq.${id}` });
   }, [apiCall, user]);
 
+  // ✅ FUNCIÓN getCategoryPath (para mostrar la ruta completa)
+  const getCategoryPath = useCallback(async (categoryId) => {
+    if (!categoryId) return '';
+    let path = [];
+    let currentId = categoryId;
+    while (currentId) {
+      const result = await apiCall('categories', 'GET', null, { select: 'id,name,parent_id', id: `eq.${currentId}` });
+      const cat = result?.[0];
+      if (!cat) break;
+      path.unshift(cat.name);
+      currentId = cat.parent_id;
+    }
+    return path.join(' > ');
+  }, [apiCall]);
+
   // ========== PRODUCTOS ==========
   const fetchProductsMeta = useCallback(async (restaurant) => {
     const filters = {
@@ -224,8 +238,12 @@ export const AuthProvider = ({ children }) => {
     return refreshProductCache(filterRestaurant);
   }, [cachedProducts, currentRestaurant, refreshProductCache]);
 
+  // ✅ CORREGIDO: consulta de producto completo con categoría
   const getProductById = useCallback(async (id) => {
-    const prods = await apiCall('products', 'GET', null, { select: '*,categories!(name,parent_id)', id: `eq.${id}` });
+    const prods = await apiCall('products', 'GET', null, {
+      select: '*,categories!products_category_id_fkey(name,parent_id)',
+      id: `eq.${id}`
+    });
     return Array.isArray(prods) ? prods[0] : null;
   }, [apiCall]);
 
