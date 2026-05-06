@@ -97,7 +97,6 @@ const Layout = () => {
               </div>
             )}
 
-            {/* Botón de notificaciones para admin en móvil */}
             {isAdmin && (
               <div className="px-4 pt-2">
                 <button
@@ -166,7 +165,6 @@ const Layout = () => {
               </select>
             )}
 
-            {/* Botón de notificaciones para admin en escritorio */}
             {isAdmin && (
               <button
                 onClick={enableNotifications}
