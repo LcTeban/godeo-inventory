@@ -1,13 +1,10 @@
 import { createContext, useState, useContext, useEffect, useCallback } from 'react';
-import { createClient } from '@supabase/supabase-js';
 
 const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
 
-const supabase = createClient(
-  'https://fshypzqmuyctllmbzdnh.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzaHlwenFtdXljdGxsbWJ6ZG5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0OTQ1NDMsImV4cCI6MjA5MzA3MDU0M30.m4c4A6J7K8JvGI69eHBpfUtGMMdD4jVGvfjz_NmQdHE'
-);
+const SUPABASE_URL = 'https://fshypzqmuyctllmbzdnh.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzaHlwenFtdXljdGxsbWJ6ZG5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0OTQ1NDMsImV4cCI6MjA5MzA3MDU0M30.m4c4A6J7K8JvGI69eHBpfUtGMMdD4jVGvfjz_NmQdHE';
 
 const compressImage = (base64Str, maxWidth = 400) => {
   return new Promise((resolve, reject) => {
@@ -38,81 +35,24 @@ export const AuthProvider = ({ children }) => {
   const [cachedProducts, setCachedProducts] = useState([]);
 
   useEffect(() => {
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        await loadUserProfile(session);
-      }
-      setLoading(false);
-    };
-    checkSession();
-
-    const { data: listener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
-        await loadUserProfile(session);
-      } else {
-        setUser(null);
-        setCurrentRestaurant(null);
-        localStorage.removeItem('user');
-      }
-    });
-
-    return () => listener.subscription.unsubscribe();
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
+    if (token && userData) {
+      const parsedUser = JSON.parse(userData);
+      setUser(parsedUser);
+      setCurrentRestaurant(parsedUser.restaurant);
+    }
+    setLoading(false);
   }, []);
 
-  const loadUserProfile = async (session) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('name, role, restaurant')
-        .eq('id', session.user.id)
-        .single();
-
-      if (error) throw error;
-
-      const userData = {
-        id: session.user.id,
-        email: session.user.email,
-        name: data.name,
-        role: data.role,
-        restaurant: data.restaurant
-      };
-
-      setUser(userData);
-      setCurrentRestaurant(userData.restaurant);
-      localStorage.setItem('user', JSON.stringify(userData));
-    } catch (error) {
-      console.error('Error al cargar perfil:', error);
-      await supabase.auth.signOut();
-      setUser(null);
-      setCurrentRestaurant(null);
-    }
-  };
-
-  // apiCall corregido: obtiene el token de la sesión o del localStorage
   const apiCall = useCallback(async (table, method, data = null, filters = {}) => {
-    const { data: { session } } = await supabase.auth.getSession();
-    let token = session?.access_token;
-
-    if (!token) {
-      const rawToken = localStorage.getItem('sb-fshypzqmuyctllmbzdnh-auth-token');
-      if (rawToken) {
-        try {
-          const parsed = JSON.parse(rawToken);
-          token = parsed.access_token || parsed;
-        } catch {
-          token = rawToken.replace(/"/g, '');
-        }
-      }
-    }
-
     const headers = {
       'Content-Type': 'application/json',
-      'apikey': supabase.supabaseKey,
-      ...(token && { Authorization: `Bearer ${token}` })
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`
     };
 
-    let url = `${supabase.supabaseUrl}/rest/v1/${table}`;
+    let url = `${SUPABASE_URL}/rest/v1/${table}`;
     const queryParams = new URLSearchParams();
 
     if (method !== 'POST') {
@@ -153,17 +93,37 @@ export const AuthProvider = ({ children }) => {
     try { return await response.json(); } catch (e) { return { success: true }; }
   }, []);
 
-  // Login con Supabase Auth
+  // Login simple con la tabla 'users'
   const login = async (email, password) => {
-    await supabase.auth.signOut();
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) return { success: false, error: error.message };
-    if (!data.session) return { success: false, error: 'Error de autenticación' };
-    return { success: true };
+    try {
+      const users = await apiCall('users', 'GET', null, {
+        select: '*',
+        email: `eq.${email}`
+      });
+      const foundUser = Array.isArray(users) ? users[0] : null;
+      if (!foundUser || foundUser.password !== password) {
+        return { success: false, error: 'Credenciales inválidas' };
+      }
+      const userData = {
+        id: foundUser.id,
+        email: foundUser.email,
+        name: foundUser.name,
+        role: foundUser.role,
+        restaurant: foundUser.restaurant
+      };
+      const token = btoa(JSON.stringify(userData));
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(userData));
+      setUser(userData);
+      setCurrentRestaurant(userData.restaurant);
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
   };
 
-  const logout = async () => {
-    await supabase.auth.signOut();
+  const logout = () => {
+    localStorage.removeItem('token');
     localStorage.removeItem('user');
     localStorage.removeItem('selectedRestaurant');
     setUser(null);
