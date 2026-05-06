@@ -11,12 +11,14 @@ import {
   BookOpenIcon,
   FolderIcon,
   Bars3Icon,
-  XMarkIcon
+  XMarkIcon,
+  BellIcon,
+  BellAlertIcon
 } from '@heroicons/react/24/outline';
 import { useState } from 'react';
 
 const Layout = () => {
-  const { user, logout, currentRestaurant, switchRestaurant, isAdmin } = useAuth();
+  const { user, logout, currentRestaurant, switchRestaurant, isAdmin, notificationsEnabled, enableNotifications } = useAuth();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -56,7 +58,13 @@ const Layout = () => {
           <span className="text-xl">{currentRest?.icon}</span>
           <span className="font-semibold">{currentRest?.name}</span>
         </div>
-        <div className="w-10"></div>
+        <button onClick={enableNotifications} className="p-2">
+          {notificationsEnabled ? (
+            <BellAlertIcon className="h-6 w-6 text-green-600" />
+          ) : (
+            <BellIcon className="h-6 w-6 text-gray-600" />
+          )}
+        </button>
       </div>
 
       {/* Sidebar Mobile */}
@@ -89,7 +97,23 @@ const Layout = () => {
               </div>
             )}
 
-            {/* Contenedor con scroll para el menú */}
+            {/* Botón de notificaciones para admin en móvil */}
+            {isAdmin && (
+              <div className="px-4 pt-2">
+                <button
+                  onClick={enableNotifications}
+                  className="w-full p-2 border rounded-lg text-sm flex items-center justify-center gap-2 hover:bg-gray-100"
+                >
+                  {notificationsEnabled ? (
+                    <BellAlertIcon className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <BellIcon className="h-4 w-4 text-gray-600" />
+                  )}
+                  {notificationsEnabled ? 'Notificaciones ON' : 'Activar Notificaciones'}
+                </button>
+              </div>
+            )}
+
             <nav className="flex-1 overflow-y-auto px-2 py-2">
               {navigation.map(item => {
                 if (item.adminOnly && !isAdmin) return null;
@@ -107,7 +131,6 @@ const Layout = () => {
               })}
             </nav>
 
-            {/* Botón de cerrar sesión siempre fijo abajo */}
             <div className="border-t p-4">
               <button
                 onClick={handleLogout}
@@ -142,9 +165,23 @@ const Layout = () => {
                 ))}
               </select>
             )}
+
+            {/* Botón de notificaciones para admin en escritorio */}
+            {isAdmin && (
+              <button
+                onClick={enableNotifications}
+                className="w-full mt-2 p-2 border rounded-lg text-sm flex items-center justify-center gap-2 hover:bg-gray-100"
+              >
+                {notificationsEnabled ? (
+                  <BellAlertIcon className="h-4 w-4 text-green-600" />
+                ) : (
+                  <BellIcon className="h-4 w-4 text-gray-600" />
+                )}
+                {notificationsEnabled ? 'Notificaciones ON' : 'Activar Notificaciones'}
+              </button>
+            )}
           </div>
           
-          {/* Menú con scroll */}
           <nav className="flex-1 overflow-y-auto px-3 py-2">
             {navigation.map(item => {
               if (item.adminOnly && !isAdmin) return null;
@@ -161,7 +198,6 @@ const Layout = () => {
             })}
           </nav>
           
-          {/* Cerrar sesión siempre visible */}
           <div className="border-t p-4">
             <button
               onClick={handleLogout}
@@ -174,7 +210,6 @@ const Layout = () => {
         </div>
       </div>
 
-      {/* Contenido principal */}
       <div className="lg:pl-64">
         <div className="p-4 lg:p-6">
           <Outlet />
