@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, TrashIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 const Requests = () => {
   const [requests, setRequests] = useState([]);
@@ -10,6 +10,7 @@ const Requests = () => {
     items: [{ productName: '', quantity: '', unit: 'unidad' }],
     notes: ''
   });
+  const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(null);
   const { isAdmin, user, getRequests, addRequest, updateRequest, getProducts } = useAuth();
 
   useEffect(() => {
@@ -54,7 +55,6 @@ const Requests = () => {
       const newItems = [...prev.items];
       newItems[index] = { ...newItems[index], [field]: value };
       
-      // Si se selecciona un producto del inventario, auto-rellenar unidad
       if (field === 'productName' && value) {
         const selectedProduct = products.find(p => p.name === value || p.id?.toString() === value);
         if (selectedProduct) {
@@ -64,12 +64,28 @@ const Requests = () => {
       
       return { ...prev, items: newItems };
     });
+    
+    if (field === 'productName') {
+      setActiveSuggestionIndex(index);
+    }
+  };
+
+  const handleSelectSuggestion = (index, product) => {
+    setFormData(prev => {
+      const newItems = [...prev.items];
+      newItems[index] = {
+        ...newItems[index],
+        productName: product.name,
+        unit: product.unit || 'unidad'
+      };
+      return { ...prev, items: newItems };
+    });
+    setActiveSuggestionIndex(null);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Filtrar items válidos (que tengan nombre y cantidad)
     const validItems = formData.items.filter(item => item.productName && item.quantity);
     if (validItems.length === 0) {
       alert('Agrega al menos un producto con nombre y cantidad');
@@ -77,7 +93,6 @@ const Requests = () => {
     }
 
     try {
-      // Enviar cada item como una solicitud individual
       for (const item of validItems) {
         await addRequest({
           productName: item.productName,
@@ -89,10 +104,15 @@ const Requests = () => {
       
       setShowModal(false);
       setFormData({ items: [{ productName: '', quantity: '', unit: 'unidad' }], notes: '' });
+      setActiveSuggestionIndex(null);
       fetchRequests();
       
-      // Notificación local
-      showNotification('✅ Pedido enviado', `${validItems.length} producto(s) solicitados`);
+      if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+        new Notification('✅ Pedido enviado', {
+          body: `${validItems.length} producto(s) solicitados`,
+          icon: '/godeo-inventory/icon-192.png'
+        });
+      }
     } catch (error) {
       alert('Error al enviar: ' + error.message);
     }
@@ -104,26 +124,18 @@ const Requests = () => {
       fetchRequests();
       
       const request = requests.find(r => r.id === id);
-      if (request) {
-        const msg = status === 'aprobado' 
-          ? `✅ Aprobado: ${request.product_name} (${request.quantity} ${request.unit})`
-          : `❌ Rechazado: ${request.product_name}`;
-        showNotification('Estado actualizado', msg);
+      if (request && typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+        const title = status === 'aprobado' ? '✅ Pedido Aprobado' : '❌ Pedido Rechazado';
+        const body = `${request.product_name} (${request.quantity} ${request.unit})`;
+        new Notification(title, { body, icon: '/godeo-inventory/icon-192.png' });
       }
     } catch (error) {
       alert('Error al actualizar');
     }
   };
 
-  const showNotification = (title, body) => {
-    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-      new Notification(title, { body, icon: '/godeo-inventory/icon-192.png' });
-    }
-  };
-
-  // Obtener sugerencias de búsqueda (productos existentes + texto libre)
   const getSuggestions = (input) => {
-    if (!input || input.length < 2) return [];
+    if (!input || input.length < 1) return [];
     const search = input.toLowerCase();
     return products
       .filter(p => 
@@ -137,77 +149,108 @@ const Requests = () => {
   const pendingRequests = isAdmin ? requests.filter(r => r.status === 'pendiente') : [];
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h1 className="text-xl font-bold">📋 Pedidos</h1>
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-bold text-gray-800">📋 Pedidos</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            {isAdmin ? 'Gestiona las solicitudes de los empleados' : 'Solicita productos que necesites'}
+          </p>
+        </div>
         <button
           onClick={() => setShowModal(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm flex items-center gap-1"
+          className="bg-blue-600 text-white px-5 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-blue-700 transition shadow-sm"
         >
-          <PlusIcon className="h-4 w-4" /> Nueva Lista
+          <PlusIcon className="h-4 w-4" />
+          Nueva Lista
         </button>
       </div>
 
       {/* Mis Solicitudes */}
-      <div className="bg-white rounded-xl p-4 shadow-sm">
-        <h2 className="font-semibold mb-3">📝 Mis Solicitudes</h2>
-        <div className="space-y-2">
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="px-5 py-4 border-b border-gray-100">
+          <h2 className="font-semibold text-gray-800">📝 Mis Solicitudes</h2>
+        </div>
+        <div className="divide-y divide-gray-100">
           {myRequests.map(req => (
-            <div key={req.id} className="border rounded-lg p-3">
-              <div className="flex justify-between">
-                <span className="font-medium">{req.product_name}</span>
-                <span className={`text-xs px-2 py-0.5 rounded-full ${
-                  req.status === 'pendiente' ? 'bg-yellow-100 text-yellow-800' :
-                  req.status === 'aprobado' ? 'bg-green-100 text-green-800' :
-                  'bg-red-100 text-red-800'
-                }`}>
-                  {req.status}
-                </span>
+            <div key={req.id} className="px-5 py-4 hover:bg-gray-50 transition">
+              <div className="flex items-center justify-between">
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-gray-800 truncate">{req.product_name}</p>
+                  <p className="text-sm text-gray-500 mt-0.5">
+                    {req.quantity} {req.unit}
+                    {req.notes && <span className="text-gray-400 ml-2">· {req.notes}</span>}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3 ml-4">
+                  <span className="text-xs text-gray-400">
+                    {new Date(req.created_at).toLocaleDateString('es', { day: '2-digit', month: 'short' })}
+                  </span>
+                  <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${
+                    req.status === 'pendiente' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                    req.status === 'aprobado' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                    'bg-red-50 text-red-700 border border-red-200'
+                  }`}>
+                    {req.status}
+                  </span>
+                </div>
               </div>
-              <p className="text-sm text-gray-600">{req.quantity} {req.unit}</p>
-              {req.notes && (
-                <p className="text-xs text-gray-500 mt-1">{req.notes}</p>
-              )}
-              <p className="text-xs text-gray-400 mt-1">
-                {new Date(req.created_at).toLocaleDateString('es')}
-              </p>
             </div>
           ))}
           {myRequests.length === 0 && (
-            <p className="text-gray-500 text-sm text-center py-4">No has hecho solicitudes</p>
+            <div className="px-5 py-10 text-center">
+              <p className="text-gray-400 text-sm">No has hecho ninguna solicitud</p>
+              <p className="text-gray-400 text-xs mt-1">Crea una nueva lista para empezar</p>
+            </div>
           )}
         </div>
       </div>
 
-      {/* Panel Admin - Pendientes */}
+      {/* Panel Admin */}
       {isAdmin && pendingRequests.length > 0 && (
-        <div className="bg-white rounded-xl p-4 shadow-sm">
-          <h2 className="font-semibold mb-3">⏳ Pendientes de aprobar ({pendingRequests.length})</h2>
-          <div className="space-y-2">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-100">
+            <h2 className="font-semibold text-gray-800">
+              ⏳ Pendientes de aprobar
+              <span className="ml-2 px-2 py-0.5 bg-amber-100 text-amber-700 text-xs rounded-full font-medium">
+                {pendingRequests.length}
+              </span>
+            </h2>
+          </div>
+          <div className="divide-y divide-gray-100">
             {pendingRequests.map(req => (
-              <div key={req.id} className="border rounded-lg p-3">
-                <div className="flex justify-between mb-1">
-                  <span className="font-medium">{req.product_name}</span>
-                  <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
-                    {req.restaurant}
-                  </span>
-                </div>
-                <p className="text-sm text-gray-600">{req.quantity} {req.unit}</p>
-                <p className="text-xs text-gray-500">Solicitado por: {req.users?.name || 'Empleado'}</p>
-                {req.notes && <p className="text-xs text-gray-600 mt-1">"{req.notes}"</p>}
-                <div className="flex gap-2 mt-3">
-                  <button
-                    onClick={() => handleStatus(req.id, 'aprobado')}
-                    className="flex-1 bg-green-600 text-white py-2 rounded-lg text-sm"
-                  >
-                    ✓ Aprobar
-                  </button>
-                  <button
-                    onClick={() => handleStatus(req.id, 'rechazado')}
-                    className="flex-1 bg-red-600 text-white py-2 rounded-lg text-sm"
-                  >
-                    ✗ Rechazar
-                  </button>
+              <div key={req.id} className="px-5 py-4 hover:bg-gray-50 transition">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="font-medium text-gray-800">{req.product_name}</p>
+                      <span className="px-1.5 py-0.5 bg-blue-50 text-blue-600 text-xs rounded font-medium">
+                        {req.restaurant}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600">
+                      {req.quantity} {req.unit}
+                      <span className="text-gray-400 ml-2">· Solicitado por {req.users?.name || 'Empleado'}</span>
+                    </p>
+                    {req.notes && (
+                      <p className="text-xs text-gray-500 mt-1 italic">"{req.notes}"</p>
+                    )}
+                  </div>
+                  <div className="flex gap-2 flex-shrink-0">
+                    <button
+                      onClick={() => handleStatus(req.id, 'aprobado')}
+                      className="px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition"
+                    >
+                      Aprobar
+                    </button>
+                    <button
+                      onClick={() => handleStatus(req.id, 'rechazado')}
+                      className="px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 transition"
+                    >
+                      Rechazar
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -215,125 +258,157 @@ const Requests = () => {
         </div>
       )}
 
-      {/* Modal Nueva Lista de Pedidos */}
+      {/* Modal Nueva Lista */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50">
-          <div className="bg-white rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-lg max-h-[85vh] flex flex-col">
-            <h2 className="text-xl font-bold mb-4">📋 Nueva Lista de Pedidos</h2>
+        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-lg max-h-[85vh] flex flex-col shadow-xl">
+            {/* Header del modal */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <h2 className="text-lg font-semibold text-gray-800">Nueva Lista de Pedidos</h2>
+              <button
+                onClick={() => {
+                  setShowModal(false);
+                  setFormData({ items: [{ productName: '', quantity: '', unit: 'unidad' }], notes: '' });
+                  setActiveSuggestionIndex(null);
+                }}
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition"
+              >
+                <XMarkIcon className="h-5 w-5" />
+              </button>
+            </div>
             
-            <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto space-y-4 pr-1">
-              {/* Lista de productos */}
-              <div className="space-y-3">
+            <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
+              <div className="px-6 py-4 space-y-4">
+                {/* Items de productos */}
                 {formData.items.map((item, index) => (
-                  <div key={index} className="border rounded-xl p-3 bg-gray-50">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm font-medium text-gray-700">
+                  <div key={index} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         Producto {index + 1}
                       </span>
                       {formData.items.length > 1 && (
                         <button
                           type="button"
                           onClick={() => handleRemoveItem(index)}
-                          className="p-1 text-red-500 hover:bg-red-50 rounded"
+                          className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
                         >
                           <TrashIcon className="h-4 w-4" />
                         </button>
                       )}
                     </div>
                     
-                    {/* Campo de búsqueda con sugerencias */}
-                    <div className="relative mb-2">
+                    {/* Campo de búsqueda */}
+                    <div className="relative mb-3">
                       <input
                         type="text"
-                        placeholder="🔍 Buscar o escribir nombre..."
+                        placeholder="Buscar producto del inventario o escribir nombre..."
                         value={item.productName}
                         onChange={(e) => handleItemChange(index, 'productName', e.target.value)}
-                        className="w-full p-2 border rounded-lg text-sm"
-                        list={`suggestions-${index}`}
+                        onFocus={() => setActiveSuggestionIndex(index)}
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                         autoComplete="off"
                       />
-                      <datalist id={`suggestions-${index}`}>
-                        {getSuggestions(item.productName).map(p => (
-                          <option key={p.id} value={p.name}>
-                            {p.stock} {p.unit} disponibles
-                          </option>
-                        ))}
-                      </datalist>
                       
-                      {/* Mostrar coincidencia exacta */}
-                      {item.productName && products.find(p => 
-                        p.name.toLowerCase() === item.productName.toLowerCase()
-                      ) && (
-                        <p className="text-xs text-green-600 mt-1">
-                          ✓ Producto existente en inventario
-                        </p>
+                      {/* Sugerencias */}
+                      {activeSuggestionIndex === index && getSuggestions(item.productName).length > 0 && (
+                        <div className="absolute z-10 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
+                          {getSuggestions(item.productName).map(product => (
+                            <button
+                              key={product.id}
+                              type="button"
+                              onClick={() => handleSelectSuggestion(index, product)}
+                              className="w-full px-4 py-3 text-left hover:bg-blue-50 transition flex items-center justify-between group"
+                            >
+                              <div>
+                                <span className="text-sm font-medium text-gray-800 group-hover:text-blue-700">
+                                  {product.name}
+                                </span>
+                                <span className="text-xs text-gray-400 ml-2">
+                                  {product.category}
+                                </span>
+                              </div>
+                              <span className="text-xs text-gray-500">
+                                {product.stock} {product.unit}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
                       )}
                     </div>
 
+                    {/* Cantidad y unidad */}
                     <div className="flex gap-2">
-                      <input
-                        type="number"
-                        step="0.01"
-                        placeholder="Cant."
-                        value={item.quantity}
-                        onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
-                        className="flex-1 p-2 border rounded-lg text-sm"
-                        required
-                      />
-                      <select
-                        value={item.unit}
-                        onChange={(e) => handleItemChange(index, 'unit', e.target.value)}
-                        className="w-20 p-2 border rounded-lg text-sm"
-                      >
-                        <option value="unidad">ud</option>
-                        <option value="kg">kg</option>
-                        <option value="L">L</option>
-                        <option value="caja">caja</option>
-                        <option value="g">g</option>
-                        <option value="ml">ml</option>
-                      </select>
+                      <div className="flex-1">
+                        <label className="block text-xs text-gray-500 mb-1">Cantidad</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          placeholder="0"
+                          value={item.quantity}
+                          onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
+                          className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                          required
+                        />
+                      </div>
+                      <div className="w-24">
+                        <label className="block text-xs text-gray-500 mb-1">Unidad</label>
+                        <select
+                          value={item.unit}
+                          onChange={(e) => handleItemChange(index, 'unit', e.target.value)}
+                          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-white"
+                        >
+                          <option value="unidad">ud</option>
+                          <option value="kg">kg</option>
+                          <option value="L">L</option>
+                          <option value="caja">caja</option>
+                          <option value="g">g</option>
+                          <option value="ml">ml</option>
+                        </select>
+                      </div>
                     </div>
                   </div>
                 ))}
                 
+                {/* Botón agregar producto */}
                 <button
                   type="button"
                   onClick={handleAddItem}
-                  className="w-full p-2 border-2 border-dashed border-blue-300 text-blue-600 rounded-xl text-sm hover:bg-blue-50 transition font-medium"
+                  className="w-full py-3 border-2 border-dashed border-gray-200 text-gray-500 rounded-xl text-sm font-medium hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50/50 transition"
                 >
                   + Agregar otro producto
                 </button>
+
+                {/* Notas */}
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">
+                    Notas generales
+                  </label>
+                  <textarea
+                    value={formData.notes}
+                    onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                    placeholder="Instrucciones adicionales para el pedido..."
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition resize-none"
+                    rows="2"
+                  />
+                </div>
               </div>
 
-              {/* Notas generales */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  📝 Notas generales (opcional)
-                </label>
-                <textarea
-                  value={formData.notes}
-                  onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                  placeholder="Ej: Para evento del fin de semana"
-                  className="w-full p-2 border rounded-lg text-sm"
-                  rows="2"
-                />
-              </div>
-
-              {/* Botones */}
-              <div className="flex gap-2 pt-2">
+              {/* Footer */}
+              <div className="px-6 py-4 border-t border-gray-100 flex gap-3">
                 <button
                   type="button"
                   onClick={() => {
                     setShowModal(false);
                     setFormData({ items: [{ productName: '', quantity: '', unit: 'unidad' }], notes: '' });
+                    setActiveSuggestionIndex(null);
                   }}
-                  className="flex-1 p-3 border rounded-xl text-gray-600 hover:bg-gray-50 transition"
+                  className="flex-1 py-2.5 border border-gray-200 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-50 transition"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition font-medium"
+                  className="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition shadow-sm"
                 >
                   Enviar Lista
                 </button>
