@@ -462,9 +462,17 @@ export const AuthProvider = ({ children }) => {
     return apiCall('requests', 'GET', null, { select: '*,users(name)', order: 'created_at.desc' });
   }, [apiCall]);
 
+  // ✅ CORREGIDO: usa product_name en lugar de productName
   const addRequest = useCallback(async (data) => {
     const result = await apiCall('requests', 'POST', {
-      ...data, user_id: user?.id, restaurant: currentRestaurant, status: 'pendiente', created_at: new Date().toISOString()
+      product_name: data.productName,
+      quantity: data.quantity,
+      unit: data.unit,
+      notes: data.notes || null,
+      user_id: user?.id,
+      restaurant: currentRestaurant,
+      status: 'pendiente',
+      created_at: new Date().toISOString()
     });
     sendPushNotification({
       title: '📋 Nuevo Pedido',
