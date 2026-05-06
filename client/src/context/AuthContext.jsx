@@ -10,7 +10,6 @@ const supabase = createClient(
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzaHlwenFtdXljdGxsbWJ6ZG5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0OTQ1NDMsImV4cCI6MjA5MzA3MDU0M30.m4c4A6J7K8JvGI69eHBpfUtGMMdD4jVGvfjz_NmQdHE'
 );
 
-// Compresor de imágenes (se usa en productos, recetas, etc.)
 const compressImage = (base64Str, maxWidth = 400) => {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -39,7 +38,6 @@ export const AuthProvider = ({ children }) => {
   const [currentRestaurant, setCurrentRestaurant] = useState(null);
   const [cachedProducts, setCachedProducts] = useState([]);
 
-  // Al iniciar, verifica si hay sesión activa
   useEffect(() => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -63,7 +61,6 @@ export const AuthProvider = ({ children }) => {
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  // Carga los datos del perfil desde la tabla profiles
   const loadUserProfile = async (session) => {
     try {
       const { data, error } = await supabase
@@ -93,10 +90,24 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Función para llamadas a la API de Supabase con el token JWT
+  // ✅ apiCall corregido: obtiene el token de varias fuentes
   const apiCall = useCallback(async (table, method, data = null, filters = {}) => {
+    // Obtener token de la sesión actual
     const { data: { session } } = await supabase.auth.getSession();
-    const token = session?.access_token;
+    let token = session?.access_token;
+
+    // Si no hay sesión activa, intentar recuperar el token del localStorage
+    if (!token) {
+      const rawToken = localStorage.getItem('sb-fshypzqmuyctllmbzdnh-auth-token');
+      if (rawToken) {
+        try {
+          const parsed = JSON.parse(rawToken);
+          token = parsed.access_token || parsed;
+        } catch {
+          token = rawToken.replace(/"/g, '');
+        }
+      }
+    }
 
     const headers = {
       'Content-Type': 'application/json',
