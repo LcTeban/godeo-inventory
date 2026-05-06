@@ -1,13 +1,10 @@
 import { createContext, useState, useContext, useEffect, useCallback } from 'react';
-import { createClient } from '@supabase/supabase-js';
 
 const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
 
 const SUPABASE_URL = 'https://fshypzqmuyctllmbzdnh.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzaHlwenFtdXljdGxsbWJ6ZG5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0OTQ1NDMsImV4cCI6MjA5MzA3MDU0M30.m4c4A6J7K8JvGI69eHBpfUtGMMdD4jVGvfjz_NmQdHE';
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const compressImage = (base64Str, maxWidth = 400) => {
   return new Promise((resolve, reject) => {
@@ -36,39 +33,12 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [currentRestaurant, setCurrentRestaurant] = useState(null);
   const [cachedProducts, setCachedProducts] = useState([]);
-  const [supabaseToken, setSupabaseToken] = useState(null);
 
   useEffect(() => {
-    const init = async () => {
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
+    if (token && userData) {
       try {
-        // Intentar recuperar sesión de Supabase Auth
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          await loadUserFromSupabase(session);
-          return;
-        }
-
-        // Si no hay sesión de Supabase, usar el sistema antiguo
-        fallbackToLegacy();
-      } catch (error) {
-        console.error('Error durante la inicialización:', error);
-        // Si algo falla, intentar el sistema antiguo directamente
-        try {
-          fallbackToLegacy();
-        } catch (e) {
-          console.error('Fallback al sistema antiguo también falló:', e);
-          setUser(null);
-          setCurrentRestaurant(null);
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const fallbackToLegacy = () => {
-      const token = localStorage.getItem('token');
-      const userData = localStorage.getItem('user');
-      if (token && userData) {
         const parsedUser = JSON.parse(userData);
         setUser(parsedUser);
         if (parsedUser.role === 'ADMIN') {
@@ -77,85 +47,21 @@ export const AuthProvider = ({ children }) => {
         } else {
           setCurrentRestaurant(parsedUser.restaurant);
         }
-      }
-    };
-
-    init();
-
-    const { data: listener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
-        await loadUserFromSupabase(session);
-      } else {
-        // Si se cierra sesión en Supabase, limpiar el token de Supabase pero mantener el antiguo si existe
-        setSupabaseToken(null);
-        // No borramos user porque puede seguir usando el sistema antiguo
-      }
-    });
-
-    return () => listener.subscription.unsubscribe();
-  }, []);
-
-  const loadUserFromSupabase = async (session) => {
-    try {
-      setSupabaseToken(session.access_token);
-
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('name, role, restaurant')
-        .eq('id', session.user.id)
-        .single();
-
-      if (error) throw error;
-
-      const userData = {
-        id: session.user.id,
-        email: session.user.email,
-        name: data.name,
-        role: data.role,
-        restaurant: data.restaurant
-      };
-
-      setUser(userData);
-      localStorage.setItem('user', JSON.stringify(userData));
-      localStorage.setItem('supabaseToken', session.access_token);
-
-      if (userData.role === 'ADMIN') {
-        const saved = localStorage.getItem('selectedRestaurant');
-        setCurrentRestaurant(saved || userData.restaurant);
-      } else {
-        setCurrentRestaurant(userData.restaurant);
-      }
-    } catch (error) {
-      console.error('Error al cargar perfil de Supabase:', error);
-      await supabase.auth.signOut();
-      setSupabaseToken(null);
-      // Intentar restaurar sesión antigua en caso de fallo
-      const token = localStorage.getItem('token');
-      const userData = localStorage.getItem('user');
-      if (token && userData) {
-        const parsedUser = JSON.parse(userData);
-        setUser(parsedUser);
-        if (parsedUser.role === 'ADMIN') {
-          const saved = localStorage.getItem('selectedRestaurant');
-          setCurrentRestaurant(saved || parsedUser.restaurant);
-        } else {
-          setCurrentRestaurant(parsedUser.restaurant);
-        }
+      } catch (e) {
+        console.error('Error al leer sesión:', e);
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
       }
     }
-  };
+    setLoading(false);
+  }, []);
 
   const apiCall = useCallback(async (table, method, data = null, filters = {}) => {
     const headers = {
       'Content-Type': 'application/json',
       'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`
     };
-
-    if (supabaseToken) {
-      headers['Authorization'] = `Bearer ${supabaseToken}`;
-    } else {
-      headers['Authorization'] = `Bearer ${SUPABASE_KEY}`;
-    }
 
     let url = `${SUPABASE_URL}/rest/v1/${table}`;
     const queryParams = new URLSearchParams();
@@ -196,21 +102,9 @@ export const AuthProvider = ({ children }) => {
     }
     if (response.status === 204 || method === 'DELETE') return { success: true };
     try { return await response.json(); } catch (e) { return { success: true }; }
-  }, [supabaseToken]);
+  }, []);
 
-  // Login híbrido: prueba Supabase Auth y, si falla, usa el sistema antiguo
   const login = async (email, password) => {
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (!error && data.session) {
-        return { success: true };
-      }
-      console.log('Supabase Auth falló, usando sistema antiguo:', error?.message);
-    } catch (e) {
-      console.log('Error en Supabase Auth:', e);
-    }
-
-    // Fallback al sistema antiguo
     try {
       const users = await apiCall('users', 'GET', null, {
         select: '*',
@@ -243,15 +137,12 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = async () => {
-    await supabase.auth.signOut();
+  const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     localStorage.removeItem('selectedRestaurant');
-    localStorage.removeItem('supabaseToken');
     setUser(null);
     setCurrentRestaurant(null);
-    setSupabaseToken(null);
   };
 
   const switchRestaurant = (r) => {
@@ -261,7 +152,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Notificación local protegida
   const showLocalNotification = (title, body, url = '/') => {
     if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
       new Notification(title, { body, icon: '/godeo-inventory/icon-192.png', data: { url } });
@@ -293,7 +183,7 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // ========== CATEGORÍAS (sin cambios) ==========
+  // ========== CATEGORÍAS ==========
   const getCategories = useCallback(async (parentId = null) => {
     const filters = { select: '*', or: `(restaurant.eq.${currentRestaurant}, restaurant.is.null)`, order: 'name.asc' };
     if (parentId === null) filters.parent_id = 'is.null';
@@ -345,7 +235,7 @@ export const AuthProvider = ({ children }) => {
     return path.join(' > ');
   }, [apiCall]);
 
-  // ========== PRODUCTOS (sin cambios) ==========
+  // ========== PRODUCTOS ==========
   const fetchProductsMeta = useCallback(async (restaurant) => {
     const filters = {
       select: 'id,name,category_id,stock,unit,price,min_stock,expiry_date,restaurant,barcode,supplier_id,suppliers(name),categories!products_category_id_fkey(name,parent_id)',
@@ -435,7 +325,7 @@ export const AuthProvider = ({ children }) => {
     }, targetRestaurant);
   }, [getProductById, addProduct]);
 
-  // ========== MOVIMIENTOS (sin cambios) ==========
+  // ========== MOVIMIENTOS ==========
   const getMovements = useCallback(async (options = {}) => {
     const { restaurant, period } = options;
     const filterRestaurant = restaurant !== undefined ? restaurant : currentRestaurant;
@@ -485,7 +375,7 @@ export const AuthProvider = ({ children }) => {
     return result;
   }, [apiCall, currentRestaurant, user, refreshProductCache, sendPushNotification]);
 
-  // ========== TRANSFERENCIAS (sin cambios) ==========
+  // ========== TRANSFERENCIAS ==========
   const getTransfers = useCallback(() => {
     return apiCall('transfers', 'GET', null, { select: '*,products(name,unit,price),users(name)', order: 'created_at.desc' });
   }, [apiCall]);
@@ -567,7 +457,7 @@ export const AuthProvider = ({ children }) => {
     return { success: true };
   }, [apiCall, user, refreshProductCache, currentRestaurant, sendPushNotification]);
 
-  // ========== SOLICITUDES (sin cambios) ==========
+  // ========== SOLICITUDES ==========
   const getRequests = useCallback(() => {
     return apiCall('requests', 'GET', null, { select: '*,users(name)', order: 'created_at.desc' });
   }, [apiCall]);
@@ -597,7 +487,7 @@ export const AuthProvider = ({ children }) => {
     return result;
   }, [apiCall, sendPushNotification]);
 
-  // ========== DASHBOARD (sin cambios) ==========
+  // ========== DASHBOARD ==========
   const getDashboard = useCallback(async () => {
     const allProducts = await getProducts({ restaurant: null, forceRefresh: true });
     const restaurants = ['POZOBLANCO', 'FUERTEVENTURA', 'GRAN_CAPITAN'];
@@ -610,13 +500,13 @@ export const AuthProvider = ({ children }) => {
     return { restaurants: stats, pendingTransfers: pending.length };
   }, [apiCall, getProducts]);
 
-  // ========== PROVEEDORES (sin cambios) ==========
+  // ========== PROVEEDORES ==========
   const getSuppliers = useCallback(() => apiCall('suppliers', 'GET', null, { select: '*', order: 'name.asc' }), [apiCall]);
   const addSupplier = useCallback((data) => { if (user?.role !== 'ADMIN') throw new Error('Solo admin'); return apiCall('suppliers', 'POST', { ...data, created_at: new Date().toISOString() }); }, [apiCall, user]);
   const updateSupplier = useCallback((id, data) => { if (user?.role !== 'ADMIN') throw new Error('Solo admin'); return apiCall('suppliers', 'PATCH', data, { id: `eq.${id}` }); }, [apiCall, user]);
   const deleteSupplier = useCallback((id) => { if (user?.role !== 'ADMIN') throw new Error('Solo admin'); return apiCall('suppliers', 'DELETE', null, { id: `eq.${id}` }); }, [apiCall, user]);
 
-  // ========== RECETAS (sin cambios) ==========
+  // ========== RECETAS ==========
   const getRecipes = useCallback(() => {
     return apiCall('recipes', 'GET', null, { select: '*,recipe_ingredients(*,products(name,unit))', restaurant: `eq.${currentRestaurant}`, order: 'name.asc' });
   }, [apiCall, currentRestaurant]);
