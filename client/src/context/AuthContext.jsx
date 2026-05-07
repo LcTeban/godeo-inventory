@@ -290,95 +290,6 @@ export const AuthProvider = ({ children }) => {
     return addProduct({ name: product.name, category_id: product.category_id, stock: product.stock, unit: product.unit, min_stock: product.min_stock, expiry_date: product.expiry_date, image: product.image, barcode: product.barcode, supplier_id: product.supplier_id, price: product.price }, targetRestaurant);
   }, [getProductById, addProduct]);
 
-const duplicateCategory = useCallback(async (categoryId, targetRestaurant) => {
-  // 1. Obtener la categoría raíz
-  const rootCategory = await apiCall('categories', 'GET', null, { select: '*', id: `eq.${categoryId}` });
-  if (!rootCategory || rootCategory.length === 0) throw new Error('Categoría no encontrada');
-  const root = rootCategory[0];
-
-  // 2. Obtener todas las categorías del restaurante actual (para reconstruir el árbol)
-  const allCats = await apiCall('categories', 'GET', null, { select: '*', restaurant: `eq.${currentRestaurant}` });
-
-  // 3. Función recursiva para recoger todos los IDs hijos
-  const getChildrenIds = (parentId, list) => {
-    const children = list.filter(c => c.parent_id === parentId);
-    let ids = children.map(c => c.id);
-    children.forEach(c => {
-      ids = ids.concat(getChildrenIds(c.id, list));
-    });
-    return ids;
-  };
-
-  const allCategoryIds = [root.id, ...getChildrenIds(root.id, allCats)];
-
-  // 4. Obtener todos los productos de esas categorías
-  const products = await apiCall('products', 'GET', null, {
-    select: '*',
-    restaurant: `eq.${currentRestaurant}`,
-    category_id: `in.(${allCategoryIds.join(',')})`
-  });
-
-  // 5. Crear el árbol de categorías en el destino, manteniendo un mapa de IDs viejos -> nuevos
-  const idMap = {};
-
-  // Crear la raíz primero
-  const newRoot = await apiCall('categories', 'POST', {
-    name: root.name,
-    parent_id: null, // la raíz no tiene padre
-    restaurant: targetRestaurant,
-    created_at: new Date().toISOString()
-  });
-  idMap[root.id] = newRoot.id;
-
-  // Crear el resto de categorías en orden (primero las que tienen padre ya creado)
-  const remaining = allCategoryIds.filter(id => id !== root.id);
-  // Ordenar por nivel (parent_id) para asegurar que el padre exista
-  const catsToCreate = allCats.filter(c => allCategoryIds.includes(c.id) && c.id !== root.id);
-  catsToCreate.sort((a, b) => {
-    // Las que tienen parent_id en idMap primero
-    const aReady = idMap[a.parent_id] ? 0 : 1;
-    const bReady = idMap[b.parent_id] ? 0 : 1;
-    return aReady - bReady;
-  });
-
-  for (const cat of catsToCreate) {
-    const newParentId = idMap[cat.parent_id] || null;
-    const newCat = await apiCall('categories', 'POST', {
-      name: cat.name,
-      parent_id: newParentId,
-      restaurant: targetRestaurant,
-      created_at: new Date().toISOString()
-    });
-    idMap[cat.id] = newCat.id;
-  }
-
-  // 6. Copiar los productos
-  let copied = 0;
-  for (const product of products) {
-    const newCategoryId = idMap[product.category_id] || null;
-    try {
-      await addProduct({
-        name: product.name,
-        category_id: newCategoryId,
-        stock: product.stock,
-        unit: product.unit,
-        min_stock: product.min_stock,
-        expiry_date: product.expiry_date,
-        image: product.image,
-        barcode: product.barcode,
-        supplier_id: product.supplier_id,
-        price: product.price
-      }, targetRestaurant);
-      copied++;
-    } catch (e) {
-      // Si falla por duplicado u otro error, ignoramos el producto pero continuamos
-      console.warn(`No se pudo copiar el producto ${product.name}:`, e.message);
-    }
-  }
-
-  return { success: true, categoriesCreated: Object.keys(idMap).length, productsCopied: copied };
-}, [apiCall, currentRestaurant, addProduct]);
-  
   // ========== MOVIMIENTOS ==========
   const getMovements = useCallback(async (options = {}) => {
     const { restaurant, period } = options;
@@ -496,31 +407,16 @@ const duplicateCategory = useCallback(async (categoryId, targetRestaurant) => {
   const updateSupplier = useCallback((id, data) => { if (user?.role !== 'ADMIN') throw new Error('Solo admin'); return apiCall('suppliers', 'PATCH', data, { id: `eq.${id}` }); }, [apiCall, user]);
   const deleteSupplier = useCallback((id) => { if (user?.role !== 'ADMIN') throw new Error('Solo admin'); return apiCall('suppliers', 'DELETE', null, { id: `eq.${id}` }); }, [apiCall, user]);
 
-  // ========== RECETAS (SOLUCIÓN MANUAL PARA INGREDIENTES) ==========
+  // ========== RECETAS ==========
   const getRecipes = useCallback(async () => {
-    // 1. Obtener todas las recetas del restaurante actual (sin ingredientes)
-    const recipes = await apiCall('recipes', 'GET', null, {
-      select: '*',
-      restaurant: `eq.${currentRestaurant}`,
-      order: 'name.asc'
-    });
-
+    const recipes = await apiCall('recipes', 'GET', null, { select: '*', restaurant: `eq.${currentRestaurant}`, order: 'name.asc' });
     if (!recipes || recipes.length === 0) return [];
-
-    // 2. Obtener los ingredientes de todas las recetas en una sola consulta
     const recipeIds = recipes.map(r => r.id);
-    const ingredients = await apiCall('recipe_ingredients', 'GET', null, {
-      select: '*,products(name,unit)',
-      recipe_id: `in.(${recipeIds.join(',')})`
-    });
-
-    // 3. Adjuntar los ingredientes a cada receta
-    const recipesWithIngredients = recipes.map(recipe => ({
+    const ingredients = await apiCall('recipe_ingredients', 'GET', null, { select: '*,products(name,unit)', recipe_id: `in.(${recipeIds.join(',')})` });
+    return recipes.map(recipe => ({
       ...recipe,
       recipe_ingredients: (ingredients || []).filter(ing => ing.recipe_id === recipe.id)
     }));
-
-    return recipesWithIngredients;
   }, [apiCall, currentRestaurant]);
 
   const addRecipe = useCallback(async (name, image, ingredients) => {
@@ -529,28 +425,13 @@ const duplicateCategory = useCallback(async (categoryId, targetRestaurant) => {
     if (finalImage && finalImage.startsWith('data:image')) {
       try { finalImage = await compressImage(finalImage); } catch (e) { throw new Error('Error al procesar la imagen'); }
     }
-
-    const recipe = await apiCall('recipes', 'POST', {
-      name,
-      image: finalImage || null,
-      restaurant: currentRestaurant,
-      created_at: new Date().toISOString()
-    });
-
+    const recipe = await apiCall('recipes', 'POST', { name, image: finalImage || null, restaurant: currentRestaurant, created_at: new Date().toISOString() });
     const validIngredients = ingredients.filter(ing => ing.product_id && parseFloat(ing.quantity) > 0);
     for (const ing of validIngredients) {
       try {
-        await apiCall('recipe_ingredients', 'POST', {
-          recipe_id: recipe.id,
-          product_id: parseInt(ing.product_id, 10),
-          quantity: parseFloat(ing.quantity),
-          unit: ing.unit || 'g'
-        });
-      } catch (e) {
-        console.error('Error al insertar ingrediente:', e);
-      }
+        await apiCall('recipe_ingredients', 'POST', { recipe_id: recipe.id, product_id: parseInt(ing.product_id, 10), quantity: parseFloat(ing.quantity), unit: ing.unit || 'g' });
+      } catch (e) { console.error('Error al insertar ingrediente:', e); }
     }
-
     return recipe;
   }, [apiCall, currentRestaurant, user]);
 
@@ -560,22 +441,14 @@ const duplicateCategory = useCallback(async (categoryId, targetRestaurant) => {
     if (finalImage && finalImage.startsWith('data:image')) {
       try { finalImage = await compressImage(finalImage); } catch (e) { throw new Error('Error al procesar la imagen'); }
     }
-
     await apiCall('recipes', 'PATCH', { name, image: finalImage || null }, { id: `eq.${id}` });
-
     const existing = await apiCall('recipe_ingredients', 'GET', null, { select: 'id', recipe_id: `eq.${id}` });
     for (const ing of (Array.isArray(existing) ? existing : [])) {
       await apiCall('recipe_ingredients', 'DELETE', null, { id: `eq.${ing.id}` });
     }
-
     const validIngredients = ingredients.filter(ing => ing.product_id && parseFloat(ing.quantity) > 0);
     for (const ing of validIngredients) {
-      await apiCall('recipe_ingredients', 'POST', {
-        recipe_id: id,
-        product_id: parseInt(ing.product_id, 10),
-        quantity: parseFloat(ing.quantity),
-        unit: ing.unit || 'g'
-      });
+      await apiCall('recipe_ingredients', 'POST', { recipe_id: id, product_id: parseInt(ing.product_id, 10), quantity: parseFloat(ing.quantity), unit: ing.unit || 'g' });
     }
   }, [apiCall, user]);
 
@@ -584,7 +457,94 @@ const duplicateCategory = useCallback(async (categoryId, targetRestaurant) => {
     return apiCall('recipes', 'DELETE', null, { id: `eq.${id}` });
   }, [apiCall, user]);
 
-  // ========== NOMBRES ==========
+  // ========== DUPLICAR CATEGORÍA (CORREGIDO) ==========
+  const duplicateCategory = useCallback(async (categoryId, targetRestaurant) => {
+    // 1. Obtener la categoría raíz
+    const rootResult = await apiCall('categories', 'GET', null, { select: '*', id: `eq.${categoryId}` });
+    if (!rootResult || rootResult.length === 0) throw new Error('Categoría no encontrada');
+    const root = rootResult[0];
+
+    // 2. Obtener todas las categorías del restaurante actual
+    const allCats = await apiCall('categories', 'GET', null, { select: '*', restaurant: `eq.${currentRestaurant}` });
+
+    // 3. Recoger todos los IDs de la rama (incluyendo el raíz)
+    const getChildrenIds = (parentId, list) => {
+      const children = list.filter(c => c.parent_id === parentId);
+      let ids = children.map(c => c.id);
+      children.forEach(c => {
+        ids = ids.concat(getChildrenIds(c.id, list));
+      });
+      return ids;
+    };
+    const branchIds = [root.id, ...getChildrenIds(root.id, allCats)];
+
+    // 4. Obtener TODOS los productos del restaurante origen (para filtrar manualmente)
+    const allProducts = await apiCall('products', 'GET', null, {
+      select: '*',
+      restaurant: `eq.${currentRestaurant}`
+    });
+    const productsToCopy = (allProducts || []).filter(p => branchIds.includes(p.category_id));
+
+    // 5. Crear el árbol de categorías en el destino con mapeo de IDs
+    const idMap = {};
+    // Crear la raíz
+    const newRoot = await apiCall('categories', 'POST', {
+      name: root.name,
+      parent_id: null,
+      restaurant: targetRestaurant,
+      created_at: new Date().toISOString()
+    });
+    idMap[root.id] = newRoot.id;
+
+    // Ordenar el resto por nivel (las que tienen padre ya mapeado primero)
+    const catsToCreate = allCats.filter(c => branchIds.includes(c.id) && c.id !== root.id);
+    // Asegurar que los padres estén creados antes que los hijos
+    let attempts = 0;
+    while (catsToCreate.length > 0 && attempts < catsToCreate.length) {
+      const cat = catsToCreate.shift();
+      const newParentId = idMap[cat.parent_id];
+      if (newParentId !== undefined) {
+        const newCat = await apiCall('categories', 'POST', {
+          name: cat.name,
+          parent_id: newParentId,
+          restaurant: targetRestaurant,
+          created_at: new Date().toISOString()
+        });
+        idMap[cat.id] = newCat.id;
+        attempts = 0;
+      } else {
+        // Volver a poner al final si el padre aún no está creado
+        catsToCreate.push(cat);
+        attempts++;
+      }
+    }
+
+    // 6. Copiar los productos
+    let copied = 0;
+    for (const product of productsToCopy) {
+      const newCategoryId = idMap[product.category_id] || null;
+      try {
+        await addProduct({
+          name: product.name,
+          category_id: newCategoryId,
+          stock: product.stock,
+          unit: product.unit,
+          min_stock: product.min_stock,
+          expiry_date: product.expiry_date,
+          image: product.image,
+          barcode: product.barcode,
+          supplier_id: product.supplier_id,
+          price: product.price
+        }, targetRestaurant);
+        copied++;
+      } catch (e) {
+        console.warn(`No se pudo copiar ${product.name}:`, e.message);
+      }
+    }
+
+    return { success: true, categoriesCreated: Object.keys(idMap).length, productsCopied: copied };
+  }, [apiCall, currentRestaurant, addProduct]);
+
   const restaurantNames = {
     POZOBLANCO: '🍽️ Godeo Pozoblanco',
     FUERTEVENTURA: '🏖️ Godeo Fuerteventura',
@@ -606,7 +566,7 @@ const duplicateCategory = useCallback(async (categoryId, targetRestaurant) => {
     getSuppliers, addSupplier, updateSupplier, deleteSupplier,
     getRecipes, addRecipe, updateRecipe, deleteRecipe,
     getCategories, getAllCategoriesFlat, addCategory, updateCategory, deleteCategory, getCategoryPath,
-    duplicateCategory,
+    duplicateCategory
   };
 
   return (
