@@ -3,7 +3,8 @@ import { useAuth } from '../context/AuthContext';
 import {
   PlusIcon, MinusIcon, TrashIcon, CameraIcon, QrCodeIcon,
   DocumentArrowDownIcon, TableCellsIcon, PencilIcon,
-  FolderIcon, FolderOpenIcon, ArrowLeftIcon, DocumentDuplicateIcon
+  FolderIcon, FolderOpenIcon, ArrowLeftIcon, DocumentDuplicateIcon,
+  XMarkIcon, ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
 import BarcodeScanner from '../components/BarcodeScanner';
 import LazyImage from '../components/LazyImage';
@@ -19,6 +20,8 @@ const Inventory = () => {
   const [showMovementModal, setShowMovementModal] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
   const [showCopyModal, setShowCopyModal] = useState(false);
+  const [showDeleteAllModal, setShowDeleteAllModal] = useState(false); // Modal de confirmación
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState({
@@ -32,6 +35,7 @@ const Inventory = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [copyTarget, setCopyTarget] = useState('');
   const [isCopying, setIsCopying] = useState(false);
+  const [isDeletingAll, setIsDeletingAll] = useState(false);
 
   const [currentFolderId, setCurrentFolderId] = useState(null);
   const [folderPath, setFolderPath] = useState([]);
@@ -40,7 +44,7 @@ const Inventory = () => {
   const {
     currentRestaurant, isAdmin, getProducts, addProduct, updateProduct, deleteProduct,
     addMovement, getSuppliers, getProductById, getProductImage, getAllCategoriesFlat,
-    duplicateProduct
+    duplicateProduct, deleteUncategorizedProducts
   } = useAuth();
 
   useEffect(() => {
@@ -320,6 +324,22 @@ const Inventory = () => {
     input.click();
   };
 
+  const handleDeleteAllUncategorized = async () => {
+    if (!isAdmin) return;
+    setIsDeletingAll(true);
+    try {
+      const result = await deleteUncategorizedProducts(currentRestaurant);
+      alert(`✅ Se eliminaron ${result.deleted} productos sin categoría.`);
+      setShowDeleteAllModal(false);
+      setDeleteConfirmText('');
+      await fetchProducts();
+    } catch (error) {
+      alert('❌ Error al eliminar: ' + error.message);
+    } finally {
+      setIsDeletingAll(false);
+    }
+  };
+
   const ProductList = ({ products }) => (
     <div className="space-y-2">
       {products.map(product => {
@@ -484,10 +504,21 @@ const Inventory = () => {
             </div>
           )}
 
-          {/* Productos sin categoría SIEMPRE VISIBLES en raíz */}
+          {/* Productos sin categoría con botón de eliminar masivo */}
           {uncategorizedProducts.length > 0 && (
             <div className="mt-6">
-              <h2 className="text-sm font-semibold text-gray-600 mb-2">📂 Productos sin categoría</h2>
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="text-sm font-semibold text-gray-600">📂 Productos sin categoría ({uncategorizedProducts.length})</h2>
+                {isAdmin && (
+                  <button
+                    onClick={() => setShowDeleteAllModal(true)}
+                    className="px-3 py-1.5 bg-red-50 text-red-600 border border-red-200 rounded-lg text-xs font-medium hover:bg-red-100 transition flex items-center gap-1"
+                  >
+                    <TrashIcon className="h-3.5 w-3.5" />
+                    Eliminar todos
+                  </button>
+                )}
+              </div>
               <ProductList products={uncategorizedProducts} />
             </div>
           )}
@@ -646,6 +677,54 @@ const Inventory = () => {
                   className="flex-1 p-3 bg-blue-600 text-white rounded-xl disabled:opacity-50"
                 >
                   {isCopying ? 'Copiando...' : 'Copiar'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmación para eliminar todos los productos sin categoría */}
+      {showDeleteAllModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-xl" onClick={e => e.stopPropagation()}>
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-red-100 rounded-full">
+                  <ExclamationTriangleIcon className="h-6 w-6 text-red-600" />
+                </div>
+                <h2 className="text-lg font-semibold text-gray-800">Eliminar productos sin categoría</h2>
+              </div>
+              <p className="text-sm text-gray-600 mb-2">
+                Esta acción eliminará <strong>permanentemente</strong> los {uncategorizedProducts.length} productos que están en "General" o sin categoría asignada.
+              </p>
+              <p className="text-sm text-gray-600 mb-4">
+                Para confirmar, escribe <span className="font-bold text-red-600">ELIMINAR</span> en el campo de abajo.
+              </p>
+              <input
+                type="text"
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder="Escribe ELIMINAR para confirmar"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition mb-4"
+                autoFocus
+              />
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowDeleteAllModal(false);
+                    setDeleteConfirmText('');
+                  }}
+                  className="flex-1 py-2.5 border border-gray-200 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-50 transition"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleDeleteAllUncategorized}
+                  disabled={deleteConfirmText !== 'ELIMINAR' || isDeletingAll}
+                  className="flex-1 py-2.5 bg-red-600 text-white rounded-xl text-sm font-medium hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isDeletingAll ? 'Eliminando...' : 'Eliminar todos'}
                 </button>
               </div>
             </div>
