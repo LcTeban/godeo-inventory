@@ -407,13 +407,31 @@ export const AuthProvider = ({ children }) => {
   const updateSupplier = useCallback((id, data) => { if (user?.role !== 'ADMIN') throw new Error('Solo admin'); return apiCall('suppliers', 'PATCH', data, { id: `eq.${id}` }); }, [apiCall, user]);
   const deleteSupplier = useCallback((id) => { if (user?.role !== 'ADMIN') throw new Error('Solo admin'); return apiCall('suppliers', 'DELETE', null, { id: `eq.${id}` }); }, [apiCall, user]);
 
-  // ========== RECETAS (POLÍTICA DE LECTURA AGREGADA) ==========
-  const getRecipes = useCallback(() => {
-    return apiCall('recipes', 'GET', null, {
-      select: '*,recipe_ingredients(*,products(name,unit))',
+  // ========== RECETAS (SOLUCIÓN MANUAL PARA INGREDIENTES) ==========
+  const getRecipes = useCallback(async () => {
+    // 1. Obtener todas las recetas del restaurante actual (sin ingredientes)
+    const recipes = await apiCall('recipes', 'GET', null, {
+      select: '*',
       restaurant: `eq.${currentRestaurant}`,
       order: 'name.asc'
     });
+
+    if (!recipes || recipes.length === 0) return [];
+
+    // 2. Obtener los ingredientes de todas las recetas en una sola consulta
+    const recipeIds = recipes.map(r => r.id);
+    const ingredients = await apiCall('recipe_ingredients', 'GET', null, {
+      select: '*,products(name,unit)',
+      recipe_id: `in.(${recipeIds.join(',')})`
+    });
+
+    // 3. Adjuntar los ingredientes a cada receta
+    const recipesWithIngredients = recipes.map(recipe => ({
+      ...recipe,
+      recipe_ingredients: (ingredients || []).filter(ing => ing.recipe_id === recipe.id)
+    }));
+
+    return recipesWithIngredients;
   }, [apiCall, currentRestaurant]);
 
   const addRecipe = useCallback(async (name, image, ingredients) => {
@@ -477,6 +495,7 @@ export const AuthProvider = ({ children }) => {
     return apiCall('recipes', 'DELETE', null, { id: `eq.${id}` });
   }, [apiCall, user]);
 
+  // ========== NOMBRES ==========
   const restaurantNames = {
     POZOBLANCO: '🍽️ Godeo Pozoblanco',
     FUERTEVENTURA: '🏖️ Godeo Fuerteventura',
