@@ -524,34 +524,49 @@ export const AuthProvider = ({ children }) => {
     });
   }, [apiCall, currentRestaurant]);
 
-  const addRecipe = useCallback(async (name, image, ingredients) => {
-    if (user?.role !== 'ADMIN') throw new Error('Solo administradores');
-    let finalImage = image;
-    if (finalImage && finalImage.startsWith('data:image')) {
-      try { finalImage = await compressImage(finalImage); } catch (e) { throw new Error('Error al procesar la imagen'); }
-    }
+const addRecipe = useCallback(async (name, image, ingredients) => {
+  if (user?.role !== 'ADMIN') throw new Error('Solo administradores');
+  let finalImage = image;
+  if (finalImage && finalImage.startsWith('data:image')) {
+    try { finalImage = await compressImage(finalImage); } catch (e) { throw new Error('Error al procesar la imagen'); }
+  }
 
-    // Crear receta
-    const recipe = await apiCall('recipes', 'POST', {
-      name,
-      image: finalImage || null,
-      restaurant: currentRestaurant,
-      created_at: new Date().toISOString()
-    });
+  // 1. Crear la receta
+  const recipe = await apiCall('recipes', 'POST', {
+    name,
+    image: finalImage || null,
+    restaurant: currentRestaurant,
+    created_at: new Date().toISOString()
+  });
 
-    // Insertar solo los ingredientes válidos (con producto y cantidad > 0)
-    const validIngredients = ingredients.filter(ing => ing.product_id && parseFloat(ing.quantity) > 0);
-    for (const ing of validIngredients) {
-      await apiCall('recipe_ingredients', 'POST', {
+  console.log('Receta creada:', recipe); // Para depuración
+
+  // 2. Insertar ingredientes uno por uno, capturando errores individualmente
+  const validIngredients = ingredients.filter(ing => ing.product_id && parseFloat(ing.quantity) > 0);
+
+  if (validIngredients.length === 0) {
+    console.warn('No hay ingredientes válidos para insertar');
+    return recipe; // Devolvemos la receta sin ingredientes
+  }
+
+  for (const ing of validIngredients) {
+    try {
+      const payload = {
         recipe_id: recipe.id,
-        product_id: parseInt(ing.product_id, 10),   // ← Aseguramos número
-        quantity: parseFloat(ing.quantity),          // ← Aseguramos decimal
+        product_id: parseInt(ing.product_id, 10),
+        quantity: parseFloat(ing.quantity),
         unit: ing.unit || 'g'
-      });
+      };
+      console.log('Insertando ingrediente:', payload);
+      await apiCall('recipe_ingredients', 'POST', payload);
+    } catch (ingError) {
+      console.error('Error al insertar ingrediente:', ingError, ing);
+      // Continuamos con el siguiente, no detenemos la creación
     }
+  }
 
-    return recipe;
-  }, [apiCall, currentRestaurant, user]);
+  return recipe;
+}, [apiCall, currentRestaurant, user]);
 
   const updateRecipe = useCallback(async (id, name, image, ingredients) => {
     if (user?.role !== 'ADMIN') throw new Error('Solo administradores');
