@@ -104,23 +104,13 @@ export const AuthProvider = ({ children }) => {
     try { return await response.json(); } catch (e) { return { success: true }; }
   }, []);
 
+  // ========== AUTENTICACIÓN ==========
   const login = async (email, password) => {
     try {
-      const users = await apiCall('users', 'GET', null, {
-        select: '*',
-        email: `eq.${email}`
-      });
+      const users = await apiCall('users', 'GET', null, { select: '*', email: `eq.${email}` });
       const foundUser = Array.isArray(users) ? users[0] : null;
-      if (!foundUser || foundUser.password !== password) {
-        return { success: false, error: 'Credenciales inválidas' };
-      }
-      const userData = {
-        id: foundUser.id,
-        email: foundUser.email,
-        name: foundUser.name,
-        role: foundUser.role,
-        restaurant: foundUser.restaurant
-      };
+      if (!foundUser || foundUser.password !== password) { return { success: false, error: 'Credenciales inválidas' }; }
+      const userData = { id: foundUser.id, email: foundUser.email, name: foundUser.name, role: foundUser.role, restaurant: foundUser.restaurant };
       const token = btoa(JSON.stringify(userData));
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(userData));
@@ -160,17 +150,7 @@ export const AuthProvider = ({ children }) => {
 
   const sendPushNotification = useCallback(async (payload) => {
     showLocalNotification(payload.title, payload.body, payload.url);
-    try {
-      await apiCall('notifications', 'POST', {
-        user_id: user?.id,
-        title: payload.title,
-        body: payload.body,
-        icon: payload.icon || '/godeo-inventory/icon-192.png',
-        url: payload.url || '/dashboard',
-        read: false,
-        created_at: new Date().toISOString()
-      });
-    } catch (e) {}
+    try { await apiCall('notifications', 'POST', { user_id: user?.id, title: payload.title, body: payload.body, icon: payload.icon || '/godeo-inventory/icon-192.png', url: payload.url || '/dashboard', read: false, created_at: new Date().toISOString() }); } catch (e) {}
   }, [user, apiCall]);
 
   const enableNotifications = useCallback(async () => {
@@ -178,9 +158,7 @@ export const AuthProvider = ({ children }) => {
       if (typeof Notification === 'undefined') return { success: false, error: 'Notificaciones no soportadas' };
       const permission = await Notification.requestPermission();
       return permission === 'granted' ? { success: true } : { success: false, error: 'Permiso denegado' };
-    } catch (error) {
-      return { success: false, error: error.message };
-    }
+    } catch (error) { return { success: false, error: error.message }; }
   }, []);
 
   // ========== CATEGORÍAS ==========
@@ -248,10 +226,7 @@ export const AuthProvider = ({ children }) => {
   const refreshProductCache = useCallback(async (restaurant) => {
     try {
       const prods = await fetchProductsMeta(restaurant);
-      setCachedProducts(prev => {
-        const others = prev.filter(p => p.restaurant !== restaurant);
-        return [...others, ...prods];
-      });
+      setCachedProducts(prev => { const others = prev.filter(p => p.restaurant !== restaurant); return [...others, ...prods]; });
       return prods;
     } catch (e) { return []; }
   }, [fetchProductsMeta]);
@@ -266,10 +241,7 @@ export const AuthProvider = ({ children }) => {
   }, [cachedProducts, currentRestaurant, refreshProductCache]);
 
   const getProductById = useCallback(async (id) => {
-    const prods = await apiCall('products', 'GET', null, {
-      select: '*,categories!products_category_id_fkey(name,parent_id)',
-      id: `eq.${id}`
-    });
+    const prods = await apiCall('products', 'GET', null, { select: '*,categories!products_category_id_fkey(name,parent_id)', id: `eq.${id}` });
     return Array.isArray(prods) ? prods[0] : null;
   }, [apiCall]);
 
@@ -290,10 +262,7 @@ export const AuthProvider = ({ children }) => {
     const supplierId = data.supplier_id ? parseInt(data.supplier_id, 10) : null;
     const expiry = finalData.expiry_date && finalData.expiry_date.trim() !== '' ? finalData.expiry_date : null;
     const categoryId = finalData.category_id ? parseInt(finalData.category_id, 10) : null;
-    const result = await apiCall('products', 'POST', {
-      ...finalData, expiry_date: expiry, price: parseFloat(data.price) || 0,
-      supplier_id: supplierId, category_id: categoryId, restaurant: restaurant, created_at: new Date().toISOString()
-    });
+    const result = await apiCall('products', 'POST', { ...finalData, expiry_date: expiry, price: parseFloat(data.price) || 0, supplier_id: supplierId, category_id: categoryId, restaurant: restaurant, created_at: new Date().toISOString() });
     await refreshProductCache(restaurant);
     return result;
   }, [apiCall, currentRestaurant, refreshProductCache]);
@@ -318,11 +287,7 @@ export const AuthProvider = ({ children }) => {
   const duplicateProduct = useCallback(async (productId, targetRestaurant) => {
     const product = await getProductById(productId);
     if (!product) throw new Error('Producto no encontrado');
-    return addProduct({
-      name: product.name, category_id: product.category_id, stock: product.stock,
-      unit: product.unit, min_stock: product.min_stock, expiry_date: product.expiry_date,
-      image: product.image, barcode: product.barcode, supplier_id: product.supplier_id, price: product.price
-    }, targetRestaurant);
+    return addProduct({ name: product.name, category_id: product.category_id, stock: product.stock, unit: product.unit, min_stock: product.min_stock, expiry_date: product.expiry_date, image: product.image, barcode: product.barcode, supplier_id: product.supplier_id, price: product.price }, targetRestaurant);
   }, [getProductById, addProduct]);
 
   // ========== MOVIMIENTOS ==========
@@ -342,33 +307,17 @@ export const AuthProvider = ({ children }) => {
 
     let newStock = product.stock;
     if (data.type === 'entrada') newStock += parseFloat(data.quantity);
-    else if (data.type === 'salida') {
-      if (product.stock < data.quantity) throw new Error('Stock insuficiente');
-      newStock -= parseFloat(data.quantity);
-    } else if (data.type === 'ajuste') newStock = parseFloat(data.quantity);
+    else if (data.type === 'salida') { if (product.stock < data.quantity) throw new Error('Stock insuficiente'); newStock -= parseFloat(data.quantity); }
+    else if (data.type === 'ajuste') newStock = parseFloat(data.quantity);
 
     await apiCall('products', 'PATCH', { stock: newStock }, { id: `eq.${data.productId}` });
-
-    const result = await apiCall('movements', 'POST', {
-      type: data.type, quantity: parseFloat(data.quantity), reason: data.reason || null,
-      product_id: data.productId, restaurant: currentRestaurant, user_id: user?.id,
-      created_at: new Date().toISOString()
-    });
+    const result = await apiCall('movements', 'POST', { type: data.type, quantity: parseFloat(data.quantity), reason: data.reason || null, product_id: data.productId, restaurant: currentRestaurant, user_id: user?.id, created_at: new Date().toISOString() });
 
     if (user?.role !== 'ADMIN') {
-      sendPushNotification({
-        title: '🔄 Movimiento Realizado',
-        body: `${user?.name} registró ${data.type === 'entrada' ? 'entrada' : 'salida'} de ${data.quantity} ${product.unit || ''} de ${product.name}`,
-        url: '/movements'
-      });
+      sendPushNotification({ title: '🔄 Movimiento Realizado', body: `${user?.name} registró ${data.type === 'entrada' ? 'entrada' : 'salida'} de ${data.quantity} ${product.unit || ''} de ${product.name}`, url: '/movements' });
     }
-
     if (newStock <= product.min_stock && product.min_stock > 0) {
-      sendPushNotification({
-        title: '⚠️ Stock Bajo',
-        body: `${product.name} tiene solo ${newStock} ${product.unit} (mín: ${product.min_stock})`,
-        url: '/inventory'
-      });
+      sendPushNotification({ title: '⚠️ Stock Bajo', body: `${product.name} tiene solo ${newStock} ${product.unit} (mín: ${product.min_stock})`, url: '/inventory' });
     }
 
     await refreshProductCache(currentRestaurant);
@@ -386,28 +335,12 @@ export const AuthProvider = ({ children }) => {
     if (!product) throw new Error('Producto no encontrado');
     if (product.stock < data.quantity) throw new Error('Stock insuficiente');
 
-    const transfer = await apiCall('transfers', 'POST', {
-      product_id: data.productId, quantity: data.quantity, to_restaurant: data.toRestaurant,
-      reason: data.reason || null, from_restaurant: currentRestaurant, user_id: user?.id,
-      status: 'pendiente', created_at: new Date().toISOString()
-    });
-
+    const transfer = await apiCall('transfers', 'POST', { product_id: data.productId, quantity: data.quantity, to_restaurant: data.toRestaurant, reason: data.reason || null, from_restaurant: currentRestaurant, user_id: user?.id, status: 'pendiente', created_at: new Date().toISOString() });
     const newStock = product.stock - data.quantity;
     await apiCall('products', 'PATCH', { stock: newStock }, { id: `eq.${data.productId}` });
+    await apiCall('movements', 'POST', { type: 'salida', quantity: data.quantity, reason: `Transferencia a ${data.toRestaurant}${data.reason ? ': ' + data.reason : ''}`, product_id: data.productId, restaurant: currentRestaurant, user_id: user?.id, created_at: new Date().toISOString() });
 
-    await apiCall('movements', 'POST', {
-      type: 'salida', quantity: data.quantity,
-      reason: `Transferencia a ${data.toRestaurant}${data.reason ? ': ' + data.reason : ''}`,
-      product_id: data.productId, restaurant: currentRestaurant, user_id: user?.id,
-      created_at: new Date().toISOString()
-    });
-
-    sendPushNotification({
-      title: '🚚 Transferencia Pendiente',
-      body: `${user?.name} envió ${data.quantity} ${product.unit} de ${product.name} a ${data.toRestaurant}`,
-      url: '/transfers'
-    });
-
+    sendPushNotification({ title: '🚚 Transferencia Pendiente', body: `${user?.name} envió ${data.quantity} ${product.unit} de ${product.name} a ${data.toRestaurant}`, url: '/transfers' });
     await refreshProductCache(currentRestaurant);
     return transfer;
   }, [apiCall, currentRestaurant, user, refreshProductCache, sendPushNotification]);
@@ -422,37 +355,19 @@ export const AuthProvider = ({ children }) => {
     const product = Array.isArray(products) ? products[0] : null;
     if (!product) throw new Error('Producto original no encontrado');
 
-    const destProducts = await apiCall('products', 'GET', null, {
-      select: '*', name: `eq.${product.name}`, restaurant: `eq.${transfer.to_restaurant}`
-    });
+    const destProducts = await apiCall('products', 'GET', null, { select: '*', name: `eq.${product.name}`, restaurant: `eq.${transfer.to_restaurant}` });
     const destProduct = Array.isArray(destProducts) ? destProducts[0] : null;
 
     if (destProduct) {
       await apiCall('products', 'PATCH', { stock: destProduct.stock + transfer.quantity }, { id: `eq.${destProduct.id}` });
     } else {
-      await apiCall('products', 'POST', {
-        name: product.name, category_id: product.category_id, stock: transfer.quantity,
-        unit: product.unit, min_stock: product.min_stock, expiry_date: product.expiry_date || null,
-        restaurant: transfer.to_restaurant, image: product.image, barcode: product.barcode,
-        price: product.price, supplier_id: product.supplier_id, created_at: new Date().toISOString()
-      });
+      await apiCall('products', 'POST', { name: product.name, category_id: product.category_id, stock: transfer.quantity, unit: product.unit, min_stock: product.min_stock, expiry_date: product.expiry_date || null, restaurant: transfer.to_restaurant, image: product.image, barcode: product.barcode, price: product.price, supplier_id: product.supplier_id, created_at: new Date().toISOString() });
     }
 
-    await apiCall('movements', 'POST', {
-      type: 'entrada', quantity: transfer.quantity,
-      reason: `Transferencia desde ${transfer.from_restaurant}`,
-      product_id: destProduct ? destProduct.id : product.id, restaurant: transfer.to_restaurant,
-      user_id: user?.id, created_at: new Date().toISOString()
-    });
-
+    await apiCall('movements', 'POST', { type: 'entrada', quantity: transfer.quantity, reason: `Transferencia desde ${transfer.from_restaurant}`, product_id: destProduct ? destProduct.id : product.id, restaurant: transfer.to_restaurant, user_id: user?.id, created_at: new Date().toISOString() });
     await apiCall('transfers', 'PATCH', { status: 'completado', completed_at: new Date().toISOString() }, { id: `eq.${id}` });
 
-    sendPushNotification({
-      title: '✅ Transferencia Completada',
-      body: `Se recibió ${product.name} (${transfer.quantity} ${product.unit})`,
-      url: '/transfers'
-    });
-
+    sendPushNotification({ title: '✅ Transferencia Completada', body: `Se recibió ${product.name} (${transfer.quantity} ${product.unit})`, url: '/transfers' });
     await refreshProductCache(currentRestaurant);
     return { success: true };
   }, [apiCall, user, refreshProductCache, currentRestaurant, sendPushNotification]);
@@ -462,23 +377,9 @@ export const AuthProvider = ({ children }) => {
     return apiCall('requests', 'GET', null, { select: '*,users(name)', order: 'created_at.desc' });
   }, [apiCall]);
 
-  // ✅ CORREGIDO: usa product_name en lugar de productName
   const addRequest = useCallback(async (data) => {
-    const result = await apiCall('requests', 'POST', {
-      product_name: data.productName,
-      quantity: data.quantity,
-      unit: data.unit,
-      notes: data.notes || null,
-      user_id: user?.id,
-      restaurant: currentRestaurant,
-      status: 'pendiente',
-      created_at: new Date().toISOString()
-    });
-    sendPushNotification({
-      title: '📋 Nuevo Pedido',
-      body: `${user?.name} solicitó ${data.quantity} ${data.unit} de ${data.productName}`,
-      url: '/requests'
-    });
+    const result = await apiCall('requests', 'POST', { product_name: data.productName, quantity: data.quantity, unit: data.unit, notes: data.notes || null, user_id: user?.id, restaurant: currentRestaurant, status: 'pendiente', created_at: new Date().toISOString() });
+    sendPushNotification({ title: '📋 Nuevo Pedido', body: `${user?.name} solicitó ${data.quantity} ${data.unit} de ${data.productName}`, url: '/requests' });
     return result;
   }, [apiCall, currentRestaurant, user, sendPushNotification]);
 
@@ -486,11 +387,7 @@ export const AuthProvider = ({ children }) => {
     const result = await apiCall('requests', 'PATCH', { status }, { id: `eq.${id}` });
     const request = await apiCall('requests', 'GET', null, { select: '*', id: `eq.${id}` });
     if (request?.[0]) {
-      sendPushNotification({
-        title: status === 'aprobado' ? '✅ Pedido Aprobado' : '❌ Pedido Rechazado',
-        body: `Tu solicitud de ${request[0].product_name} ha sido ${status}`,
-        url: '/requests'
-      });
+      sendPushNotification({ title: status === 'aprobado' ? '✅ Pedido Aprobado' : '❌ Pedido Rechazado', body: `Tu solicitud de ${request[0].product_name} ha sido ${status}`, url: '/requests' });
     }
     return result;
   }, [apiCall, sendPushNotification]);
@@ -514,7 +411,7 @@ export const AuthProvider = ({ children }) => {
   const updateSupplier = useCallback((id, data) => { if (user?.role !== 'ADMIN') throw new Error('Solo admin'); return apiCall('suppliers', 'PATCH', data, { id: `eq.${id}` }); }, [apiCall, user]);
   const deleteSupplier = useCallback((id) => { if (user?.role !== 'ADMIN') throw new Error('Solo admin'); return apiCall('suppliers', 'DELETE', null, { id: `eq.${id}` }); }, [apiCall, user]);
 
-  // ========== RECETAS ==========
+  // ========== RECETAS (CORREGIDO: ingredientes se guardan al crear) ==========
   const getRecipes = useCallback(() => {
     return apiCall('recipes', 'GET', null, { select: '*,recipe_ingredients(*,products(name,unit))', restaurant: `eq.${currentRestaurant}`, order: 'name.asc' });
   }, [apiCall, currentRestaurant]);
@@ -522,22 +419,36 @@ export const AuthProvider = ({ children }) => {
   const addRecipe = useCallback(async (name, image, ingredients) => {
     if (user?.role !== 'ADMIN') throw new Error('Solo administradores');
     let finalImage = image;
-    if (finalImage && finalImage.startsWith('data:image')) try { finalImage = await compressImage(finalImage); } catch (e) { throw new Error('Error al procesar la imagen'); }
-    const recipe = await apiCall('recipes', 'POST', { name, image: finalImage, restaurant: currentRestaurant, created_at: new Date().toISOString() });
-    for (const ing of ingredients) {
-      await apiCall('recipe_ingredients', 'POST', { recipe_id: recipe.id, product_id: ing.product_id, quantity: ing.quantity, unit: ing.unit });
+    if (finalImage && finalImage.startsWith('data:image')) {
+      try { finalImage = await compressImage(finalImage); } catch (e) { throw new Error('Error al procesar la imagen'); }
     }
+
+    const recipe = await apiCall('recipes', 'POST', { name, image: finalImage || null, restaurant: currentRestaurant, created_at: new Date().toISOString() });
+
+    for (const ing of ingredients) {
+      await apiCall('recipe_ingredients', 'POST', { recipe_id: recipe.id, product_id: parseInt(ing.product_id, 10), quantity: parseFloat(ing.quantity), unit: ing.unit });
+    }
+
     return recipe;
   }, [apiCall, currentRestaurant, user]);
 
   const updateRecipe = useCallback(async (id, name, image, ingredients) => {
     if (user?.role !== 'ADMIN') throw new Error('Solo administradores');
     let finalImage = image;
-    if (finalImage && finalImage.startsWith('data:image')) try { finalImage = await compressImage(finalImage); } catch (e) { throw new Error('Error al procesar la imagen'); }
-    await apiCall('recipes', 'PATCH', { name, image: finalImage }, { id: `eq.${id}` });
+    if (finalImage && finalImage.startsWith('data:image')) {
+      try { finalImage = await compressImage(finalImage); } catch (e) { throw new Error('Error al procesar la imagen'); }
+    }
+
+    await apiCall('recipes', 'PATCH', { name, image: finalImage || null }, { id: `eq.${id}` });
+
     const existing = await apiCall('recipe_ingredients', 'GET', null, { select: 'id', recipe_id: `eq.${id}` });
-    for (const ing of (Array.isArray(existing) ? existing : [])) await apiCall('recipe_ingredients', 'DELETE', null, { id: `eq.${ing.id}` });
-    for (const ing of ingredients) await apiCall('recipe_ingredients', 'POST', { recipe_id: id, product_id: ing.product_id, quantity: ing.quantity, unit: ing.unit });
+    for (const ing of (Array.isArray(existing) ? existing : [])) {
+      await apiCall('recipe_ingredients', 'DELETE', null, { id: `eq.${ing.id}` });
+    }
+
+    for (const ing of ingredients) {
+      await apiCall('recipe_ingredients', 'POST', { recipe_id: id, product_id: parseInt(ing.product_id, 10), quantity: parseFloat(ing.quantity), unit: ing.unit });
+    }
   }, [apiCall, user]);
 
   const deleteRecipe = useCallback((id) => {
@@ -545,6 +456,7 @@ export const AuthProvider = ({ children }) => {
     return apiCall('recipes', 'DELETE', null, { id: `eq.${id}` });
   }, [apiCall, user]);
 
+  // ========== NOMBRES ==========
   const restaurantNames = {
     POZOBLANCO: '🍽️ Godeo Pozoblanco',
     FUERTEVENTURA: '🏖️ Godeo Fuerteventura',
