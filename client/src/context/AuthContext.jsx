@@ -290,6 +290,95 @@ export const AuthProvider = ({ children }) => {
     return addProduct({ name: product.name, category_id: product.category_id, stock: product.stock, unit: product.unit, min_stock: product.min_stock, expiry_date: product.expiry_date, image: product.image, barcode: product.barcode, supplier_id: product.supplier_id, price: product.price }, targetRestaurant);
   }, [getProductById, addProduct]);
 
+const duplicateCategory = useCallback(async (categoryId, targetRestaurant) => {
+  // 1. Obtener la categoría raíz
+  const rootCategory = await apiCall('categories', 'GET', null, { select: '*', id: `eq.${categoryId}` });
+  if (!rootCategory || rootCategory.length === 0) throw new Error('Categoría no encontrada');
+  const root = rootCategory[0];
+
+  // 2. Obtener todas las categorías del restaurante actual (para reconstruir el árbol)
+  const allCats = await apiCall('categories', 'GET', null, { select: '*', restaurant: `eq.${currentRestaurant}` });
+
+  // 3. Función recursiva para recoger todos los IDs hijos
+  const getChildrenIds = (parentId, list) => {
+    const children = list.filter(c => c.parent_id === parentId);
+    let ids = children.map(c => c.id);
+    children.forEach(c => {
+      ids = ids.concat(getChildrenIds(c.id, list));
+    });
+    return ids;
+  };
+
+  const allCategoryIds = [root.id, ...getChildrenIds(root.id, allCats)];
+
+  // 4. Obtener todos los productos de esas categorías
+  const products = await apiCall('products', 'GET', null, {
+    select: '*',
+    restaurant: `eq.${currentRestaurant}`,
+    category_id: `in.(${allCategoryIds.join(',')})`
+  });
+
+  // 5. Crear el árbol de categorías en el destino, manteniendo un mapa de IDs viejos -> nuevos
+  const idMap = {};
+
+  // Crear la raíz primero
+  const newRoot = await apiCall('categories', 'POST', {
+    name: root.name,
+    parent_id: null, // la raíz no tiene padre
+    restaurant: targetRestaurant,
+    created_at: new Date().toISOString()
+  });
+  idMap[root.id] = newRoot.id;
+
+  // Crear el resto de categorías en orden (primero las que tienen padre ya creado)
+  const remaining = allCategoryIds.filter(id => id !== root.id);
+  // Ordenar por nivel (parent_id) para asegurar que el padre exista
+  const catsToCreate = allCats.filter(c => allCategoryIds.includes(c.id) && c.id !== root.id);
+  catsToCreate.sort((a, b) => {
+    // Las que tienen parent_id en idMap primero
+    const aReady = idMap[a.parent_id] ? 0 : 1;
+    const bReady = idMap[b.parent_id] ? 0 : 1;
+    return aReady - bReady;
+  });
+
+  for (const cat of catsToCreate) {
+    const newParentId = idMap[cat.parent_id] || null;
+    const newCat = await apiCall('categories', 'POST', {
+      name: cat.name,
+      parent_id: newParentId,
+      restaurant: targetRestaurant,
+      created_at: new Date().toISOString()
+    });
+    idMap[cat.id] = newCat.id;
+  }
+
+  // 6. Copiar los productos
+  let copied = 0;
+  for (const product of products) {
+    const newCategoryId = idMap[product.category_id] || null;
+    try {
+      await addProduct({
+        name: product.name,
+        category_id: newCategoryId,
+        stock: product.stock,
+        unit: product.unit,
+        min_stock: product.min_stock,
+        expiry_date: product.expiry_date,
+        image: product.image,
+        barcode: product.barcode,
+        supplier_id: product.supplier_id,
+        price: product.price
+      }, targetRestaurant);
+      copied++;
+    } catch (e) {
+      // Si falla por duplicado u otro error, ignoramos el producto pero continuamos
+      console.warn(`No se pudo copiar el producto ${product.name}:`, e.message);
+    }
+  }
+
+  return { success: true, categoriesCreated: Object.keys(idMap).length, productsCopied: copied };
+}, [apiCall, currentRestaurant, addProduct]);
+  
   // ========== MOVIMIENTOS ==========
   const getMovements = useCallback(async (options = {}) => {
     const { restaurant, period } = options;
@@ -516,7 +605,8 @@ export const AuthProvider = ({ children }) => {
     getDashboard,
     getSuppliers, addSupplier, updateSupplier, deleteSupplier,
     getRecipes, addRecipe, updateRecipe, deleteRecipe,
-    getCategories, getAllCategoriesFlat, addCategory, updateCategory, deleteCategory, getCategoryPath
+    getCategories, getAllCategoriesFlat, addCategory, updateCategory, deleteCategory, getCategoryPath,
+    duplicateCategory,
   };
 
   return (
