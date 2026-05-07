@@ -407,7 +407,7 @@ export const AuthProvider = ({ children }) => {
   const updateSupplier = useCallback((id, data) => { if (user?.role !== 'ADMIN') throw new Error('Solo admin'); return apiCall('suppliers', 'PATCH', data, { id: `eq.${id}` }); }, [apiCall, user]);
   const deleteSupplier = useCallback((id) => { if (user?.role !== 'ADMIN') throw new Error('Solo admin'); return apiCall('suppliers', 'DELETE', null, { id: `eq.${id}` }); }, [apiCall, user]);
 
-  // ========== RECETAS (CORREGIDO - INGREDIENTES SE GUARDAN) ==========
+  // ========== RECETAS (POLÍTICA DE LECTURA AGREGADA) ==========
   const getRecipes = useCallback(() => {
     return apiCall('recipes', 'GET', null, {
       select: '*,recipe_ingredients(*,products(name,unit))',
@@ -423,7 +423,6 @@ export const AuthProvider = ({ children }) => {
       try { finalImage = await compressImage(finalImage); } catch (e) { throw new Error('Error al procesar la imagen'); }
     }
 
-    // 1. Crear la receta
     const recipe = await apiCall('recipes', 'POST', {
       name,
       image: finalImage || null,
@@ -431,9 +430,7 @@ export const AuthProvider = ({ children }) => {
       created_at: new Date().toISOString()
     });
 
-    // 2. Insertar ingredientes con reintento automático
     const validIngredients = ingredients.filter(ing => ing.product_id && parseFloat(ing.quantity) > 0);
-    let inserted = 0;
     for (const ing of validIngredients) {
       try {
         await apiCall('recipe_ingredients', 'POST', {
@@ -442,24 +439,11 @@ export const AuthProvider = ({ children }) => {
           quantity: parseFloat(ing.quantity),
           unit: ing.unit || 'g'
         });
-        inserted++;
       } catch (e) {
-        console.error('Error al insertar ingrediente (primer intento):', e);
-        // Reintento inmediato
-        try {
-          await apiCall('recipe_ingredients', 'POST', {
-            recipe_id: recipe.id,
-            product_id: parseInt(ing.product_id, 10),
-            quantity: parseFloat(ing.quantity),
-            unit: ing.unit || 'g'
-          });
-          inserted++;
-        } catch (retryError) {
-          console.error('Error definitivo al insertar ingrediente:', retryError);
-        }
+        console.error('Error al insertar ingrediente:', e);
       }
     }
-    console.log(`✅ Receta creada con ${inserted}/${validIngredients.length} ingredientes`);
+
     return recipe;
   }, [apiCall, currentRestaurant, user]);
 
@@ -493,7 +477,6 @@ export const AuthProvider = ({ children }) => {
     return apiCall('recipes', 'DELETE', null, { id: `eq.${id}` });
   }, [apiCall, user]);
 
-  // ========== NOMBRES ==========
   const restaurantNames = {
     POZOBLANCO: '🍽️ Godeo Pozoblanco',
     FUERTEVENTURA: '🏖️ Godeo Fuerteventura',
