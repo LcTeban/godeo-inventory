@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { PlusIcon, TrashIcon, PencilIcon, CameraIcon, XMarkIcon, BookOpenIcon } from '@heroicons/react/24/outline';
+import {
+  PlusIcon, TrashIcon, PencilIcon, CameraIcon,
+  XMarkIcon, BookOpenIcon, MagnifyingGlassIcon
+} from '@heroicons/react/24/outline';
 
 const Recipes = () => {
   const [recipes, setRecipes] = useState([]);
@@ -12,6 +15,7 @@ const Recipes = () => {
   const [ingredients, setIngredients] = useState([{ product_id: '', quantity: '', unit: 'g' }]);
   const [showDetail, setShowDetail] = useState(false);
   const [selectedRecipe, setSelectedRecipe] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const { isAdmin, getRecipes, addRecipe, updateRecipe, deleteRecipe, getProducts } = useAuth();
 
   useEffect(() => {
@@ -53,7 +57,6 @@ const Recipes = () => {
     setEditingRecipe(recipe);
     setName(recipe.name);
     setImage(recipe.image || '');
-    // Cargar ingredientes existentes
     if (recipe.recipe_ingredients && recipe.recipe_ingredients.length > 0) {
       setIngredients(recipe.recipe_ingredients.map(ing => ({
         product_id: ing.product_id?.toString() || '',
@@ -145,75 +148,59 @@ const Recipes = () => {
     setShowDetail(true);
   };
 
-  if (!isAdmin) {
-    return (
-      <div className="space-y-4">
-        <h1 className="text-xl font-bold">📖 Recetas</h1>
-        {recipes.length === 0 ? (
-          <div className="text-center py-10 text-gray-500">
-            <BookOpenIcon className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-            <p>No hay recetas disponibles</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {recipes.map(recipe => (
-              <div
-                key={recipe.id}
-                onClick={() => openDetail(recipe)}
-                className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden cursor-pointer hover:shadow-md transition"
-              >
-                {recipe.image ? (
-                  <img src={recipe.image} alt={recipe.name} className="w-full h-40 object-cover" />
-                ) : (
-                  <div className="w-full h-40 bg-gray-100 flex items-center justify-center">
-                    <BookOpenIcon className="h-12 w-12 text-gray-300" />
-                  </div>
-                )}
-                <div className="p-4">
-                  <h3 className="font-semibold text-gray-800">{recipe.name}</h3>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {recipe.recipe_ingredients?.length || 0} ingredientes
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  }
+  const filteredRecipes = recipes.filter(recipe =>
+    recipe.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-gray-800">📖 Recetas</h1>
+          <h1 className="text-2xl font-bold text-gray-800">📖 Recetas</h1>
           <p className="text-sm text-gray-500 mt-1">Gestiona las recetas y sus ingredientes</p>
         </div>
-        <button
-          onClick={openAdd}
-          className="bg-blue-600 text-white px-4 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-blue-700 transition shadow-sm"
-        >
-          <PlusIcon className="h-4 w-4" /> Nueva Receta
-        </button>
+        {isAdmin && (
+          <button
+            onClick={openAdd}
+            className="bg-blue-600 text-white px-4 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-blue-700 transition shadow-sm"
+          >
+            <PlusIcon className="h-4 w-4" /> Nueva Receta
+          </button>
+        )}
+      </div>
+
+      {/* Barra de búsqueda */}
+      <div className="relative">
+        <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-3 text-gray-400" />
+        <input
+          type="text"
+          placeholder="Buscar receta..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+        />
       </div>
 
       {/* Lista de recetas */}
-      {recipes.length === 0 ? (
+      {filteredRecipes.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
           <BookOpenIcon className="h-16 w-16 mx-auto mb-4 text-gray-300" />
-          <p className="text-gray-500 font-medium">No hay recetas creadas</p>
-          <p className="text-gray-400 text-sm mt-1">Crea la primera receta para empezar</p>
+          <p className="text-gray-500 font-medium">
+            {recipes.length === 0 ? 'No hay recetas creadas' : 'No se encontraron recetas'}
+          </p>
+          <p className="text-gray-400 text-sm mt-1">
+            {recipes.length === 0 ? 'Crea la primera receta para empezar' : 'Prueba con otro término de búsqueda'}
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {recipes.map(recipe => (
+          {filteredRecipes.map(recipe => (
             <div
               key={recipe.id}
-              className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden group"
+              className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden group hover:shadow-md transition"
             >
-              {/* Imagen de la receta */}
+              {/* Imagen */}
               <div className="relative cursor-pointer" onClick={() => openDetail(recipe)}>
                 {recipe.image ? (
                   <img src={recipe.image} alt={recipe.name} className="w-full h-44 object-cover" />
@@ -234,22 +221,24 @@ const Recipes = () => {
                   <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {recipe.recipe_ingredients?.length || 0} ingredientes
                   </span>
-                  <div className="flex gap-1">
-                    <button
-                      onClick={() => openEdit(recipe)}
-                      className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition"
-                      title="Editar"
-                    >
-                      <PencilIcon className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(recipe.id)}
-                      className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition"
-                      title="Eliminar"
-                    >
-                      <TrashIcon className="h-4 w-4" />
-                    </button>
-                  </div>
+                  {isAdmin && (
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => openEdit(recipe)}
+                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                        title="Editar"
+                      >
+                        <PencilIcon className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(recipe.id)}
+                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition"
+                        title="Eliminar"
+                      >
+                        <TrashIcon className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
                 </div>
                 <ul className="space-y-1">
                   {recipe.recipe_ingredients?.slice(0, 3).map((ing, i) => (
@@ -261,7 +250,10 @@ const Recipes = () => {
                     </li>
                   ))}
                   {recipe.recipe_ingredients?.length > 3 && (
-                    <li className="text-xs text-blue-600 cursor-pointer" onClick={() => openDetail(recipe)}>
+                    <li
+                      className="text-xs text-blue-600 cursor-pointer hover:underline"
+                      onClick={() => openDetail(recipe)}
+                    >
                       + {recipe.recipe_ingredients.length - 3} más
                     </li>
                   )}
@@ -272,7 +264,7 @@ const Recipes = () => {
         </div>
       )}
 
-      {/* Modal Detalle (vista ampliada) */}
+      {/* Modal Detalle */}
       {showDetail && selectedRecipe && (
         <div className="fixed inset-0 bg-black/75 z-50 flex flex-col" onClick={() => setShowDetail(false)}>
           <div className="p-4 flex items-center justify-between">
@@ -305,8 +297,8 @@ const Recipes = () => {
         </div>
       )}
 
-      {/* Modal Crear/Editar Receta */}
-      {showModal && (
+      {/* Modal Crear/Editar */}
+      {showModal && isAdmin && (
         <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4" onClick={() => setShowModal(false)}>
           <div className="bg-white rounded-2xl w-full max-w-lg max-h-[85vh] flex flex-col shadow-xl" onClick={e => e.stopPropagation()}>
             {/* Header */}
