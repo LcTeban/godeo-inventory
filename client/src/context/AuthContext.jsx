@@ -545,6 +545,26 @@ export const AuthProvider = ({ children }) => {
     return { success: true, categoriesCreated: Object.keys(idMap).length, productsCopied: copied };
   }, [apiCall, currentRestaurant, addProduct]);
 
+const deleteUncategorizedProducts = useCallback(async (restaurant) => {
+  // Obtener todos los productos sin categoría del restaurante actual
+  const prods = await apiCall('products', 'GET', null, {
+    select: 'id',
+    restaurant: `eq.${restaurant}`,
+    category_id: 'is.null'
+  });
+
+  if (!prods || prods.length === 0) return { deleted: 0 };
+
+  let deleted = 0;
+  for (const p of prods) {
+    await apiCall('products', 'DELETE', null, { id: `eq.${p.id}` });
+    deleted++;
+  }
+
+  await refreshProductCache(restaurant);
+  return { deleted };
+}, [apiCall, refreshProductCache]);
+  
   const restaurantNames = {
     POZOBLANCO: '🍽️ Godeo Pozoblanco',
     FUERTEVENTURA: '🏖️ Godeo Fuerteventura',
@@ -566,7 +586,7 @@ export const AuthProvider = ({ children }) => {
     getSuppliers, addSupplier, updateSupplier, deleteSupplier,
     getRecipes, addRecipe, updateRecipe, deleteRecipe,
     getCategories, getAllCategoriesFlat, addCategory, updateCategory, deleteCategory, getCategoryPath,
-    duplicateCategory
+    duplicateCategory, deleteUncategorizedProducts,
   };
 
   return (
