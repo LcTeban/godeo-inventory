@@ -431,24 +431,20 @@ export const AuthProvider = ({ children }) => {
       created_at: new Date().toISOString()
     });
 
-    // 2. Insertar ingredientes uno por uno con manejo de errores mejorado
+    // 2. Insertar ingredientes con reintento automático
     const validIngredients = ingredients.filter(ing => ing.product_id && parseFloat(ing.quantity) > 0);
-    
     let inserted = 0;
     for (const ing of validIngredients) {
       try {
-        const payload = {
+        await apiCall('recipe_ingredients', 'POST', {
           recipe_id: recipe.id,
           product_id: parseInt(ing.product_id, 10),
           quantity: parseFloat(ing.quantity),
           unit: ing.unit || 'g'
-        };
-        console.log('Intentando insertar ingrediente:', payload);
-        await apiCall('recipe_ingredients', 'POST', payload);
-        console.log('✅ Ingrediente insertado correctamente');
+        });
         inserted++;
       } catch (e) {
-        console.error('❌ Error al insertar ingrediente (primer intento):', ing, e);
+        console.error('Error al insertar ingrediente (primer intento):', e);
         // Reintento inmediato
         try {
           await apiCall('recipe_ingredients', 'POST', {
@@ -457,14 +453,12 @@ export const AuthProvider = ({ children }) => {
             quantity: parseFloat(ing.quantity),
             unit: ing.unit || 'g'
           });
-          console.log('✅ Ingrediente insertado en segundo intento');
           inserted++;
         } catch (retryError) {
-          console.error('❌ Error definitivo al insertar ingrediente:', retryError);
+          console.error('Error definitivo al insertar ingrediente:', retryError);
         }
       }
     }
-
     console.log(`✅ Receta creada con ${inserted}/${validIngredients.length} ingredientes`);
     return recipe;
   }, [apiCall, currentRestaurant, user]);
@@ -478,13 +472,11 @@ export const AuthProvider = ({ children }) => {
 
     await apiCall('recipes', 'PATCH', { name, image: finalImage || null }, { id: `eq.${id}` });
 
-    // Eliminar ingredientes existentes
     const existing = await apiCall('recipe_ingredients', 'GET', null, { select: 'id', recipe_id: `eq.${id}` });
     for (const ing of (Array.isArray(existing) ? existing : [])) {
       await apiCall('recipe_ingredients', 'DELETE', null, { id: `eq.${ing.id}` });
     }
 
-    // Insertar nuevos ingredientes
     const validIngredients = ingredients.filter(ing => ing.product_id && parseFloat(ing.quantity) > 0);
     for (const ing of validIngredients) {
       await apiCall('recipe_ingredients', 'POST', {
