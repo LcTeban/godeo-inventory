@@ -525,6 +525,7 @@ export const AuthProvider = ({ children }) => {
   }, [apiCall, currentRestaurant]);
 
 const addRecipe = useCallback(async (name, image, ingredients) => {
+const addRecipe = useCallback(async (name, image, ingredients) => {
   if (user?.role !== 'ADMIN') throw new Error('Solo administradores');
   let finalImage = image;
   if (finalImage && finalImage.startsWith('data:image')) {
@@ -539,32 +540,37 @@ const addRecipe = useCallback(async (name, image, ingredients) => {
     created_at: new Date().toISOString()
   });
 
-  console.log('Receta creada:', recipe); // Para depuración
-
-  // 2. Insertar ingredientes uno por uno, capturando errores individualmente
+  // 2. Insertar ingredientes con manejo de errores mejorado
   const validIngredients = ingredients.filter(ing => ing.product_id && parseFloat(ing.quantity) > 0);
-
-  if (validIngredients.length === 0) {
-    console.warn('No hay ingredientes válidos para insertar');
-    return recipe; // Devolvemos la receta sin ingredientes
-  }
-
+  
+  let inserted = 0;
   for (const ing of validIngredients) {
     try {
-      const payload = {
+      await apiCall('recipe_ingredients', 'POST', {
         recipe_id: recipe.id,
         product_id: parseInt(ing.product_id, 10),
         quantity: parseFloat(ing.quantity),
         unit: ing.unit || 'g'
-      };
-      console.log('Insertando ingrediente:', payload);
-      await apiCall('recipe_ingredients', 'POST', payload);
-    } catch (ingError) {
-      console.error('Error al insertar ingrediente:', ingError, ing);
-      // Continuamos con el siguiente, no detenemos la creación
+      });
+      inserted++;
+    } catch (e) {
+      console.error('Falló un ingrediente, reintentando...', ing, e);
+      // Reintento inmediato
+      try {
+        await apiCall('recipe_ingredients', 'POST', {
+          recipe_id: recipe.id,
+          product_id: parseInt(ing.product_id, 10),
+          quantity: parseFloat(ing.quantity),
+          unit: ing.unit || 'g'
+        });
+        inserted++;
+      } catch (retryError) {
+        console.error('Error definitivo al insertar ingrediente:', retryError);
+      }
     }
   }
 
+  console.log(`✅ Receta creada con ${inserted}/${validIngredients.length} ingredientes`);
   return recipe;
 }, [apiCall, currentRestaurant, user]);
 
