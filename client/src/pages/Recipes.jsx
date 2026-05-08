@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import {
   PlusIcon, TrashIcon, PencilIcon, CameraIcon,
   XMarkIcon, BookOpenIcon, MagnifyingGlassIcon,
-  ClockIcon, BeakerIcon, PhotoIcon
+  PhotoIcon
 } from '@heroicons/react/24/outline';
 
 const Recipes = () => {
@@ -76,6 +76,24 @@ const Recipes = () => {
     setIngredients(prev => {
       const updated = [...prev];
       updated[index] = { ...updated[index], [field]: value };
+      // Si cambia el product_id a vacío, limpiar también el productName
+      if (field === 'product_id' && !value) {
+        updated[index].productName = '';
+      }
+      return updated;
+    });
+  };
+
+  // Seleccionar producto de sugerencia
+  const handleSelectSuggestion = (index, product) => {
+    setIngredients(prev => {
+      const updated = [...prev];
+      updated[index] = {
+        ...updated[index],
+        product_id: product.id.toString(),
+        productName: product.name,
+        unit: product.unit || 'g'
+      };
       return updated;
     });
   };
@@ -110,8 +128,9 @@ const Recipes = () => {
     e.preventDefault();
     if (!name.trim()) return alert('Falta el nombre de la receta');
 
+    // Solo ingredientes con product_id y cantidad > 0
     const validIngredients = ingredients.filter(ing => ing.product_id && parseFloat(ing.quantity) > 0);
-    if (validIngredients.length === 0) return alert('Agrega al menos un ingrediente con producto y cantidad');
+    if (validIngredients.length === 0) return alert('Agrega al menos un ingrediente seleccionado de la lista con cantidad mayor a 0');
 
     try {
       if (editingRecipe) {
@@ -143,21 +162,14 @@ const Recipes = () => {
     setShowDetail(true);
   };
 
-  // KPIs
-  const totalRecipes = recipes.length;
-  const totalIngredients = recipes.reduce((sum, r) => sum + (r.recipe_ingredients?.length || 0), 0);
-  const recipesWithPhoto = recipes.filter(r => r.image).length;
-
   // Búsqueda
   const filteredRecipes = useMemo(() => {
     if (!searchTerm) return recipes;
     const search = searchTerm.toLowerCase();
-    return recipes.filter(r => 
-      r.name?.toLowerCase().includes(search)
-    );
+    return recipes.filter(r => r.name?.toLowerCase().includes(search));
   }, [recipes, searchTerm]);
 
-  // Obtener sugerencias de productos para ingredientes
+  // Obtener sugerencias de productos
   const getProductSuggestions = (input) => {
     if (!input || input.length < 1) return [];
     const search = input.toLowerCase();
@@ -168,48 +180,18 @@ const Recipes = () => {
 
   return (
     <div className="space-y-5">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold text-gray-800">📖 Recetas</h1>
           <p className="text-sm text-gray-500 mt-1">Gestiona las recetas y sus ingredientes</p>
         </div>
         {isAdmin && (
-          <button
-            onClick={openAdd}
-            className="bg-blue-600 text-white px-5 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-blue-700 transition shadow-sm"
-          >
+          <button onClick={openAdd} className="bg-blue-600 text-white px-5 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-blue-700 transition shadow-sm">
             <PlusIcon className="h-4 w-4" /> Nueva Receta
           </button>
         )}
       </div>
 
-      {/* KPIs */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-          <div className="flex items-center gap-2">
-            <BookOpenIcon className="h-5 w-5 text-blue-500" />
-            <span className="text-sm text-gray-500">Total recetas</span>
-          </div>
-          <p className="text-2xl font-bold text-gray-800 mt-1">{totalRecipes}</p>
-        </div>
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-          <div className="flex items-center gap-2">
-            <BeakerIcon className="h-5 w-5 text-amber-500" />
-            <span className="text-sm text-gray-500">Ingredientes totales</span>
-          </div>
-          <p className="text-2xl font-bold text-gray-800 mt-1">{totalIngredients}</p>
-        </div>
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-          <div className="flex items-center gap-2">
-            <PhotoIcon className="h-5 w-5 text-emerald-500" />
-            <span className="text-sm text-gray-500">Con foto</span>
-          </div>
-          <p className="text-2xl font-bold text-gray-800 mt-1">{recipesWithPhoto}</p>
-        </div>
-      </div>
-
-      {/* Barra de búsqueda */}
       <div className="relative">
         <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-2.5 text-gray-400" />
         <input
@@ -221,25 +203,16 @@ const Recipes = () => {
         />
       </div>
 
-      {/* Lista de recetas */}
       {filteredRecipes.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
           <BookOpenIcon className="h-16 w-16 mx-auto mb-4 text-gray-300" />
-          <p className="text-gray-500 font-medium">
-            {recipes.length === 0 ? 'No hay recetas creadas' : 'No se encontraron recetas'}
-          </p>
-          <p className="text-gray-400 text-sm mt-1">
-            {recipes.length === 0 ? 'Crea la primera receta para empezar' : 'Prueba con otro término de búsqueda'}
-          </p>
+          <p className="text-gray-500 font-medium">{recipes.length === 0 ? 'No hay recetas creadas' : 'No se encontraron recetas'}</p>
+          <p className="text-gray-400 text-sm mt-1">{recipes.length === 0 ? 'Crea la primera receta para empezar' : 'Prueba con otro término de búsqueda'}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredRecipes.map(recipe => (
-            <div
-              key={recipe.id}
-              className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden group hover:shadow-md transition"
-            >
-              {/* Imagen */}
+            <div key={recipe.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden group hover:shadow-md transition">
               <div className="relative cursor-pointer" onClick={() => openDetail(recipe)}>
                 {recipe.image ? (
                   <img src={recipe.image} alt={recipe.name} className="w-full h-44 object-cover" />
@@ -253,8 +226,6 @@ const Recipes = () => {
                   <h3 className="text-white font-semibold text-lg">{recipe.name}</h3>
                 </div>
               </div>
-
-              {/* Ingredientes */}
               <div className="p-4">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -262,18 +233,10 @@ const Recipes = () => {
                   </span>
                   {isAdmin && (
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition">
-                      <button
-                        onClick={() => openEdit(recipe)}
-                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition"
-                        title="Editar"
-                      >
+                      <button onClick={() => openEdit(recipe)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Editar">
                         <PencilIcon className="h-4 w-4" />
                       </button>
-                      <button
-                        onClick={() => handleDelete(recipe.id)}
-                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition"
-                        title="Eliminar"
-                      >
+                      <button onClick={() => handleDelete(recipe.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition" title="Eliminar">
                         <TrashIcon className="h-4 w-4" />
                       </button>
                     </div>
@@ -283,16 +246,11 @@ const Recipes = () => {
                   {recipe.recipe_ingredients?.slice(0, 3).map((ing, i) => (
                     <li key={i} className="text-sm text-gray-600 flex justify-between">
                       <span className="truncate mr-2">{ing.products?.name || 'Producto'}</span>
-                      <span className="font-medium text-gray-800 whitespace-nowrap">
-                        {ing.quantity} {ing.unit}
-                      </span>
+                      <span className="font-medium text-gray-800 whitespace-nowrap">{ing.quantity} {ing.unit}</span>
                     </li>
                   ))}
                   {recipe.recipe_ingredients?.length > 3 && (
-                    <li
-                      className="text-xs text-blue-600 cursor-pointer hover:underline"
-                      onClick={() => openDetail(recipe)}
-                    >
+                    <li className="text-xs text-blue-600 cursor-pointer hover:underline" onClick={() => openDetail(recipe)}>
                       + {recipe.recipe_ingredients.length - 3} más
                     </li>
                   )}
@@ -303,7 +261,6 @@ const Recipes = () => {
         </div>
       )}
 
-      {/* Modal Detalle */}
       {showDetail && selectedRecipe && (
         <div className="fixed inset-0 bg-black/75 z-50 flex flex-col" onClick={() => setShowDetail(false)}>
           <div className="p-4 flex items-center justify-between">
@@ -336,38 +293,23 @@ const Recipes = () => {
         </div>
       )}
 
-      {/* Modal Crear/Editar */}
       {showModal && isAdmin && (
         <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4" onClick={() => setShowModal(false)}>
           <div className="bg-white rounded-2xl w-full max-w-lg max-h-[85vh] flex flex-col shadow-xl" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-              <h2 className="text-lg font-semibold text-gray-800">
-                {editingRecipe ? '✏️ Editar Receta' : '📖 Nueva Receta'}
-              </h2>
-              <button
-                onClick={() => { setShowModal(false); resetForm(); }}
-                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition"
-              >
+              <h2 className="text-lg font-semibold text-gray-800">{editingRecipe ? '✏️ Editar Receta' : '📖 Nueva Receta'}</h2>
+              <button onClick={() => { setShowModal(false); resetForm(); }} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition">
                 <XMarkIcon className="h-5 w-5" />
               </button>
             </div>
 
             <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
               <div className="px-6 py-4 space-y-4">
-                {/* Nombre */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Nombre de la receta *</label>
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Ej: Tarta de queso"
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                    required
-                  />
+                  <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej: Tarta de queso" className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" required />
                 </div>
 
-                {/* Imagen */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">📸 Imagen de la receta</label>
                   <div className="flex gap-2">
@@ -386,91 +328,79 @@ const Recipes = () => {
                   )}
                 </div>
 
-                {/* Ingredientes */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">🥄 Ingredientes</label>
                   <div className="space-y-3">
                     {ingredients.map((ing, idx) => (
                       <div key={idx} className="bg-gray-50 border border-gray-200 rounded-xl p-3">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            Ingrediente {idx + 1}
-                          </span>
+                          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Ingrediente {idx + 1}</span>
                           {ingredients.length > 1 && (
                             <button type="button" onClick={() => handleRemoveIngredient(idx)} className="p-1 text-red-500 hover:bg-red-50 rounded">
                               <TrashIcon className="h-4 w-4" />
                             </button>
                           )}
                         </div>
-                        <div className="flex flex-col sm:flex-row gap-2">
-                          <div className="flex-1 relative">
-                            <input
-                              type="text"
-                              placeholder="Buscar producto..."
-                              value={ing.productName || ''}
-                              onChange={(e) => {
-                                handleIngredientChange(idx, 'productName', e.target.value);
-                                // Si se escribe un nombre, no asignamos product_id directamente
-                              }}
-                              onFocus={() => handleIngredientChange(idx, '_showSuggestions', true)}
-                              onBlur={() => setTimeout(() => handleIngredientChange(idx, '_showSuggestions', false), 200)}
-                              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                              autoComplete="off"
-                            />
-                            {ing._showSuggestions && getProductSuggestions(ing.productName || '').length > 0 && (
-                              <div className="absolute z-10 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
-                                {getProductSuggestions(ing.productName || '').map(product => (
-                                  <button
-                                    key={product.id}
-                                    type="button"
-                                    onClick={() => {
-                                      handleIngredientChange(idx, 'product_id', product.id.toString());
-                                      handleIngredientChange(idx, 'productName', product.name);
-                                      handleIngredientChange(idx, 'unit', product.unit || 'g');
-                                      handleIngredientChange(idx, '_showSuggestions', false);
-                                    }}
-                                    className="w-full px-4 py-3 text-left hover:bg-blue-50 transition flex items-center justify-between"
-                                  >
-                                    <div>
-                                      <span className="text-sm font-medium text-gray-800">{product.name}</span>
-                                      <span className="text-xs text-gray-400 ml-2">{product.category}</span>
-                                    </div>
-                                    <span className="text-xs text-gray-500">{product.stock} {product.unit}</span>
-                                  </button>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex gap-2">
-                            <input
-                              type="number"
-                              step="0.01"
-                              placeholder="Cant."
-                              value={ing.quantity}
-                              onChange={(e) => handleIngredientChange(idx, 'quantity', e.target.value)}
-                              className="w-24 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                              required
-                            />
-                            <select
-                              value={ing.unit}
-                              onChange={(e) => handleIngredientChange(idx, 'unit', e.target.value)}
-                              className="w-20 px-2 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
-                            >
-                              <option value="g">g</option>
-                              <option value="kg">kg</option>
-                              <option value="ml">ml</option>
-                              <option value="L">L</option>
-                              <option value="unidad">ud</option>
-                            </select>
-                          </div>
+                        <div className="relative mb-2">
+                          <input
+                            type="text"
+                            placeholder="Buscar producto..."
+                            value={ing.productName || ''}
+                            onChange={(e) => {
+                              handleIngredientChange(idx, 'productName', e.target.value);
+                              // Si borra el texto, quitar product_id
+                              if (!e.target.value) handleIngredientChange(idx, 'product_id', '');
+                            }}
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                            autoComplete="off"
+                          />
+                          {ing.productName && getProductSuggestions(ing.productName).length > 0 && !ing.product_id && (
+                            <div className="absolute z-10 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
+                              {getProductSuggestions(ing.productName).map(product => (
+                                <button
+                                  key={product.id}
+                                  type="button"
+                                  onClick={() => handleSelectSuggestion(idx, product)}
+                                  className="w-full px-4 py-3 text-left hover:bg-blue-50 transition flex items-center justify-between"
+                                >
+                                  <div>
+                                    <span className="text-sm font-medium text-gray-800">{product.name}</span>
+                                    <span className="text-xs text-gray-400 ml-2">{product.category}</span>
+                                  </div>
+                                  <span className="text-xs text-gray-500">{product.stock} {product.unit}</span>
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        {ing.product_id && (
+                          <p className="text-xs text-green-600 mb-2">✓ {ing.productName || 'Producto seleccionado'}</p>
+                        )}
+                        <div className="flex gap-2">
+                          <input
+                            type="number"
+                            step="0.01"
+                            placeholder="Cant."
+                            value={ing.quantity}
+                            onChange={(e) => handleIngredientChange(idx, 'quantity', e.target.value)}
+                            className="w-24 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                            required
+                          />
+                          <select
+                            value={ing.unit}
+                            onChange={(e) => handleIngredientChange(idx, 'unit', e.target.value)}
+                            className="w-20 px-2 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                          >
+                            <option value="g">g</option>
+                            <option value="kg">kg</option>
+                            <option value="ml">ml</option>
+                            <option value="L">L</option>
+                            <option value="unidad">ud</option>
+                          </select>
                         </div>
                       </div>
                     ))}
-                    <button
-                      type="button"
-                      onClick={handleAddIngredient}
-                      className="w-full py-2.5 border-2 border-dashed border-gray-200 text-gray-500 rounded-xl text-sm font-medium hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50/50 transition"
-                    >
+                    <button type="button" onClick={handleAddIngredient} className="w-full py-2.5 border-2 border-dashed border-gray-200 text-gray-500 rounded-xl text-sm font-medium hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50/50 transition">
                       + Agregar ingrediente
                     </button>
                   </div>
@@ -478,17 +408,10 @@ const Recipes = () => {
               </div>
 
               <div className="px-6 py-4 border-t border-gray-100 flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => { setShowModal(false); resetForm(); }}
-                  className="flex-1 py-2.5 border border-gray-200 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-50 transition"
-                >
+                <button type="button" onClick={() => { setShowModal(false); resetForm(); }} className="flex-1 py-2.5 border border-gray-200 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-50 transition">
                   Cancelar
                 </button>
-                <button
-                  type="submit"
-                  className="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition shadow-sm"
-                >
+                <button type="submit" className="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition shadow-sm">
                   {editingRecipe ? 'Actualizar' : 'Crear Receta'}
                 </button>
               </div>
