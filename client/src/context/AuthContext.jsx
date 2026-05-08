@@ -457,105 +457,79 @@ export const AuthProvider = ({ children }) => {
     return apiCall('recipes', 'DELETE', null, { id: `eq.${id}` });
   }, [apiCall, user]);
 
-  // ========== DUPLICAR CATEGORÍA (CORREGIDO) ==========
-
+  // ========== DUPLICAR CATEGORÍA (CORREGIDO - solo productos de la rama) ==========
   const duplicateCategory = useCallback(async (categoryId, targetRestaurant) => {
-  // 1. Obtener la categoría raíz (la que se va a copiar)
-  const rootResult = await apiCall('categories', 'GET', null, { select: '*', id: `eq.${categoryId}` });
-  if (!rootResult || rootResult.length === 0) throw new Error('Categoría no encontrada');
-  const root = rootResult[0];
+    // 1. Obtener la categoría raíz
+    const rootResult = await apiCall('categories', 'GET', null, { select: '*', id: `eq.${categoryId}` });
+    if (!rootResult || rootResult.length === 0) throw new Error('Categoría no encontrada');
+    const root = rootResult[0];
 
-  // 2. Obtener todas las categorías del origen (para reconstruir el árbol)
-  const allCats = await apiCall('categories', 'GET', null, { select: '*', or: `(restaurant.eq.${currentRestaurant}, restaurant.is.null)` });
-
-  // 3. Recoger todos los IDs de la rama (incluyendo la raíz)
-  const getChildrenIds = (parentId, list) => {
-    const children = list.filter(c => c.parent_id === parentId);
-    let ids = children.map(c => c.id);
-    children.forEach(c => {
-      ids = ids.concat(getChildrenIds(c.id, list));
+    // 2. Obtener todas las categorías accesibles (origen + globales)
+    const allCats = await apiCall('categories', 'GET', null, {
+      select: '*',
+      or: `(restaurant.eq.${currentRestaurant}, restaurant.is.null)`
     });
-    return ids;
-  };
-  const branchIds = [root.id, ...getChildrenIds(root.id, allCats)];
 
-  // 4. Obtener TODOS los productos del origen que pertenecen a esa rama
-  const allProducts = await apiCall('products', 'GET', null, {
-    select: '*',
-    restaurant: `eq.${currentRestaurant}`,
-    category_id: `in.(${branchIds.join(',')})`  // <-- Filtro directo por IDs
-  });
+    // 3. Recoger todos los IDs de la rama (incluyendo la raíz)
+    const getChildrenIds = (parentId, list) => {
+      const children = list.filter(c => c.parent_id === parentId);
+      let ids = children.map(c => c.id);
+      children.forEach(c => {
+        ids = ids.concat(getChildrenIds(c.id, list));
+      });
+      return ids;
+    };
+    const branchIds = [root.id, ...getChildrenIds(root.id, allCats)];
 
-  // 5. Para cada producto, buscar la categoría equivalente en el destino
-  //    (mismo nombre y mismo padre). Si no existe, se crea.
-  const destCats = await apiCall('categories', 'GET', null, { select: '*', or: `(restaurant.eq.${targetRestaurant}, restaurant.is.null)` });
-
-  const findOrCreateDestCat = async (sourceCat) => {
-    // Buscar en el destino una categoría con el mismo nombre y mismo parent_id (si tiene)
-    const match = destCats.find(c => c.name === sourceCat.name && c.parent_id === sourceCat.parent_id);
-    if (match) return match.id;
-
-    // Si no existe, crearla (por si acaso)
-    const newCat = await apiCall('categories', 'POST', {
-      name: sourceCat.name,
-      parent_id: sourceCat.parent_id,
-      restaurant: null, // global
-      created_at: new Date().toISOString()
+    // 4. Obtener TODOS los productos del restaurante origen y FILTRAR manualmente
+    const allProducts = await apiCall('products', 'GET', null, {
+      select: '*',
+      restaurant: `eq.${currentRestaurant}`
     });
-    destCats.push(newCat); // añadir al array local para futuras búsquedas
-    return newCat.id;
-  };
+    const productsToCopy = (allProducts || []).filter(p => branchIds.includes(p.category_id));
 
-  // 6. Copiar los productos, asignando el category_id correcto del destino
-  let copied = 0;
-  for (const product of allProducts) {
-    const sourceCat = allCats.find(c => c.id === product.category_id);
-    if (!sourceCat) continue; // no debería ocurrir
-
-    const destCategoryId = await findOrCreateDestCat(sourceCat);
-
-    try {
-      await addProduct({
-        name: product.name,
-        category_id: destCategoryId,
-        stock: product.stock,
-        unit: product.unit,
-        min_stock: product.min_stock,
-        expiry_date: product.expiry_date,
-        image: product.image,
-        barcode: product.barcode,
-        supplier_id: product.supplier_id,
-        price: product.price
-      }, targetRestaurant);
-      copied++;
-    } catch (e) {
-      console.warn(`No se pudo copiar ${product.name}:`, e.message);
+    // 5. Copiar los productos con el MISMO category_id (categorías globales)
+    let copied = 0;
+    for (const product of productsToCopy) {
+      try {
+        await addProduct({
+          name: product.name,
+          category_id: product.category_id,  // <-- mismo ID, ya es global
+          stock: product.stock,
+          unit: product.unit,
+          min_stock: product.min_stock,
+          expiry_date: product.expiry_date,
+          image: product.image,
+          barcode: product.barcode,
+          supplier_id: product.supplier_id,
+          price: product.price
+        }, targetRestaurant);
+        copied++;
+      } catch (e) {
+        console.warn(`No se pudo copiar ${product.name}:`, e.message);
+      }
     }
-  }
 
-  return { success: true, categoriesCreated: 0, productsCopied: copied };
-}, [apiCall, currentRestaurant, addProduct]);
+    return { success: true, categoriesCreated: 0, productsCopied: copied };
+  }, [apiCall, currentRestaurant, addProduct]);
 
-const deleteUncategorizedProducts = useCallback(async (restaurant) => {
-  // Obtener todos los productos sin categoría del restaurante actual
-  const prods = await apiCall('products', 'GET', null, {
-    select: 'id',
-    restaurant: `eq.${restaurant}`,
-    category_id: 'is.null'
-  });
+  // ========== ELIMINAR PRODUCTOS SIN CATEGORÍA ==========
+  const deleteUncategorizedProducts = useCallback(async (restaurant) => {
+    const prods = await apiCall('products', 'GET', null, {
+      select: 'id',
+      restaurant: `eq.${restaurant}`,
+      category_id: 'is.null'
+    });
+    if (!prods || prods.length === 0) return { deleted: 0 };
+    let deleted = 0;
+    for (const p of prods) {
+      await apiCall('products', 'DELETE', null, { id: `eq.${p.id}` });
+      deleted++;
+    }
+    await refreshProductCache(restaurant);
+    return { deleted };
+  }, [apiCall, refreshProductCache]);
 
-  if (!prods || prods.length === 0) return { deleted: 0 };
-
-  let deleted = 0;
-  for (const p of prods) {
-    await apiCall('products', 'DELETE', null, { id: `eq.${p.id}` });
-    deleted++;
-  }
-
-  await refreshProductCache(restaurant);
-  return { deleted };
-}, [apiCall, refreshProductCache]);
-  
   const restaurantNames = {
     POZOBLANCO: '🍽️ Godeo Pozoblanco',
     FUERTEVENTURA: '🏖️ Godeo Fuerteventura',
@@ -577,7 +551,8 @@ const deleteUncategorizedProducts = useCallback(async (restaurant) => {
     getSuppliers, addSupplier, updateSupplier, deleteSupplier,
     getRecipes, addRecipe, updateRecipe, deleteRecipe,
     getCategories, getAllCategoriesFlat, addCategory, updateCategory, deleteCategory, getCategoryPath,
-    duplicateCategory, deleteUncategorizedProducts,
+    duplicateCategory,
+    deleteUncategorizedProducts
   };
 
   return (
