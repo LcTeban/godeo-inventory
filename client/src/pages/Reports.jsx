@@ -2,12 +2,19 @@ import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
+  PieChart, Pie, Legend
 } from 'recharts';
 import {
   CurrencyDollarIcon, CubeIcon, ExclamationTriangleIcon,
-  ArrowTrendingDownIcon, ClockIcon, TruckIcon
+  ArrowTrendingDownIcon, TruckIcon, ArrowUpIcon, ArrowDownIcon,
+  DocumentArrowDownIcon, TableCellsIcon
 } from '@heroicons/react/24/outline';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+
+const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316'];
 
 const Reports = () => {
   const { isAdmin, currentRestaurant, switchRestaurant, getProducts, getMovements, getTransfers } = useAuth();
@@ -15,11 +22,12 @@ const Reports = () => {
   const mountedRef = useRef(true);
 
   const [period, setPeriod] = useState('month');
-  const [activeTab, setActiveTab] = useState('summary');
+  const [activeTab, setActiveTab] = useState('overview');
   const [allProducts, setAllProducts] = useState([]);
   const [movements, setMovements] = useState([]);
   const [transfers, setTransfers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [sortConfig, setSortConfig] = useState({ field: 'name', direction: 'asc' });
 
   useEffect(() => {
     if (!isAdmin) navigate('/dashboard');
@@ -50,7 +58,7 @@ const Reports = () => {
     return () => { mountedRef.current = false; };
   }, [currentRestaurant, period]);
 
-  // Cálculos financieros
+  // ---- Cálculos financieros ----
   const inventoryValueByRestaurant = () => {
     const map = {};
     allProducts.forEach(p => {
@@ -63,7 +71,6 @@ const Reports = () => {
 
   const totalInventoryValue = Object.values(inventoryValueByRestaurant()).reduce((a, b) => a + b, 0);
   const totalProducts = allProducts.length;
-  const pendingTransfers = transfers.filter(t => t.status === 'pendiente').length;
 
   const filteredMovements = movements.filter(m => {
     const date = new Date(m.created_at);
@@ -81,8 +88,10 @@ const Reports = () => {
     .filter(m => m.type === 'salida')
     .reduce((sum, m) => sum + ((m.quantity || 0) * (m.products?.price || 0)), 0);
   const costOfSales = totalExits;
+  const pendingTransfers = transfers.filter(t => t.status === 'pendiente').length;
 
-  // Top 5 productos más consumidos (salidas) en el período
+  // ---- Datos para gráficos ----
+  // Top 5 productos más consumidos (barras)
   const consumptionMap = {};
   filteredMovements
     .filter(m => m.type === 'salida')
@@ -95,8 +104,75 @@ const Reports = () => {
     .sort((a, b) => b.consumo - a.consumo)
     .slice(0, 5);
 
-  const lowStockProducts = allProducts.filter(p => (p.stock || 0) <= (p.min_stock || 10));
-  const lowStockValue = lowStockProducts.reduce((sum, p) => sum + ((p.stock || 0) * (p.price || 0)), 0);
+  // Distribución por categoría (pastel)
+  const categoryMap = {};
+  filteredMovements
+    .filter(m => m.type === 'salida')
+    .forEach(m => {
+      const cat = m.products?.category || 'Sin categoría';
+      categoryMap[cat] = (categoryMap[cat] || 0) + (m.quantity || 0);
+    });
+  const categoryData = Object.entries(categoryMap).map(([name, value]) => ({ name, value }));
+
+  // ---- Ordenación de tabla ----
+  const currentRestProducts = allProducts.filter(p => p.restaurant === currentRestaurant);
+  const sortedProducts = [...currentRestProducts].sort((a, b) => {
+    const aVal = a[sortConfig.field] || '';
+    const bVal = b[sortConfig.field] || '';
+    if (sortConfig.field === 'price' || sortConfig.field === 'stock') {
+      return sortConfig.direction === 'asc' ? (aVal - bVal) : (bVal - aVal);
+    }
+    return sortConfig.direction === 'asc'
+      ? String(aVal).localeCompare(String(bVal))
+      : String(bVal).localeCompare(String(aVal));
+  });
+
+  const requestSort = (field) => {
+    setSortConfig(prev => ({
+      field,
+      direction: prev.field === field && prev.direction === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
+  const getSortIcon = (field) => {
+    if (sortConfig.field !== field) return null;
+    return sortConfig.direction === 'asc' ? <ArrowUpIcon className="h-3 w-3 inline ml-1" /> : <ArrowDownIcon className="h-3 w-3 inline ml-1" />;
+  };
+
+  // ---- Exportaciones ----
+  const exportToExcel = () => {
+    const data = sortedProducts.map(p => ({
+      'Producto': p.name,
+      'Categoría': p.categories?.name || '',
+      'Stock': p.stock,
+      'Unidad': p.unit,
+      'Precio': p.price || 0,
+      'Valor total': (p.stock || 0) * (p.price || 0)
+    }));
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Inventario');
+    XLSX.writeFile(wb, `reporte_inventario_${currentRestaurant}_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text(`Reporte de Inventario - ${restaurantNames[currentRestaurant]}`, 14, 20);
+    doc.setFontSize(10);
+    doc.text(`Generado: ${new Date().toLocaleString('es')}`, 14, 28);
+    const tableData = sortedProducts.map(p => [
+      p.name, p.categories?.name || '', `${p.stock} ${p.unit}`, `€${(p.price || 0).toFixed(2)}`, `€${((p.stock || 0) * (p.price || 0)).toFixed(2)}`
+    ]);
+    doc.autoTable({
+      head: [['Producto', 'Categoría', 'Stock', 'Precio Ud.', 'Valor Total']],
+      body: tableData,
+      startY: 35,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [59, 130, 246] }
+    });
+    doc.save(`reporte_inventario_${currentRestaurant}_${new Date().toISOString().split('T')[0]}.pdf`);
+  };
 
   const restaurants = ['POZOBLANCO', 'FUERTEVENTURA', 'GRAN_CAPITAN'];
   const restaurantNames = {
@@ -111,18 +187,21 @@ const Reports = () => {
   };
 
   if (!isAdmin) return null;
-  if (loading) return <div className="text-center py-8 text-gray-500">Cargando reportes...</div>;
+  if (loading) return <div className="text-center py-20 text-gray-500"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>Cargando reportes...</div>;
 
   return (
     <div className="space-y-6">
-      {/* Header con selector de restaurante y período */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-gray-800">📊 Reportes Financieros</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800 tracking-tight">📊 Reportes Financieros</h1>
+          <p className="text-sm text-gray-500">Panel de control y análisis de inventario</p>
+        </div>
         <div className="flex items-center gap-3">
           <select
             value={currentRestaurant}
             onChange={(e) => switchRestaurant(e.target.value)}
-            className="border rounded-lg p-2 text-sm bg-white shadow-sm"
+            className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm bg-white shadow-sm focus:ring-2 focus:ring-blue-500/20 outline-none"
           >
             {restaurants.map(rest => (
               <option key={rest} value={rest}>{restaurantNames[rest]}</option>
@@ -131,7 +210,7 @@ const Reports = () => {
           <select
             value={period}
             onChange={(e) => setPeriod(e.target.value)}
-            className="border rounded-lg p-2 text-sm bg-white shadow-sm"
+            className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm bg-white shadow-sm focus:ring-2 focus:ring-blue-500/20 outline-none"
           >
             <option value="week">Última semana</option>
             <option value="month">Último mes</option>
@@ -140,61 +219,61 @@ const Reports = () => {
         </div>
       </div>
 
-      {/* KPIs principales */}
+      {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-5 shadow-sm border border-blue-200">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <CurrencyDollarIcon className="h-6 w-6 text-blue-600" />
+            <div className="p-3 bg-blue-500 rounded-xl">
+              <CurrencyDollarIcon className="h-6 w-6 text-white" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Valor inventario</p>
-              <p className="text-2xl font-bold text-gray-800">€{totalInventoryValue.toFixed(0)}</p>
+              <p className="text-sm text-blue-700 font-medium">Valor Inventario</p>
+              <p className="text-2xl font-bold text-blue-900">€{totalInventoryValue.toFixed(0)}</p>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+        <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-2xl p-5 shadow-sm border border-indigo-200">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-indigo-100 rounded-lg">
-              <CubeIcon className="h-6 w-6 text-indigo-600" />
+            <div className="p-3 bg-indigo-500 rounded-xl">
+              <CubeIcon className="h-6 w-6 text-white" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Total productos</p>
-              <p className="text-2xl font-bold text-gray-800">{totalProducts}</p>
+              <p className="text-sm text-indigo-700 font-medium">Total Productos</p>
+              <p className="text-2xl font-bold text-indigo-900">{totalProducts}</p>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+        <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl p-5 shadow-sm border border-amber-200">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-amber-100 rounded-lg">
-              <TruckIcon className="h-6 w-6 text-amber-600" />
+            <div className="p-3 bg-amber-500 rounded-xl">
+              <TruckIcon className="h-6 w-6 text-white" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Transf. pendientes</p>
-              <p className="text-2xl font-bold text-gray-800">{pendingTransfers}</p>
+              <p className="text-sm text-amber-700 font-medium">Transf. Pendientes</p>
+              <p className="text-2xl font-bold text-amber-900">{pendingTransfers}</p>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+        <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-2xl p-5 shadow-sm border border-red-200">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-red-100 rounded-lg">
-              <ArrowTrendingDownIcon className="h-6 w-6 text-red-600" />
+            <div className="p-3 bg-red-500 rounded-xl">
+              <ArrowTrendingDownIcon className="h-6 w-6 text-white" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Costo de ventas</p>
-              <p className="text-2xl font-bold text-red-600">€{costOfSales.toFixed(0)}</p>
+              <p className="text-sm text-red-700 font-medium">Costo de Ventas</p>
+              <p className="text-2xl font-bold text-red-900">€{costOfSales.toFixed(0)}</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Resumen por restaurante (solo admin) */}
+      {/* Resumen por restaurante */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {restaurants.map(rest => {
           const value = inventoryValueByRestaurant()[rest] || 0;
           const prods = allProducts.filter(p => p.restaurant === rest).length;
           return (
-            <div key={rest} className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+            <div key={rest} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-semibold text-gray-800">{restaurantNames[rest]}</h3>
                 <div className="w-3 h-3 rounded-full" style={{ backgroundColor: restaurantColors[rest] }}></div>
@@ -214,18 +293,21 @@ const Reports = () => {
         })}
       </div>
 
-      {/* Pestañas de detalle */}
+      {/* Pestañas */}
       <div className="flex gap-2 flex-wrap">
         {[
+          { key: 'overview', label: '📈 Resumen' },
+          { key: 'inventory', label: '📦 Inventario' },
           { key: 'movements', label: '🔄 Movimientos' },
-          { key: 'alerts', label: '⚠️ Alertas Stock' },
-          { key: 'consumption', label: '📊 Consumo' },
+          { key: 'alerts', label: '⚠️ Alertas' },
         ].map(tab => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`px-4 py-2 rounded-xl text-sm font-medium transition ${
-              activeTab === tab.key ? 'bg-blue-600 text-white shadow-sm' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+              activeTab === tab.key
+                ? 'bg-blue-600 text-white shadow-md'
+                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
             }`}
           >
             {tab.label}
@@ -234,129 +316,179 @@ const Reports = () => {
       </div>
 
       {/* Contenido de pestañas */}
-      {activeTab === 'movements' && (
-        <div className="space-y-4">
+      {activeTab === 'overview' && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Barras: Top 5 consumo */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <h3 className="font-semibold text-gray-800 mb-4">📊 Top 5 productos más consumidos</h3>
+              {topConsumed.length > 0 ? (
+                <ResponsiveContainer width="100%" height={280}>
+                  <BarChart data={topConsumed} layout="vertical" margin={{ left: 60 }}>
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                    <XAxis type="number" />
+                    <YAxis type="category" dataKey="name" tick={{ fontSize: 12 }} />
+                    <Tooltip />
+                    <Bar dataKey="consumo" fill={restaurantColors[currentRestaurant]} radius={[0, 4, 4, 0]}>
+                      {topConsumed.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={restaurantColors[currentRestaurant]} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-gray-400 text-center py-12">Sin datos de consumo en este período</p>
+              )}
+            </div>
+
+            {/* Pastel: Distribución por categoría */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <h3 className="font-semibold text-gray-800 mb-4">🥧 Distribución por categoría</h3>
+              {categoryData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={280}>
+                  <PieChart>
+                    <Pie data={categoryData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label>
+                      {categoryData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-gray-400 text-center py-12">Sin datos de categorías</p>
+              )}
+            </div>
+          </div>
+
+          {/* Totales de movimientos */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
               <p className="text-sm text-gray-500">Total entradas</p>
               <p className="text-2xl font-bold text-green-600">+€{totalEntries.toFixed(0)}</p>
             </div>
-            <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
               <p className="text-sm text-gray-500">Total salidas</p>
               <p className="text-2xl font-bold text-red-600">-€{totalExits.toFixed(0)}</p>
             </div>
           </div>
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="px-5 py-4 border-b border-gray-100">
-              <h3 className="font-semibold text-gray-800">Últimos movimientos en {restaurantNames[currentRestaurant]}</h3>
+        </div>
+      )}
+
+      {activeTab === 'inventory' && (
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+            <h3 className="font-semibold text-gray-800">Inventario actual de {restaurantNames[currentRestaurant]}</h3>
+            <div className="flex gap-2">
+              <button onClick={exportToExcel} className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition" title="Excel">
+                <TableCellsIcon className="h-5 w-5" />
+              </button>
+              <button onClick={exportToPDF} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition" title="PDF">
+                <DocumentArrowDownIcon className="h-5 w-5" />
+              </button>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="text-left p-3">Fecha</th>
-                    <th className="text-left p-3">Producto</th>
-                    <th className="text-left p-3">Tipo</th>
-                    <th className="text-right p-3">Cantidad</th>
-                    <th className="text-right p-3">Precio ud.</th>
-                    <th className="text-right p-3">Valor</th>
-                    <th className="text-left p-3">Usuario</th>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="text-left px-4 py-3 cursor-pointer hover:text-blue-600" onClick={() => requestSort('name')}>
+                    Producto {getSortIcon('name')}
+                  </th>
+                  <th className="text-left px-4 py-3 cursor-pointer hover:text-blue-600" onClick={() => requestSort('category')}>
+                    Categoría {getSortIcon('category')}
+                  </th>
+                  <th className="text-right px-4 py-3 cursor-pointer hover:text-blue-600" onClick={() => requestSort('stock')}>
+                    Stock {getSortIcon('stock')}
+                  </th>
+                  <th className="text-right px-4 py-3 cursor-pointer hover:text-blue-600" onClick={() => requestSort('price')}>
+                    Precio {getSortIcon('price')}
+                  </th>
+                  <th className="text-right px-4 py-3">Valor total</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {sortedProducts.map(p => (
+                  <tr key={p.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 font-medium">{p.name}</td>
+                    <td className="px-4 py-3 text-gray-600">{p.categories?.name || '-'}</td>
+                    <td className="px-4 py-3 text-right">{p.stock || 0} {p.unit}</td>
+                    <td className="px-4 py-3 text-right">€{(p.price || 0).toFixed(2)}</td>
+                    <td className="px-4 py-3 text-right font-semibold">€{((p.stock || 0) * (p.price || 0)).toFixed(2)}</td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {filteredMovements.slice(0, 20).map(m => (
-                    <tr key={m.id} className="hover:bg-gray-50">
-                      <td className="p-3">{new Date(m.created_at).toLocaleDateString('es')}</td>
-                      <td className="p-3 font-medium">{m.products?.name || '-'}</td>
-                      <td className={`p-3 font-medium ${m.type === 'entrada' ? 'text-green-600' : 'text-red-600'}`}>{m.type}</td>
-                      <td className="p-3 text-right">{m.quantity}</td>
-                      <td className="p-3 text-right">€{(m.products?.price || 0).toFixed(2)}</td>
-                      <td className="p-3 text-right font-semibold">€{((m.quantity || 0) * (m.products?.price || 0)).toFixed(2)}</td>
-                      <td className="p-3">{m.users?.name || '-'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'movements' && (
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-100">
+            <h3 className="font-semibold text-gray-800">Últimos movimientos en {restaurantNames[currentRestaurant]}</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="text-left px-4 py-3">Fecha</th>
+                  <th className="text-left px-4 py-3">Producto</th>
+                  <th className="text-left px-4 py-3">Tipo</th>
+                  <th className="text-right px-4 py-3">Cantidad</th>
+                  <th className="text-right px-4 py-3">Precio ud.</th>
+                  <th className="text-right px-4 py-3">Valor</th>
+                  <th className="text-left px-4 py-3">Usuario</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {filteredMovements.slice(0, 30).map(m => (
+                  <tr key={m.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3">{new Date(m.created_at).toLocaleDateString('es')}</td>
+                    <td className="px-4 py-3 font-medium">{m.products?.name || '-'}</td>
+                    <td className={`px-4 py-3 font-medium ${m.type === 'entrada' ? 'text-green-600' : 'text-red-600'}`}>{m.type}</td>
+                    <td className="px-4 py-3 text-right">{m.quantity}</td>
+                    <td className="px-4 py-3 text-right">€{(m.products?.price || 0).toFixed(2)}</td>
+                    <td className="px-4 py-3 text-right font-semibold">€{((m.quantity || 0) * (m.products?.price || 0)).toFixed(2)}</td>
+                    <td className="px-4 py-3">{m.users?.name || '-'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
 
       {activeTab === 'alerts' && (
-        <div className="space-y-4">
-          <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+        <div className="space-y-6">
+          <div className="bg-gradient-to-r from-amber-50 to-amber-100 rounded-2xl p-5 shadow-sm border border-amber-200">
             <div className="flex items-center gap-2 mb-2">
               <ExclamationTriangleIcon className="h-5 w-5 text-amber-600" />
               <h3 className="font-semibold text-gray-800">Productos con stock bajo en {restaurantNames[currentRestaurant]}</h3>
             </div>
-            <p className="text-sm text-gray-500">Valor total en riesgo: <span className="font-bold text-red-600">€{lowStockValue.toFixed(0)}</span></p>
+            <p className="text-sm text-amber-700">
+              Valor total en riesgo: <span className="font-bold">
+                €{allProducts.filter(p => p.restaurant === currentRestaurant && p.stock <= p.min_stock).reduce((sum, p) => sum + (p.stock * p.price || 0), 0).toFixed(2)}
+              </span>
+            </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {lowStockProducts
-              .filter(p => p.restaurant === currentRestaurant)
-              .map(p => (
-                <div key={p.id} className="bg-white rounded-xl p-4 shadow-sm border border-amber-200 flex flex-col">
-                  <div className="flex justify-between items-start mb-2">
-                    <h4 className="font-medium text-gray-800">{p.name}</h4>
-                    <span className="px-2 py-0.5 text-xs font-semibold bg-amber-100 text-amber-700 rounded-full">Bajo</span>
-                  </div>
-                  <div className="text-sm text-gray-500 mb-2">{p.stock || 0} {p.unit} (mín {p.min_stock || 10})</div>
-                  <div className="mt-auto text-right font-semibold text-gray-800">
-                    €{((p.stock || 0) * (p.price || 0)).toFixed(2)}
-                  </div>
+            {allProducts.filter(p => p.restaurant === currentRestaurant && p.stock <= p.min_stock).map(p => (
+              <div key={p.id} className="bg-white rounded-2xl p-4 shadow-sm border border-amber-200 flex flex-col">
+                <div className="flex justify-between items-start mb-2">
+                  <h4 className="font-medium text-gray-800">{p.name}</h4>
+                  <span className="px-2 py-0.5 text-xs font-semibold bg-amber-100 text-amber-700 rounded-full">Bajo</span>
                 </div>
-              ))}
-            {lowStockProducts.filter(p => p.restaurant === currentRestaurant).length === 0 && (
+                <div className="text-sm text-gray-500 mb-2">{p.stock || 0} {p.unit} (mín {p.min_stock || 10})</div>
+                <div className="mt-auto text-right font-semibold text-gray-800">
+                  €{((p.stock || 0) * (p.price || 0)).toFixed(2)}
+                </div>
+              </div>
+            ))}
+            {allProducts.filter(p => p.restaurant === currentRestaurant && p.stock <= p.min_stock).length === 0 && (
               <div className="col-span-full text-center py-8 text-gray-500">🎉 No hay productos con stock bajo</div>
             )}
-          </div>
-        </div>
-      )}
-
-      {activeTab === 'consumption' && (
-        <div className="space-y-4">
-          <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-            <h3 className="font-semibold text-gray-800 mb-2">📊 Top 5 productos más consumidos ({restaurantNames[currentRestaurant]})</h3>
-            {topConsumed.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={topConsumed} layout="vertical" margin={{ left: 60 }}>
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                  <XAxis type="number" />
-                  <YAxis type="category" dataKey="name" tick={{ fontSize: 12 }} />
-                  <Tooltip />
-                  <Bar dataKey="consumo" fill={restaurantColors[currentRestaurant]} radius={[0, 4, 4, 0]}>
-                    {topConsumed.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={restaurantColors[currentRestaurant]} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <p className="text-gray-500 text-center py-8">No hay datos de consumo en este período</p>
-            )}
-          </div>
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="px-5 py-4 border-b border-gray-100">
-              <h3 className="font-semibold text-gray-800">Detalle de consumo ({restaurantNames[currentRestaurant]})</h3>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="text-left p-3">Producto</th>
-                    <th className="text-right p-3">Cantidad consumida</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {topConsumed.map((item, idx) => (
-                    <tr key={idx} className="hover:bg-gray-50">
-                      <td className="p-3 font-medium">{item.name}</td>
-                      <td className="p-3 text-right font-semibold">{item.consumo}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
           </div>
         </div>
       )}
