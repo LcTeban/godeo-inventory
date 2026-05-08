@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import {
   PlusIcon, TrashIcon, PencilIcon, CameraIcon,
-  XMarkIcon, BookOpenIcon, MagnifyingGlassIcon
+  XMarkIcon, BookOpenIcon, MagnifyingGlassIcon,
+  ClockIcon, BeakerIcon, PhotoIcon
 } from '@heroicons/react/24/outline';
 
 const Recipes = () => {
@@ -19,25 +20,19 @@ const Recipes = () => {
   const { isAdmin, getRecipes, addRecipe, updateRecipe, deleteRecipe, getProducts } = useAuth();
 
   useEffect(() => {
-    loadRecipes();
-    loadProducts();
+    loadData();
   }, []);
 
-  const loadRecipes = async () => {
+  const loadData = async () => {
     try {
-      const data = await getRecipes();
-      setRecipes(Array.isArray(data) ? data : []);
+      const [recData, prodData] = await Promise.all([
+        getRecipes(),
+        getProducts()
+      ]);
+      setRecipes(Array.isArray(recData) ? recData : []);
+      setProducts(Array.isArray(prodData) ? prodData : []);
     } catch (error) {
       console.error('Error loading recipes:', error);
-    }
-  };
-
-  const loadProducts = async () => {
-    try {
-      const data = await getProducts();
-      setProducts(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error('Error loading products:', error);
     }
   };
 
@@ -115,7 +110,7 @@ const Recipes = () => {
     e.preventDefault();
     if (!name.trim()) return alert('Falta el nombre de la receta');
 
-    const validIngredients = ingredients.filter(ing => ing.product_id && ing.quantity > 0);
+    const validIngredients = ingredients.filter(ing => ing.product_id && parseFloat(ing.quantity) > 0);
     if (validIngredients.length === 0) return alert('Agrega al menos un ingrediente con producto y cantidad');
 
     try {
@@ -126,7 +121,7 @@ const Recipes = () => {
       }
       setShowModal(false);
       resetForm();
-      loadRecipes();
+      loadData();
     } catch (error) {
       alert('Error: ' + error.message);
     }
@@ -136,7 +131,7 @@ const Recipes = () => {
     if (window.confirm('¿Eliminar receta?')) {
       try {
         await deleteRecipe(id);
-        loadRecipes();
+        loadData();
       } catch (error) {
         alert('Error al eliminar');
       }
@@ -148,31 +143,75 @@ const Recipes = () => {
     setShowDetail(true);
   };
 
-  const filteredRecipes = recipes.filter(recipe =>
-    recipe.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // KPIs
+  const totalRecipes = recipes.length;
+  const totalIngredients = recipes.reduce((sum, r) => sum + (r.recipe_ingredients?.length || 0), 0);
+  const recipesWithPhoto = recipes.filter(r => r.image).length;
+
+  // Búsqueda
+  const filteredRecipes = useMemo(() => {
+    if (!searchTerm) return recipes;
+    const search = searchTerm.toLowerCase();
+    return recipes.filter(r => 
+      r.name?.toLowerCase().includes(search)
+    );
+  }, [recipes, searchTerm]);
+
+  // Obtener sugerencias de productos para ingredientes
+  const getProductSuggestions = (input) => {
+    if (!input || input.length < 1) return [];
+    const search = input.toLowerCase();
+    return products
+      .filter(p => p.name.toLowerCase().includes(search) || p.barcode?.includes(search))
+      .slice(0, 4);
+  };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">📖 Recetas</h1>
+          <h1 className="text-xl font-bold text-gray-800">📖 Recetas</h1>
           <p className="text-sm text-gray-500 mt-1">Gestiona las recetas y sus ingredientes</p>
         </div>
         {isAdmin && (
           <button
             onClick={openAdd}
-            className="bg-blue-600 text-white px-4 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-blue-700 transition shadow-sm"
+            className="bg-blue-600 text-white px-5 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-blue-700 transition shadow-sm"
           >
             <PlusIcon className="h-4 w-4" /> Nueva Receta
           </button>
         )}
       </div>
 
+      {/* KPIs */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+          <div className="flex items-center gap-2">
+            <BookOpenIcon className="h-5 w-5 text-blue-500" />
+            <span className="text-sm text-gray-500">Total recetas</span>
+          </div>
+          <p className="text-2xl font-bold text-gray-800 mt-1">{totalRecipes}</p>
+        </div>
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+          <div className="flex items-center gap-2">
+            <BeakerIcon className="h-5 w-5 text-amber-500" />
+            <span className="text-sm text-gray-500">Ingredientes totales</span>
+          </div>
+          <p className="text-2xl font-bold text-gray-800 mt-1">{totalIngredients}</p>
+        </div>
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+          <div className="flex items-center gap-2">
+            <PhotoIcon className="h-5 w-5 text-emerald-500" />
+            <span className="text-sm text-gray-500">Con foto</span>
+          </div>
+          <p className="text-2xl font-bold text-gray-800 mt-1">{recipesWithPhoto}</p>
+        </div>
+      </div>
+
       {/* Barra de búsqueda */}
       <div className="relative">
-        <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-3 text-gray-400" />
+        <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-2.5 text-gray-400" />
         <input
           type="text"
           placeholder="Buscar receta..."
@@ -222,7 +261,7 @@ const Recipes = () => {
                     {recipe.recipe_ingredients?.length || 0} ingredientes
                   </span>
                   {isAdmin && (
-                    <div className="flex gap-1">
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition">
                       <button
                         onClick={() => openEdit(recipe)}
                         className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition"
@@ -301,7 +340,6 @@ const Recipes = () => {
       {showModal && isAdmin && (
         <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4" onClick={() => setShowModal(false)}>
           <div className="bg-white rounded-2xl w-full max-w-lg max-h-[85vh] flex flex-col shadow-xl" onClick={e => e.stopPropagation()}>
-            {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
               <h2 className="text-lg font-semibold text-gray-800">
                 {editingRecipe ? '✏️ Editar Receta' : '📖 Nueva Receta'}
@@ -365,17 +403,44 @@ const Recipes = () => {
                           )}
                         </div>
                         <div className="flex flex-col sm:flex-row gap-2">
-                          <select
-                            value={ing.product_id}
-                            onChange={(e) => handleIngredientChange(idx, 'product_id', e.target.value)}
-                            className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
-                            required
-                          >
-                            <option value="">Seleccionar producto</option>
-                            {products.map(p => (
-                              <option key={p.id} value={p.id}>{p.name}</option>
-                            ))}
-                          </select>
+                          <div className="flex-1 relative">
+                            <input
+                              type="text"
+                              placeholder="Buscar producto..."
+                              value={ing.productName || ''}
+                              onChange={(e) => {
+                                handleIngredientChange(idx, 'productName', e.target.value);
+                                // Si se escribe un nombre, no asignamos product_id directamente
+                              }}
+                              onFocus={() => handleIngredientChange(idx, '_showSuggestions', true)}
+                              onBlur={() => setTimeout(() => handleIngredientChange(idx, '_showSuggestions', false), 200)}
+                              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                              autoComplete="off"
+                            />
+                            {ing._showSuggestions && getProductSuggestions(ing.productName || '').length > 0 && (
+                              <div className="absolute z-10 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
+                                {getProductSuggestions(ing.productName || '').map(product => (
+                                  <button
+                                    key={product.id}
+                                    type="button"
+                                    onClick={() => {
+                                      handleIngredientChange(idx, 'product_id', product.id.toString());
+                                      handleIngredientChange(idx, 'productName', product.name);
+                                      handleIngredientChange(idx, 'unit', product.unit || 'g');
+                                      handleIngredientChange(idx, '_showSuggestions', false);
+                                    }}
+                                    className="w-full px-4 py-3 text-left hover:bg-blue-50 transition flex items-center justify-between"
+                                  >
+                                    <div>
+                                      <span className="text-sm font-medium text-gray-800">{product.name}</span>
+                                      <span className="text-xs text-gray-400 ml-2">{product.category}</span>
+                                    </div>
+                                    <span className="text-xs text-gray-500">{product.stock} {product.unit}</span>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                           <div className="flex gap-2">
                             <input
                               type="number"
@@ -412,7 +477,6 @@ const Recipes = () => {
                 </div>
               </div>
 
-              {/* Footer */}
               <div className="px-6 py-4 border-t border-gray-100 flex gap-3">
                 <button
                   type="button"
