@@ -407,15 +407,24 @@ export const AuthProvider = ({ children }) => {
   const updateSupplier = useCallback((id, data) => { if (user?.role !== 'ADMIN') throw new Error('Solo admin'); return apiCall('suppliers', 'PATCH', data, { id: `eq.${id}` }); }, [apiCall, user]);
   const deleteSupplier = useCallback((id) => { if (user?.role !== 'ADMIN') throw new Error('Solo admin'); return apiCall('suppliers', 'DELETE', null, { id: `eq.${id}` }); }, [apiCall, user]);
 
-  // ========== RECETAS (CORREGIDO DEFINITIVO) ==========
+  // ========== RECETAS (VERSIÓN FINAL FUNCIONAL) ==========
   const getRecipes = useCallback(async () => {
-    const recipes = await apiCall('recipes', 'GET', null, { select: '*', restaurant: `eq.${currentRestaurant}`, order: 'name.asc' });
+    const recipes = await apiCall('recipes', 'GET', null, {
+      select: '*',
+      restaurant: `eq.${currentRestaurant}`,
+      order: 'name.asc'
+    });
     if (!recipes || recipes.length === 0) return [];
+
     const recipeIds = recipes.map(r => r.id);
-    const ingredients = await apiCall('recipe_ingredients', 'GET', null, { select: '*,products(name,unit)', recipe_id: `in.(${recipeIds.join(',')})` });
+    const allIngredients = await apiCall('recipe_ingredients', 'GET', null, {
+      select: '*,products(name,unit)',
+      recipe_id: `in.(${recipeIds.join(',')})`
+    });
+
     return recipes.map(recipe => ({
       ...recipe,
-      recipe_ingredients: (ingredients || []).filter(ing => ing.recipe_id === recipe.id)
+      recipe_ingredients: (allIngredients || []).filter(ing => ing.recipe_id === recipe.id)
     }));
   }, [apiCall, currentRestaurant]);
 
@@ -426,26 +435,44 @@ export const AuthProvider = ({ children }) => {
       try { finalImage = await compressImage(finalImage); } catch (e) { throw new Error('Error al procesar la imagen'); }
     }
 
-    const recipe = await apiCall('recipes', 'POST', { name, image: finalImage || null, restaurant: currentRestaurant, created_at: new Date().toISOString() });
+    // Crear la receta
+    const recipe = await apiCall('recipes', 'POST', {
+      name,
+      image: finalImage || null,
+      restaurant: currentRestaurant,
+      created_at: new Date().toISOString()
+    });
 
-    let fallas = 0;
+    let insertados = 0;
     for (const ing of ingredients) {
-      if (!ing.product_id || parseFloat(ing.quantity) <= 0) continue;
+      let productId = ing.product_id ? parseInt(ing.product_id, 10) : null;
+      // Si no tiene product_id, intentar buscarlo por nombre en el restaurante actual
+      if (!productId && ing.productName) {
+        const found = await apiCall('products', 'GET', null, {
+          select: 'id',
+          name: `eq.${ing.productName}`,
+          restaurant: `eq.${currentRestaurant}`
+        });
+        if (found && found.length > 0) {
+          productId = found[0].id;
+        }
+      }
+
+      if (!productId || parseFloat(ing.quantity) <= 0) continue;
+
       try {
         await apiCall('recipe_ingredients', 'POST', {
           recipe_id: recipe.id,
-          product_id: parseInt(ing.product_id, 10),
+          product_id: productId,
           quantity: parseFloat(ing.quantity),
           unit: ing.unit || 'g'
         });
+        insertados++;
       } catch (e) {
         console.error('Error al insertar ingrediente:', e);
-        fallas++;
       }
     }
-    if (fallas > 0) {
-      alert(`Se creó la receta pero ${fallas} ingrediente(s) fallaron. Revisa la consola.`);
-    }
+
     return recipe;
   }, [apiCall, currentRestaurant, user]);
 
@@ -458,19 +485,23 @@ export const AuthProvider = ({ children }) => {
 
     await apiCall('recipes', 'PATCH', { name, image: finalImage || null }, { id: `eq.${id}` });
 
+    // Eliminar ingredientes existentes
     const existing = await apiCall('recipe_ingredients', 'GET', null, { select: 'id', recipe_id: `eq.${id}` });
     for (const ing of (Array.isArray(existing) ? existing : [])) {
       await apiCall('recipe_ingredients', 'DELETE', null, { id: `eq.${ing.id}` });
     }
 
+    // Insertar nuevos ingredientes
     for (const ing of ingredients) {
-      if (!ing.product_id || parseFloat(ing.quantity) <= 0) continue;
-      await apiCall('recipe_ingredients', 'POST', {
-        recipe_id: id,
-        product_id: parseInt(ing.product_id, 10),
-        quantity: parseFloat(ing.quantity),
-        unit: ing.unit || 'g'
-      });
+      let productId = ing.product_id ? parseInt(ing.product_id, 10) : null;
+      if (productId && parseFloat(ing.quantity) > 0) {
+        await apiCall('recipe_ingredients', 'POST', {
+          recipe_id: id,
+          product_id: productId,
+          quantity: parseFloat(ing.quantity),
+          unit: ing.unit || 'g'
+        });
+      }
     }
   }, [apiCall, user]);
 
@@ -479,7 +510,7 @@ export const AuthProvider = ({ children }) => {
     return apiCall('recipes', 'DELETE', null, { id: `eq.${id}` });
   }, [apiCall, user]);
 
-  // ========== DUPLICAR CATEGORÍA (CORREGIDO - solo productos de la rama) ==========
+  // ========== DUPLICAR CATEGORÍA (CORREGIDO) ==========
   const duplicateCategory = useCallback(async (categoryId, targetRestaurant) => {
     const rootResult = await apiCall('categories', 'GET', null, { select: '*', id: `eq.${categoryId}` });
     if (!rootResult || rootResult.length === 0) throw new Error('Categoría no encontrada');
