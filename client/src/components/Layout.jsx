@@ -59,7 +59,7 @@ const Layout = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header en tablet (lg:hidden) – solo se muestra si NO estamos en móvil */}
+      {/* Header visible solo en tablet (lg:hidden) si NO estamos en móvil */}
       {!isMobile && (
         <div className="lg:hidden bg-white shadow-sm p-4 flex items-center justify-between">
           <button onClick={toggleSidebar} className="p-2">
@@ -79,10 +79,13 @@ const Layout = () => {
         </div>
       )}
 
-      {/* Sidebar Mobile (overlay) */}
+      {/* Sidebar móvil: ahora se desliza desde la DERECHA */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-50 lg:hidden" onClick={() => setSidebarOpen(false)}>
-          <div className="bg-white w-64 h-full flex flex-col" onClick={e => e.stopPropagation()}>
+          <div
+            className="bg-white w-64 h-full flex flex-col fixed right-0 top-0 shadow-xl animate-slide-in-right"
+            onClick={e => e.stopPropagation()}
+          >
             <div className="p-4 flex justify-between items-center border-b">
               <h2 className="text-xl font-bold">🍴 Godeo</h2>
               <button onClick={() => setSidebarOpen(false)}>
@@ -155,7 +158,7 @@ const Layout = () => {
         </div>
       )}
 
-      {/* Sidebar Desktop (siempre visible en lg) – solo si NO estamos en móvil */}
+      {/* Sidebar escritorio (izquierda) solo si NO es móvil */}
       {!isMobile && (
         <div className="hidden lg:flex lg:w-64 lg:fixed lg:inset-y-0">
           <div className="w-64 bg-white shadow-lg flex flex-col h-full">
