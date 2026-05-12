@@ -52,11 +52,18 @@ const Inventory = () => {
     loadCategories();
   }, [currentRestaurant]);
 
-  // Escuchar evento de la barra inferior para abrir el escáner
+  // Escuchar evento de la barra inferior para abrir el formulario de añadir producto
   useEffect(() => {
-    const handleOpenScanner = () => setShowScanner(true);
-    window.addEventListener('openScanner', handleOpenScanner);
-    return () => window.removeEventListener('openScanner', handleOpenScanner);
+    const handleOpenAddProduct = () => {
+      setEditingProduct(null);
+      setFormData({
+        name: '', category_id: '', stock: '', unit: 'unidad', min_stock: '10',
+        expiry_date: '', image: '', barcode: '', supplier_id: '', price: ''
+      });
+      setShowAddModal(true);
+    };
+    window.addEventListener('openAddProduct', handleOpenAddProduct);
+    return () => window.removeEventListener('openAddProduct', handleOpenAddProduct);
   }, []);
 
   const loadCategories = async () => {
@@ -539,12 +546,23 @@ const Inventory = () => {
         </>
       )}
 
-      {/* Modal Agregar/Editar Producto */}
+      {/* Modal Agregar/Editar Producto - CORREGIDO EL SCROLL */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end sm:items-center justify-center overflow-y-auto" onClick={resetModal}>
-          <div className="bg-white rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <h2 className="text-xl font-bold mb-4">{editingProduct ? 'Editar Producto' : 'Nuevo Producto'}</h2>
-            <form onSubmit={handleAddProduct} className="space-y-3">
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end sm:items-center justify-center" onClick={resetModal}>
+          <div
+            className="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-md shadow-xl flex flex-col"
+            style={{ maxHeight: '90vh' }}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Cabecera fija */}
+            <div className="px-6 py-4 border-b border-gray-100 flex-shrink-0">
+              <h2 className="text-lg font-semibold text-gray-800">
+                {editingProduct ? 'Editar Producto' : 'Nuevo Producto'}
+              </h2>
+            </div>
+
+            {/* Cuerpo del modal con scroll interno */}
+            <div className="overflow-y-auto flex-1 px-6 py-4 space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-2">📸 Foto del producto</label>
                 <div className="flex gap-2">
@@ -563,8 +581,11 @@ const Inventory = () => {
                 )}
               </div>
 
-              <input type="text" placeholder="Nombre*" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full p-3 border rounded-xl" required />
-              
+              <div>
+                <label className="block text-sm font-medium mb-1">Nombre *</label>
+                <input type="text" placeholder="Nombre*" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full p-3 border rounded-xl" required />
+              </div>
+
               <div>
                 <label className="block text-sm font-medium mb-1">📁 Categoría</label>
                 <select
@@ -597,24 +618,46 @@ const Inventory = () => {
               )}
 
               <div className="flex gap-2">
-                <input type="number" step="0.01" placeholder="Stock inicial*" value={formData.stock} onChange={(e) => setFormData({...formData, stock: e.target.value})} className="flex-1 p-3 border rounded-xl" required />
-                <select value={formData.unit} onChange={(e) => setFormData({...formData, unit: e.target.value})} className="w-24 p-3 border rounded-xl">
-                  <option value="unidad">ud</option><option value="kg">kg</option><option value="L">L</option><option value="caja">caja</option>
-                </select>
+                <div className="flex-1">
+                  <label className="block text-sm font-medium mb-1">Stock inicial *</label>
+                  <input type="number" step="0.01" placeholder="Stock inicial*" value={formData.stock} onChange={(e) => setFormData({...formData, stock: e.target.value})} className="w-full p-3 border rounded-xl" required />
+                </div>
+                <div className="w-24">
+                  <label className="block text-sm font-medium mb-1">Unidad</label>
+                  <select value={formData.unit} onChange={(e) => setFormData({...formData, unit: e.target.value})} className="w-full p-3 border rounded-xl">
+                    <option value="unidad">ud</option><option value="kg">kg</option><option value="L">L</option><option value="caja">caja</option>
+                  </select>
+                </div>
               </div>
-              <input type="number" placeholder="Stock mínimo" value={formData.min_stock} onChange={(e) => setFormData({...formData, min_stock: e.target.value})} className="w-full p-3 border rounded-xl" />
-              <input type="date" placeholder="Fecha caducidad" value={formData.expiry_date} onChange={(e) => setFormData({...formData, expiry_date: e.target.value})} className="w-full p-3 border rounded-xl" />
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Stock mínimo</label>
+                <input type="number" placeholder="Stock mínimo" value={formData.min_stock} onChange={(e) => setFormData({...formData, min_stock: e.target.value})} className="w-full p-3 border rounded-xl" />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Fecha caducidad</label>
+                <input type="date" placeholder="Fecha caducidad" value={formData.expiry_date} onChange={(e) => setFormData({...formData, expiry_date: e.target.value})} className="w-full p-3 border rounded-xl" />
+              </div>
+
               <div className="flex gap-2">
-                <input type="text" placeholder="Código de barras" value={formData.barcode} onChange={(e) => setFormData({...formData, barcode: e.target.value})} className="flex-1 p-3 border rounded-xl" />
-                <button type="button" onClick={() => setShowScanner(true)} className="px-4 bg-gray-100 rounded-xl"><QrCodeIcon className="h-5 w-5" /></button>
+                <div className="flex-1">
+                  <label className="block text-sm font-medium mb-1">Código de barras</label>
+                  <div className="flex gap-2">
+                    <input type="text" placeholder="Código de barras" value={formData.barcode} onChange={(e) => setFormData({...formData, barcode: e.target.value})} className="flex-1 p-3 border rounded-xl" />
+                    <button type="button" onClick={() => setShowScanner(true)} className="px-4 bg-gray-100 rounded-xl"><QrCodeIcon className="h-5 w-5" /></button>
+                  </div>
+                </div>
               </div>
-              <div className="flex gap-2 pt-2">
-                <button type="button" onClick={resetModal} className="flex-1 p-3 border rounded-xl">Cancelar</button>
-                <button type="submit" disabled={isSaving} className="flex-1 p-3 bg-blue-600 text-white rounded-xl disabled:opacity-50">
-                  {isSaving ? 'Guardando...' : editingProduct ? 'Actualizar' : 'Guardar'}
-                </button>
-              </div>
-            </form>
+            </div>
+
+            {/* Pie del modal fijo */}
+            <div className="px-6 py-4 border-t border-gray-100 flex gap-3 flex-shrink-0">
+              <button type="button" onClick={resetModal} className="flex-1 p-3 border rounded-xl">Cancelar</button>
+              <button onClick={handleAddProduct} disabled={isSaving} className="flex-1 p-3 bg-blue-600 text-white rounded-xl disabled:opacity-50">
+                {isSaving ? 'Guardando...' : editingProduct ? 'Actualizar' : 'Guardar'}
+              </button>
+            </div>
           </div>
         </div>
       )}
