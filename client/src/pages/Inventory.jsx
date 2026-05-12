@@ -20,7 +20,7 @@ const Inventory = () => {
   const [showMovementModal, setShowMovementModal] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
   const [showCopyModal, setShowCopyModal] = useState(false);
-  const [showDeleteAllModal, setShowDeleteAllModal] = useState(false); // Modal de confirmación
+  const [showDeleteAllModal, setShowDeleteAllModal] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -36,7 +36,6 @@ const Inventory = () => {
   const [copyTarget, setCopyTarget] = useState('');
   const [isCopying, setIsCopying] = useState(false);
   const [isDeletingAll, setIsDeletingAll] = useState(false);
-
   const [currentFolderId, setCurrentFolderId] = useState(null);
   const [folderPath, setFolderPath] = useState([]);
   const [allCategories, setAllCategories] = useState([]);
@@ -52,11 +51,13 @@ const Inventory = () => {
     fetchSuppliers();
     loadCategories();
   }, [currentRestaurant]);
-  
-  const handleOpenScanner = () => setShowScanner(true);
-  window.addEventListener('openScanner', handleOpenScanner);
-  return () => window.removeEventListener('openScanner', handleOpenScanner);
-}, []);
+
+  // Escuchar evento de la barra inferior para abrir el escáner
+  useEffect(() => {
+    const handleOpenScanner = () => setShowScanner(true);
+    window.addEventListener('openScanner', handleOpenScanner);
+    return () => window.removeEventListener('openScanner', handleOpenScanner);
+  }, []);
 
   const loadCategories = async () => {
     const flat = await getAllCategoriesFlat();
