@@ -52,6 +52,11 @@ const Inventory = () => {
     fetchSuppliers();
     loadCategories();
   }, [currentRestaurant]);
+  
+  const handleOpenScanner = () => setShowScanner(true);
+  window.addEventListener('openScanner', handleOpenScanner);
+  return () => window.removeEventListener('openScanner', handleOpenScanner);
+}, []);
 
   const loadCategories = async () => {
     const flat = await getAllCategoriesFlat();
