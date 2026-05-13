@@ -183,14 +183,14 @@ const Requests = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-gray-800 tracking-tight">📋 Pedidos</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-xl font-bold text-slate-900 tracking-tight">📋 Pedidos</h1>
+          <p className="text-sm text-slate-500 mt-1">
             {isAdmin ? 'Gestiona las solicitudes de los empleados' : 'Solicita los productos que necesites'}
           </p>
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="bg-blue-600 text-white px-5 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-blue-700 transition shadow-sm"
+          className="bg-blue-600 text-white px-5 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-blue-700 transition shadow-sm shadow-blue-200"
         >
           <PlusIcon className="h-4 w-4" />
           Nueva Lista
@@ -203,16 +203,16 @@ const Requests = () => {
           <div className="bg-white rounded-2xl p-4 shadow-sm">
             <div className="flex items-center gap-2">
               <ClockIcon className="h-5 w-5 text-amber-500" />
-              <span className="text-sm text-gray-500">Pendientes</span>
+              <span className="text-sm text-slate-500">Pendientes</span>
             </div>
-            <p className="text-2xl font-bold text-gray-800 mt-1">{pendingCount}</p>
+            <p className="text-2xl font-bold text-slate-900 mt-1">{pendingCount}</p>
           </div>
           <div className="bg-white rounded-2xl p-4 shadow-sm">
             <div className="flex items-center gap-2">
               <CheckCircleIcon className="h-5 w-5 text-emerald-500" />
-              <span className="text-sm text-gray-500">Aprobados hoy</span>
+              <span className="text-sm text-slate-500">Aprobados hoy</span>
             </div>
-            <p className="text-2xl font-bold text-gray-800 mt-1">
+            <p className="text-2xl font-bold text-slate-900 mt-1">
               {requests.filter(r => {
                 if (r.status !== 'aprobado') return false;
                 const today = new Date();
@@ -224,9 +224,9 @@ const Requests = () => {
           <div className="bg-white rounded-2xl p-4 shadow-sm">
             <div className="flex items-center gap-2">
               <ClipboardDocumentListIcon className="h-5 w-5 text-blue-500" />
-              <span className="text-sm text-gray-500">Total solicitudes</span>
+              <span className="text-sm text-slate-500">Total solicitudes</span>
             </div>
-            <p className="text-2xl font-bold text-gray-800 mt-1">{requests.length}</p>
+            <p className="text-2xl font-bold text-slate-900 mt-1">{requests.length}</p>
           </div>
         </div>
       )}
@@ -234,19 +234,19 @@ const Requests = () => {
       {/* Barra de búsqueda */}
       <div className="flex gap-2">
         <div className="flex-1 relative">
-          <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-2.5 text-gray-400" />
+          <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-2.5 text-slate-400" />
           <input
             type="text"
             placeholder="Buscar por nombre de producto..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+            className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition"
           />
         </div>
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
-          className="px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+          className="px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 outline-none bg-white"
         >
           <option value="all">Todos</option>
           <option value="pendiente">Pendientes</option>
@@ -257,22 +257,22 @@ const Requests = () => {
 
       {/* Mis Solicitudes */}
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-100">
-          <h2 className="font-semibold text-gray-800">📝 Mis Solicitudes ({filteredMyRequests.length})</h2>
+        <div className="px-5 py-4 border-b border-slate-100">
+          <h2 className="font-semibold text-slate-900">📝 Mis Solicitudes ({filteredMyRequests.length})</h2>
         </div>
-        <div className="divide-y divide-gray-100">
+        <div className="divide-y divide-slate-100">
           {filteredMyRequests.map(req => (
-            <div key={req.id} className="px-5 py-4 hover:bg-gray-50 transition">
+            <div key={req.id} className="px-5 py-4 hover:bg-slate-50 transition">
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-gray-800 truncate">{req.product_name}</p>
-                  <p className="text-sm text-gray-500 mt-0.5">
+                  <p className="font-medium text-slate-900 truncate">{req.product_name}</p>
+                  <p className="text-sm text-slate-500 mt-0.5">
                     {req.quantity} {req.unit}
-                    {req.notes && <span className="text-gray-400 ml-2">· {req.notes}</span>}
+                    {req.notes && <span className="text-slate-400 ml-2">· {req.notes}</span>}
                   </p>
                 </div>
                 <div className="flex items-center gap-3 ml-4">
-                  <span className="text-xs text-gray-400">
+                  <span className="text-xs text-slate-400">
                     {new Date(req.created_at).toLocaleDateString('es', { day: '2-digit', month: 'short' })}
                   </span>
                   <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${
@@ -288,7 +288,7 @@ const Requests = () => {
           ))}
           {filteredMyRequests.length === 0 && (
             <div className="px-5 py-10 text-center">
-              <p className="text-gray-400 text-sm">No se encontraron solicitudes</p>
+              <p className="text-slate-400 text-sm">No se encontraron solicitudes</p>
             </div>
           )}
         </div>
@@ -297,43 +297,43 @@ const Requests = () => {
       {/* Panel Admin - Pendientes de aprobar */}
       {isAdmin && pendingRequests.length > 0 && (
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-          <div className="px-5 py-4 border-b border-gray-100">
-            <h2 className="font-semibold text-gray-800">
+          <div className="px-5 py-4 border-b border-slate-100">
+            <h2 className="font-semibold text-slate-900">
               ⏳ Pendientes de aprobar
               <span className="ml-2 px-2 py-0.5 bg-amber-100 text-amber-700 text-xs rounded-full font-medium">
                 {filteredPending.length}
               </span>
             </h2>
           </div>
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-slate-100">
             {filteredPending.map(req => (
-              <div key={req.id} className="px-5 py-4 hover:bg-gray-50 transition">
+              <div key={req.id} className="px-5 py-4 hover:bg-slate-50 transition">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <p className="font-medium text-gray-800">{req.product_name}</p>
+                      <p className="font-medium text-slate-900">{req.product_name}</p>
                       <span className="px-1.5 py-0.5 bg-blue-50 text-blue-600 text-xs rounded font-medium">
                         {req.restaurant}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-slate-600">
                       {req.quantity} {req.unit}
-                      <span className="text-gray-400 ml-2">· Solicitado por {req.users?.name || 'Empleado'}</span>
+                      <span className="text-slate-400 ml-2">· Solicitado por {req.users?.name || 'Empleado'}</span>
                     </p>
                     {req.notes && (
-                      <p className="text-xs text-gray-500 mt-1 italic">"{req.notes}"</p>
+                      <p className="text-xs text-slate-500 mt-1 italic">"{req.notes}"</p>
                     )}
                   </div>
                   <div className="flex gap-2 flex-shrink-0">
                     <button
                       onClick={() => handleStatus(req.id, 'aprobado')}
-                      className="px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition"
+                      className="px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition shadow-sm shadow-emerald-200"
                     >
                       ✓ Aprobar
                     </button>
                     <button
                       onClick={() => handleStatus(req.id, 'rechazado')}
-                      className="px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 transition"
+                      className="px-4 py-2 bg-white border border-slate-200 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-50 transition"
                     >
                       ✗ Rechazar
                     </button>
@@ -347,7 +347,7 @@ const Requests = () => {
 
       {/* Modal Nueva Lista */}
       {showModal && (
-        <div className={`fixed inset-0 z-50 flex ${isMobile ? 'items-end' : 'items-center justify-center'} bg-black/30`} onClick={() => setShowModal(false)}>
+        <div className={`fixed inset-0 z-50 flex ${isMobile ? 'items-end' : 'items-center justify-center'} bg-black/30 backdrop-blur-sm`} onClick={() => setShowModal(false)}>
           <div
             className={`bg-white w-full max-w-lg flex flex-col shadow-2xl ${
               isMobile ? 'rounded-t-[32px] animate-slide-up max-h-[85dvh] mb-12' : 'rounded-2xl max-h-[85vh]'
@@ -355,8 +355,8 @@ const Requests = () => {
             onClick={e => e.stopPropagation()}
           >
             {isMobile && <div className="bottom-sheet-handle" />}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
-              <h2 className="text-lg font-semibold text-gray-800">📋 Nueva Lista de Pedidos</h2>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 flex-shrink-0">
+              <h2 className="text-lg font-semibold text-slate-900">📋 Nueva Lista de Pedidos</h2>
               <button
                 onClick={() => {
                   setShowModal(false);
@@ -364,7 +364,7 @@ const Requests = () => {
                   setActiveSuggestionIndex(null);
                   setProductExists({});
                 }}
-                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition"
+                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition"
               >
                 <XMarkIcon className="h-5 w-5" />
               </button>
@@ -372,13 +372,13 @@ const Requests = () => {
             
             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 modal-scroll" style={{ paddingBottom: isMobile ? 'calc(80px + env(safe-area-inset-bottom))' : '16px' }}>
               {formData.items.map((item, index) => (
-                <div key={index} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                <div key={index} className="bg-slate-50 rounded-xl p-4 border border-slate-100">
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
                       Producto {index + 1}
                     </span>
                     {formData.items.length > 1 && (
-                      <button type="button" onClick={() => handleRemoveItem(index)} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition">
+                      <button type="button" onClick={() => handleRemoveItem(index)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition">
                         <TrashIcon className="h-4 w-4" />
                       </button>
                     )}
@@ -391,7 +391,7 @@ const Requests = () => {
                       value={item.productName}
                       onChange={(e) => handleItemChange(index, 'productName', e.target.value)}
                       onFocus={() => setActiveSuggestionIndex(index)}
-                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                      className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition"
                       autoComplete="off"
                     />
                     
@@ -406,7 +406,7 @@ const Requests = () => {
                     )}
                     
                     {activeSuggestionIndex === index && getSuggestions(item.productName).length > 0 && (
-                      <div className="absolute z-10 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
+                      <div className="absolute z-10 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden">
                         {getSuggestions(item.productName).map(product => (
                           <button
                             key={product.id}
@@ -415,10 +415,10 @@ const Requests = () => {
                             className="w-full px-4 py-3 text-left hover:bg-blue-50 transition flex items-center justify-between"
                           >
                             <div>
-                              <span className="text-sm font-medium text-gray-800">{product.name}</span>
-                              <span className="text-xs text-gray-400 ml-2">{product.category}</span>
+                              <span className="text-sm font-medium text-slate-900">{product.name}</span>
+                              <span className="text-xs text-slate-400 ml-2">{product.category}</span>
                             </div>
-                            <span className="text-xs text-gray-500">{product.stock} {product.unit}</span>
+                            <span className="text-xs text-slate-500">{product.stock} {product.unit}</span>
                           </button>
                         ))}
                       </div>
@@ -427,23 +427,23 @@ const Requests = () => {
 
                   <div className="flex gap-2">
                     <div className="flex-1">
-                      <label className="block text-xs text-gray-500 mb-1">Cantidad</label>
+                      <label className="block text-xs text-slate-500 mb-1">Cantidad</label>
                       <input
                         type="number"
                         step="0.01"
                         placeholder="0"
                         value={item.quantity}
                         onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
-                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                        className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition"
                         required
                       />
                     </div>
                     <div className="w-24">
-                      <label className="block text-xs text-gray-500 mb-1">Unidad</label>
+                      <label className="block text-xs text-slate-500 mb-1">Unidad</label>
                       <select
                         value={item.unit}
                         onChange={(e) => handleItemChange(index, 'unit', e.target.value)}
-                        className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                        className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 outline-none bg-white"
                       >
                         <option value="unidad">ud</option>
                         <option value="kg">kg</option>
@@ -460,24 +460,24 @@ const Requests = () => {
               <button
                 type="button"
                 onClick={handleAddItem}
-                className="w-full py-3 border-2 border-dashed border-gray-200 text-gray-500 rounded-xl text-sm font-medium hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50/50 transition"
+                className="w-full py-3 border-2 border-dashed border-slate-200 text-slate-500 rounded-xl text-sm font-medium hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50/50 transition"
               >
                 + Agregar otro producto
               </button>
 
               <div>
-                <label className="block text-xs text-gray-500 mb-1">📝 Notas generales</label>
+                <label className="block text-xs text-slate-500 mb-1">📝 Notas generales</label>
                 <textarea
                   value={formData.notes}
                   onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
                   placeholder="Instrucciones adicionales..."
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition resize-none"
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition resize-none"
                   rows="2"
                 />
               </div>
             </div>
 
-            <div className="px-6 py-4 border-t border-gray-100 flex gap-3 flex-shrink-0">
+            <div className="px-6 py-4 border-t border-slate-100 flex gap-3 flex-shrink-0">
               <button
                 type="button"
                 onClick={() => {
@@ -486,13 +486,13 @@ const Requests = () => {
                   setActiveSuggestionIndex(null);
                   setProductExists({});
                 }}
-                className="flex-1 py-2.5 border border-gray-200 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-50 transition"
+                className="flex-1 py-2.5 border border-slate-200 text-slate-600 rounded-xl text-sm font-medium hover:bg-slate-50 transition"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleSubmit}
-                className="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition shadow-sm"
+                className="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition shadow-sm shadow-blue-200"
               >
                 Enviar Lista
               </button>
