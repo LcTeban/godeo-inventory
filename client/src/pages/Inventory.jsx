@@ -562,7 +562,7 @@ const Inventory = () => {
           <div
             className={`bg-white w-full max-w-md flex flex-col shadow-2xl ${
               isMobile
-                ? 'rounded-t-[32px] animate-slide-up max-h-[85dvh]'
+                ? 'rounded-t-[32px] animate-slide-up max-h-[85dvh] mb-12'
                 : 'rounded-2xl max-h-[90vh]'
             }`}
             onClick={e => e.stopPropagation()}
@@ -668,7 +668,7 @@ const Inventory = () => {
       {showMovementModal && (
         <div className={`fixed inset-0 z-50 flex ${isMobile ? 'items-end' : 'items-center justify-center'} bg-black/30`} onClick={() => setShowMovementModal(false)}>
           <div className={`bg-white w-full max-w-md flex flex-col shadow-2xl ${
-            isMobile ? 'rounded-t-[32px] animate-slide-up' : 'rounded-2xl'
+            isMobile ? 'rounded-t-[32px] animate-slide-up mb-12' : 'rounded-2xl'
           }`} onClick={e => e.stopPropagation()}>
             {isMobile && <div className="bottom-sheet-handle" />}
             <div className="p-6">
@@ -703,7 +703,7 @@ const Inventory = () => {
       {showCopyModal && selectedProduct && (
         <div className={`fixed inset-0 z-50 flex ${isMobile ? 'items-end' : 'items-center justify-center'} bg-black/30`} onClick={() => setShowCopyModal(false)}>
           <div className={`bg-white w-full max-w-md flex flex-col shadow-2xl ${
-            isMobile ? 'rounded-t-[32px] animate-slide-up' : 'rounded-2xl'
+            isMobile ? 'rounded-t-[32px] animate-slide-up mb-12' : 'rounded-2xl'
           }`} onClick={e => e.stopPropagation()}>
             {isMobile && <div className="bottom-sheet-handle" />}
             <div className="p-6">
@@ -737,7 +737,7 @@ const Inventory = () => {
       {showDeleteAllModal && (
         <div className={`fixed inset-0 z-50 flex ${isMobile ? 'items-end' : 'items-center justify-center'} bg-black/30`} onClick={() => setShowDeleteAllModal(false)}>
           <div className={`bg-white w-full max-w-md flex flex-col shadow-2xl ${
-            isMobile ? 'rounded-t-[32px] animate-slide-up' : 'rounded-2xl'
+            isMobile ? 'rounded-t-[32px] animate-slide-up mb-12' : 'rounded-2xl'
           }`} onClick={e => e.stopPropagation()}>
             {isMobile && <div className="bottom-sheet-handle" />}
             <div className="p-6">
