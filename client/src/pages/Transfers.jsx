@@ -148,7 +148,7 @@ const Transfers = () => {
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="bg-blue-600 text-white px-5 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-blue-700 transition shadow-sm shadow-blue-200"
+          className="bg-orange-500 text-white px-5 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-orange-600 transition shadow-sm shadow-orange-200"
         >
           <TruckIcon className="h-4 w-4" /> Nueva Transferencia
         </button>
@@ -156,26 +156,26 @@ const Transfers = () => {
 
       {/* KPIs rápidos */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-white rounded-2xl p-4 shadow-sm">
-          <div className="flex items-center gap-2">
-            <ClockIcon className="h-5 w-5 text-amber-500" />
-            <span className="text-sm text-slate-500">Pendientes</span>
+        <div className="bg-white rounded-2xl p-4 shadow-md shadow-slate-100/50 animate-fade-in-up flex flex-col items-start">
+          <div className="p-2 bg-amber-50 rounded-xl mb-3">
+            <ClockIcon className="h-5 w-5 text-amber-600" />
           </div>
           <p className="text-2xl font-bold text-slate-900 mt-1">{pendingCount}</p>
+          <p className="text-xs text-slate-500 mt-1 tracking-wide">Pendientes</p>
         </div>
-        <div className="bg-white rounded-2xl p-4 shadow-sm">
-          <div className="flex items-center gap-2">
-            <CheckCircleIcon className="h-5 w-5 text-emerald-500" />
-            <span className="text-sm text-slate-500">Completadas hoy</span>
+        <div className="bg-white rounded-2xl p-4 shadow-md shadow-slate-100/50 animate-fade-in-up flex flex-col items-start" style={{ animationDelay: '0.1s' }}>
+          <div className="p-2 bg-emerald-50 rounded-xl mb-3">
+            <CheckCircleIcon className="h-5 w-5 text-emerald-600" />
           </div>
           <p className="text-2xl font-bold text-slate-900 mt-1">{completedToday}</p>
+          <p className="text-xs text-slate-500 mt-1 tracking-wide">Completadas hoy</p>
         </div>
-        <div className="bg-white rounded-2xl p-4 shadow-sm">
-          <div className="flex items-center gap-2">
-            <ArrowPathIcon className="h-5 w-5 text-blue-500" />
-            <span className="text-sm text-slate-500">Total</span>
+        <div className="bg-white rounded-2xl p-4 shadow-md shadow-slate-100/50 animate-fade-in-up flex flex-col items-start" style={{ animationDelay: '0.2s' }}>
+          <div className="p-2 bg-blue-50 rounded-xl mb-3">
+            <ArrowPathIcon className="h-5 w-5 text-blue-600" />
           </div>
           <p className="text-2xl font-bold text-slate-900 mt-1">{transfers.length}</p>
+          <p className="text-xs text-slate-500 mt-1 tracking-wide">Total</p>
         </div>
       </div>
 
@@ -189,14 +189,14 @@ const Transfers = () => {
               placeholder="Buscar por producto, restaurante o motivo..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition"
+              className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition"
             />
           </div>
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={`px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition ${
               showFilters || filterStatus !== 'all' || filterDirection !== 'all' 
-                ? 'bg-blue-600 text-white shadow-sm shadow-blue-200' 
+                ? 'bg-orange-500 text-white shadow-sm shadow-orange-200' 
                 : 'border border-slate-200 text-slate-700 hover:bg-slate-50'
             }`}
           >
@@ -221,7 +221,7 @@ const Transfers = () => {
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 outline-none"
+                className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/20 outline-none"
               >
                 <option value="all">Todos</option>
                 <option value="pendiente">⏳ Pendientes</option>
@@ -233,7 +233,7 @@ const Transfers = () => {
               <select
                 value={filterDirection}
                 onChange={(e) => setFilterDirection(e.target.value)}
-                className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 outline-none"
+                className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/20 outline-none"
               >
                 <option value="all">Todas</option>
                 <option value="outgoing">📤 Enviadas</option>
@@ -246,12 +246,13 @@ const Transfers = () => {
 
       {/* Lista de transferencias */}
       <div className="space-y-2">
-        {filteredTransfers.map(transfer => (
+        {filteredTransfers.map((transfer, index) => (
           <div 
             key={transfer.id} 
-            className={`bg-white rounded-2xl p-4 shadow-sm border transition ${
+            className={`bg-white rounded-2xl p-4 shadow-md shadow-slate-100/50 border transition animate-fade-in-up ${
               transfer.status === 'pendiente' ? 'border-amber-200' : 'border-slate-100'
             }`}
+            style={{ animationDelay: `${index * 0.03}s` }}
           >
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1 min-w-0">
@@ -326,7 +327,7 @@ const Transfers = () => {
                 <select
                   value={formData.productId}
                   onChange={(e) => setFormData(prev => ({ ...prev, productId: e.target.value }))}
-                  className="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition"
+                  className="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-500/20 outline-none transition"
                   required
                 >
                   <option value="">Seleccionar producto</option>
@@ -351,7 +352,7 @@ const Transfers = () => {
                   placeholder="0"
                   value={formData.quantity}
                   onChange={(e) => setFormData(prev => ({ ...prev, quantity: e.target.value }))}
-                  className="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition"
+                  className="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-500/20 outline-none transition"
                   required
                 />
               </div>
@@ -366,7 +367,7 @@ const Transfers = () => {
                       onClick={() => setFormData(prev => ({ ...prev, toRestaurant: r.id }))}
                       className={`p-3 rounded-xl border text-sm font-medium transition ${
                         formData.toRestaurant === r.id
-                          ? 'bg-blue-50 border-blue-300 text-blue-700'
+                          ? 'bg-orange-50 border-orange-300 text-orange-700'
                           : 'border-slate-200 text-slate-600 hover:bg-slate-50'
                       }`}
                     >
@@ -383,7 +384,7 @@ const Transfers = () => {
                   placeholder="Ej: Urgencia fin de semana"
                   value={formData.reason}
                   onChange={(e) => setFormData(prev => ({ ...prev, reason: e.target.value }))}
-                  className="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition"
+                  className="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-500/20 outline-none transition"
                 />
               </div>
 
@@ -398,7 +399,7 @@ const Transfers = () => {
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition disabled:opacity-50 shadow-sm shadow-blue-200"
+                  className="flex-1 py-2.5 bg-orange-500 text-white rounded-xl text-sm font-medium hover:bg-orange-600 transition disabled:opacity-50 shadow-sm shadow-orange-200"
                 >
                   {isSaving ? 'Enviando...' : 'Enviar Transferencia'}
                 </button>
