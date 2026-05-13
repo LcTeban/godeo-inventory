@@ -278,7 +278,7 @@ const Inventory = () => {
       body: tableData,
       startY: 35,
       styles: { fontSize: 8 },
-      headStyles: { fillColor: [59, 130, 246] }
+      headStyles: { fillColor: [249, 115, 22] } // naranja
     });
     doc.save(`inventario_${currentRestaurant}_${new Date().toISOString().split('T')[0]}.pdf`);
   };
@@ -364,18 +364,22 @@ const Inventory = () => {
   };
 
   const ProductList = ({ products }) => (
-    <div className="space-y-2">
-      {products.map(product => {
+    <div className="space-y-3">
+      {products.map((product, index) => {
         const status = getStockStatus(product);
         const isExpiring = product.expiry_date && (new Date(product.expiry_date) - new Date()) / (1000 * 60 * 60 * 24) <= 7;
         return (
-          <div key={product.id} className="bg-white rounded-2xl p-3 shadow-sm">
+          <div
+            key={product.id}
+            className="bg-white rounded-[20px] p-3 shadow-md shadow-slate-100/50 animate-fade-in-up"
+            style={{ animationDelay: `${index * 0.05}s` }}
+          >
             <div className="flex items-start gap-3">
               <LazyImage productId={product.id} fetchImage={getProductImage} />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="font-semibold text-sm text-slate-900 truncate">{product.name}</h3>
+                    <h3 className="font-bold text-base text-slate-900 truncate">{product.name}</h3>
                     <span className={`text-xs px-2 py-0.5 rounded-full ${status.color}`}>{status.text}</span>
                     {isExpiring && <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">⏰ Próximo</span>}
                   </div>
@@ -448,7 +452,7 @@ const Inventory = () => {
             <DocumentArrowDownIcon className="h-5 w-5" />
           </button>
           {isAdmin && (
-            <button onClick={() => openAddModal(currentFolderId)} className="bg-blue-600 text-white p-3 rounded-full shadow-lg shadow-blue-200">
+            <button onClick={() => openAddModal(currentFolderId)} className="bg-orange-500 text-white p-3 rounded-full shadow-lg shadow-orange-200">
               <PlusIcon className="h-6 w-6" />
             </button>
           )}
@@ -468,7 +472,7 @@ const Inventory = () => {
               setFolderPath([]);
             }
           }}
-          className="w-full p-3 bg-white rounded-2xl shadow-sm pl-10 text-sm text-slate-700 placeholder-slate-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition"
+          className="w-full p-3 bg-white rounded-2xl shadow-sm pl-10 text-sm text-slate-700 placeholder-slate-400 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition"
         />
         <QrCodeIcon className="h-5 w-5 absolute left-3 top-3.5 text-slate-400" />
       </div>
@@ -477,7 +481,7 @@ const Inventory = () => {
       {isLoadingProducts ? (
         <div className="animate-pulse space-y-3">
           {[1,2,3,4,5].map(i => (
-            <div key={i} className="h-20 bg-white rounded-2xl shadow-sm"></div>
+            <div key={i} className="h-20 bg-white rounded-[20px] shadow-sm"></div>
           ))}
         </div>
       ) : searchTerm.trim() !== '' ? (
@@ -556,7 +560,7 @@ const Inventory = () => {
         </>
       )}
 
-      {/* Modal Agregar/Editar Producto (Bottom Sheet) */}
+      {/* Modal Agregar/Editar Producto */}
       {showAddModal && (
         <div className={`fixed inset-0 z-50 flex ${isMobile ? 'items-end' : 'items-center justify-center'} bg-black/30 backdrop-blur-sm`} onClick={resetModal}>
           <div
@@ -594,12 +598,12 @@ const Inventory = () => {
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Nombre *</label>
-                <input type="text" placeholder="Nombre*" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition" required />
+                <input type="text" placeholder="Nombre*" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition" required />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">📁 Categoría</label>
-                <select value={formData.category_id} onChange={(e) => setFormData({...formData, category_id: e.target.value})} className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition">
+                <select value={formData.category_id} onChange={(e) => setFormData({...formData, category_id: e.target.value})} className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition">
                   <option value="">General (sin categoría)</option>
                   {allCategories.map(cat => (<option key={cat.id} value={cat.id}>{cat.label || cat.name}</option>))}
                 </select>
@@ -607,7 +611,7 @@ const Inventory = () => {
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">🏢 Proveedor</label>
-                <select value={formData.supplier_id} onChange={(e) => setFormData({...formData, supplier_id: e.target.value})} className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition">
+                <select value={formData.supplier_id} onChange={(e) => setFormData({...formData, supplier_id: e.target.value})} className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition">
                   <option value="">Sin proveedor</option>
                   {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select>
@@ -616,18 +620,18 @@ const Inventory = () => {
               {isAdmin && (
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">💰 Precio (€)</label>
-                  <input type="number" step="0.01" placeholder="Precio unitario" value={formData.price || ''} onChange={(e) => setFormData({...formData, price: e.target.value})} className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition" />
+                  <input type="number" step="0.01" placeholder="Precio unitario" value={formData.price || ''} onChange={(e) => setFormData({...formData, price: e.target.value})} className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition" />
                 </div>
               )}
 
               <div className="flex gap-2">
                 <div className="flex-1">
                   <label className="block text-sm font-medium text-slate-700 mb-1">Stock inicial *</label>
-                  <input type="number" step="0.01" placeholder="Stock inicial*" value={formData.stock} onChange={(e) => setFormData({...formData, stock: e.target.value})} className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition" required />
+                  <input type="number" step="0.01" placeholder="Stock inicial*" value={formData.stock} onChange={(e) => setFormData({...formData, stock: e.target.value})} className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition" required />
                 </div>
                 <div className="w-24">
                   <label className="block text-sm font-medium text-slate-700 mb-1">Unidad</label>
-                  <select value={formData.unit} onChange={(e) => setFormData({...formData, unit: e.target.value})} className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition">
+                  <select value={formData.unit} onChange={(e) => setFormData({...formData, unit: e.target.value})} className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition">
                     <option value="unidad">ud</option><option value="kg">kg</option><option value="L">L</option><option value="caja">caja</option>
                   </select>
                 </div>
@@ -635,19 +639,19 @@ const Inventory = () => {
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Stock mínimo</label>
-                <input type="number" placeholder="Stock mínimo" value={formData.min_stock} onChange={(e) => setFormData({...formData, min_stock: e.target.value})} className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition" />
+                <input type="number" placeholder="Stock mínimo" value={formData.min_stock} onChange={(e) => setFormData({...formData, min_stock: e.target.value})} className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition" />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Fecha caducidad</label>
-                <input type="date" placeholder="Fecha caducidad" value={formData.expiry_date} onChange={(e) => setFormData({...formData, expiry_date: e.target.value})} className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition" />
+                <input type="date" placeholder="Fecha caducidad" value={formData.expiry_date} onChange={(e) => setFormData({...formData, expiry_date: e.target.value})} className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition" />
               </div>
 
               <div className="flex gap-2">
                 <div className="flex-1">
                   <label className="block text-sm font-medium text-slate-700 mb-1">Código de barras</label>
                   <div className="flex gap-2">
-                    <input type="text" placeholder="Código de barras" value={formData.barcode} onChange={(e) => setFormData({...formData, barcode: e.target.value})} className="flex-1 p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition" />
+                    <input type="text" placeholder="Código de barras" value={formData.barcode} onChange={(e) => setFormData({...formData, barcode: e.target.value})} className="flex-1 p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition" />
                     <button type="button" onClick={() => setShowScanner(true)} className="px-4 bg-slate-100 rounded-xl"><QrCodeIcon className="h-5 w-5" /></button>
                   </div>
                 </div>
@@ -656,7 +660,7 @@ const Inventory = () => {
 
             <div className="px-6 py-4 border-t border-slate-100 flex gap-3 flex-shrink-0">
               <button type="button" onClick={resetModal} className="flex-1 p-3 border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition">Cancelar</button>
-              <button onClick={handleAddProduct} disabled={isSaving} className="flex-1 p-3 bg-blue-600 text-white rounded-xl shadow-sm shadow-blue-200 hover:bg-blue-700 disabled:opacity-50 transition">
+              <button onClick={handleAddProduct} disabled={isSaving} className="flex-1 p-3 bg-orange-500 text-white rounded-xl shadow-sm shadow-orange-200 hover:bg-orange-600 disabled:opacity-50 transition">
                 {isSaving ? 'Guardando...' : editingProduct ? 'Actualizar' : 'Guardar'}
               </button>
             </div>
@@ -664,7 +668,7 @@ const Inventory = () => {
         </div>
       )}
 
-      {/* Modal Movimiento (Bottom Sheet) */}
+      {/* Modal Movimiento */}
       {showMovementModal && (
         <div className={`fixed inset-0 z-50 flex ${isMobile ? 'items-end' : 'items-center justify-center'} bg-black/30 backdrop-blur-sm`} onClick={() => setShowMovementModal(false)}>
           <div className={`bg-white w-full max-w-md flex flex-col shadow-2xl ${
@@ -683,10 +687,10 @@ const Inventory = () => {
                 </div>
                 <input type="number" step="0.01" placeholder="Cantidad" value={movementData.quantity}
                   onChange={(e) => setMovementData({...movementData, quantity: e.target.value})}
-                  className="w-full p-3 border border-slate-200 rounded-xl text-lg text-center focus:ring-2 focus:ring-blue-500/20 outline-none transition" required autoFocus />
+                  className="w-full p-3 border border-slate-200 rounded-xl text-lg text-center focus:ring-2 focus:ring-orange-500/20 outline-none transition" required autoFocus />
                 <input type="text" placeholder="Motivo (opcional)" value={movementData.reason}
                   onChange={(e) => setMovementData({...movementData, reason: e.target.value})}
-                  className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none transition" />
+                  className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500/20 outline-none transition" />
                 <div className="flex gap-2 pt-2">
                   <button type="button" onClick={() => setShowMovementModal(false)} className="flex-1 p-3 border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition">Cancelar</button>
                   <button type="submit" disabled={isSaving} className={`flex-1 p-3 text-white rounded-xl shadow-sm disabled:opacity-50 transition ${movementData.type === 'entrada' ? 'bg-emerald-600 shadow-emerald-200 hover:bg-emerald-700' : 'bg-red-600 shadow-red-200 hover:bg-red-700'}`}>
@@ -714,7 +718,7 @@ const Inventory = () => {
               <div className="space-y-3">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">🏢 Restaurante destino</label>
-                  <select value={copyTarget} onChange={(e) => setCopyTarget(e.target.value)} className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none transition">
+                  <select value={copyTarget} onChange={(e) => setCopyTarget(e.target.value)} className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500/20 outline-none transition">
                     <option value="">Seleccionar destino</option>
                     {['POZOBLANCO', 'FUERTEVENTURA', 'GRAN_CAPITAN'].filter(r => r !== currentRestaurant).map(r => (
                       <option key={r} value={r}>{r === 'POZOBLANCO' ? '🍽️ Pozoblanco' : r === 'FUERTEVENTURA' ? '🏖️ Fuerteventura' : '🏛️ Gran Capitán'}</option>
@@ -723,7 +727,7 @@ const Inventory = () => {
                 </div>
                 <div className="flex gap-2 pt-2">
                   <button onClick={() => setShowCopyModal(false)} className="flex-1 p-3 border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition">Cancelar</button>
-                  <button onClick={handleCopyProduct} disabled={isCopying || !copyTarget} className="flex-1 p-3 bg-blue-600 text-white rounded-xl shadow-sm shadow-blue-200 hover:bg-blue-700 disabled:opacity-50 transition">
+                  <button onClick={handleCopyProduct} disabled={isCopying || !copyTarget} className="flex-1 p-3 bg-orange-500 text-white rounded-xl shadow-sm shadow-orange-200 hover:bg-orange-600 disabled:opacity-50 transition">
                     {isCopying ? 'Copiando...' : 'Copiar'}
                   </button>
                 </div>
