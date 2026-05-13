@@ -4,6 +4,7 @@ import {
   PlusIcon, PencilIcon, TrashIcon, FolderIcon, GlobeAltIcon,
   ClipboardDocumentIcon, XMarkIcon
 } from '@heroicons/react/24/outline';
+import useLockBodyScroll from '../hooks/useLockBodyScroll';
 
 const TreeNode = ({ category, allCategories, onEdit, onDelete, onAddChild, onCopy }) => {
   const [expanded, setExpanded] = useState(false);
@@ -56,11 +57,12 @@ const Categories = () => {
   const [isGlobal, setIsGlobal] = useState(false);
   const [editIsGlobal, setEditIsGlobal] = useState(false);
 
-  // Estados para copia
   const [showCopyModal, setShowCopyModal] = useState(false);
   const [copyCategory, setCopyCategory] = useState(null);
   const [copyTarget, setCopyTarget] = useState('');
   const [isCopying, setIsCopying] = useState(false);
+
+  useLockBodyScroll(showCopyModal);
 
   useEffect(() => { loadCategories(); }, []);
 
@@ -137,7 +139,6 @@ const Categories = () => {
         </button>
       </div>
 
-      {/* Formularios de añadir/editar (sin cambios) */}
       {(showAddRoot || parentForNew !== null || editId !== null) && (
         <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-3">
           <p className="text-sm font-medium text-gray-700">
@@ -206,7 +207,6 @@ const Categories = () => {
         ))}
       </div>
 
-      {/* Modal de copia de categoría */}
       {showCopyModal && copyCategory && (
         <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4" onClick={() => setShowCopyModal(false)}>
           <div className="bg-white rounded-2xl w-full max-w-md shadow-xl" onClick={e => e.stopPropagation()}>
