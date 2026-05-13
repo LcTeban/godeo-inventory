@@ -25,7 +25,6 @@ const Layout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
 
-  // Bloquear scroll del body cuando el sidebar está abierto en móvil
   useLockBodyScroll(sidebarOpen && isMobile);
 
   useEffect(() => {
@@ -63,7 +62,6 @@ const Layout = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header visible solo en tablet (lg:hidden) si NO estamos en móvil */}
       {!isMobile && (
         <div className="lg:hidden bg-white shadow-sm p-4 flex items-center justify-between">
           <button onClick={toggleSidebar} className="p-2">
@@ -83,7 +81,6 @@ const Layout = () => {
         </div>
       )}
 
-      {/* Sidebar móvil: se desliza desde la derecha */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-50 lg:hidden" onClick={() => setSidebarOpen(false)}>
           <div
@@ -132,7 +129,6 @@ const Layout = () => {
               </div>
             )}
 
-            {/* Navegación scrollable */}
             <nav className="flex-1 overflow-y-auto px-2 py-2">
               {navigation.map(item => {
                 if (item.adminOnly && !isAdmin) return null;
@@ -148,10 +144,11 @@ const Layout = () => {
                   </Link>
                 );
               })}
+              {/* Espacio adicional para asegurar que el botón de cerrar sesión sea accesible */}
+              <div className="h-4" />
             </nav>
 
-            {/* Botón de cerrar sesión siempre visible al final */}
-            <div className="border-t p-4 flex-shrink-0">
+            <div className="border-t p-4 flex-shrink-0 pb-[calc(64px+env(safe-area-inset-bottom))]">
               <button
                 onClick={handleLogout}
                 className="w-full flex items-center px-3 py-3 text-red-600 hover:bg-red-50 rounded-lg"
@@ -164,7 +161,6 @@ const Layout = () => {
         </div>
       )}
 
-      {/* Sidebar escritorio (izquierda) solo si NO es móvil */}
       {!isMobile && (
         <div className="hidden lg:flex lg:w-64 lg:fixed lg:inset-y-0">
           <div className="w-64 bg-white shadow-lg flex flex-col h-full">
@@ -231,14 +227,12 @@ const Layout = () => {
         </div>
       )}
 
-      {/* Contenido principal */}
       <div className={`${!isMobile ? 'lg:pl-64' : 'pb-20'}`}>
         <div className="p-4 lg:p-6">
           <Outlet />
         </div>
       </div>
 
-      {/* Barra inferior en móvil */}
       {isMobile && (
         <MobileBottomBar onMenuToggle={toggleSidebar} />
       )}
