@@ -4,6 +4,7 @@ import {
   PlusIcon, TrashIcon, XMarkIcon, MagnifyingGlassIcon,
   ClipboardDocumentListIcon, CheckCircleIcon, XCircleIcon, ClockIcon
 } from '@heroicons/react/24/outline';
+import useLockBodyScroll from '../hooks/useLockBodyScroll';
 
 const Requests = () => {
   const { isAdmin, user, getRequests, addRequest, updateRequest, getProducts } = useAuth();
@@ -19,6 +20,8 @@ const Requests = () => {
   });
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(null);
   const [productExists, setProductExists] = useState({});
+
+  useLockBodyScroll(showModal);
 
   useEffect(() => {
     loadData();
@@ -187,7 +190,6 @@ const Requests = () => {
         </button>
       </div>
 
-      {/* KPIs (solo admin) */}
       {isAdmin && (
         <div className="grid grid-cols-3 gap-3">
           <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
@@ -221,7 +223,6 @@ const Requests = () => {
         </div>
       )}
 
-      {/* Barra de búsqueda */}
       <div className="flex gap-2">
         <div className="flex-1 relative">
           <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-2.5 text-gray-400" />
@@ -245,7 +246,6 @@ const Requests = () => {
         </select>
       </div>
 
-      {/* Mis Solicitudes */}
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-100">
           <h2 className="font-semibold text-gray-800">📝 Mis Solicitudes ({filteredMyRequests.length})</h2>
@@ -284,7 +284,6 @@ const Requests = () => {
         </div>
       </div>
 
-      {/* Panel Admin - Pendientes de aprobar */}
       {isAdmin && pendingRequests.length > 0 && (
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="px-5 py-4 border-b border-gray-100">
@@ -335,7 +334,6 @@ const Requests = () => {
         </div>
       )}
 
-      {/* Modal Nueva Lista con estructura fixed header/footer */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4">
           <div
@@ -343,7 +341,6 @@ const Requests = () => {
             style={{ maxHeight: '85vh' }}
             onClick={e => e.stopPropagation()}
           >
-            {/* Header fijo */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
               <h2 className="text-lg font-semibold text-gray-800">📋 Nueva Lista de Pedidos</h2>
               <button
@@ -359,7 +356,6 @@ const Requests = () => {
               </button>
             </div>
             
-            {/* Cuerpo con scroll */}
             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
               {formData.items.map((item, index) => (
                 <div key={index} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
@@ -467,7 +463,6 @@ const Requests = () => {
               </div>
             </div>
 
-            {/* Footer fijo */}
             <div className="px-6 py-4 border-t border-gray-100 flex gap-3 flex-shrink-0">
               <button
                 type="button"
