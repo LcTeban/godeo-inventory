@@ -33,13 +33,16 @@ const Movements = () => {
 
   // Aplicar filtros
   const filteredMovements = movements.filter(mov => {
+    // Búsqueda por nombre de producto o usuario
     const matchesSearch = !searchTerm || 
       mov.products?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       mov.users?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       mov.reason?.toLowerCase().includes(searchTerm.toLowerCase());
     
+    // Filtro por tipo (entrada / salida)
     const matchesType = filterType === 'all' || mov.type === filterType;
     
+    // Filtro por fecha
     let matchesDate = true;
     if (filterDate !== 'all') {
       const movDate = new Date(mov.created_at);
@@ -58,6 +61,7 @@ const Movements = () => {
     return matchesSearch && matchesType && matchesDate;
   });
 
+  // Estadísticas rápidas
   const totalEntries = filteredMovements
     .filter(m => m.type === 'entrada')
     .reduce((sum, m) => sum + (m.quantity || 0), 0);
@@ -92,7 +96,7 @@ const Movements = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-gray-800">🔄 Historial de Movimientos</h1>
+          <h1 className="text-xl font-bold text-gray-800 tracking-tight">🔄 Historial de Movimientos</h1>
           <p className="text-sm text-gray-500 mt-1">Consulta todas las entradas y salidas de inventario</p>
         </div>
         <div className="flex items-center gap-3 text-sm">
@@ -108,7 +112,7 @@ const Movements = () => {
       </div>
 
       {/* Barra de búsqueda y filtros */}
-      <div className="bg-white rounded-xl border border-gray-200 p-3 space-y-3">
+      <div className="bg-white rounded-2xl shadow-sm p-3 space-y-3">
         <div className="flex gap-2">
           <div className="flex-1 relative">
             <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-2.5 text-gray-400" />
@@ -173,8 +177,8 @@ const Movements = () => {
         )}
       </div>
 
-      {/* Contenido: tarjetas en móvil, tabla en escritorio */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      {/* Lista de movimientos */}
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
         {filteredMovements.length === 0 ? (
           <div className="text-center py-16">
             <FunnelIcon className="h-12 w-12 mx-auto mb-3 text-gray-300" />
@@ -272,6 +276,7 @@ const Movements = () => {
         )}
       </div>
 
+      {/* Contador de resultados */}
       <div className="text-center text-sm text-gray-500">
         Mostrando {filteredMovements.length} de {movements.length} movimientos
         {hasActiveFilters && ' (filtros activos)'}
