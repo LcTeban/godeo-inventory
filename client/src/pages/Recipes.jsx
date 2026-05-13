@@ -318,11 +318,12 @@ const Recipes = () => {
 
       {showModal && isAdmin && (
         <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           onClick={() => setShowModal(false)}
         >
           <div
-            className="bg-white rounded-2xl w-full max-w-lg max-h-[85vh] flex flex-col shadow-2xl"
+            className="bg-white rounded-2xl w-full max-w-lg shadow-2xl flex flex-col"
+            style={{ maxHeight: 'calc(100dvh - 100px)' }}
             onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 flex-shrink-0">
@@ -338,7 +339,7 @@ const Recipes = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
-              <div className="px-6 py-5 space-y-5">
+              <div className="px-6 py-5 space-y-5" style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom))' }}>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">Nombre de la receta *</label>
                   <input
