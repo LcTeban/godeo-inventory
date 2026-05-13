@@ -10,9 +10,13 @@ const Movements = () => {
   const [filterType, setFilterType] = useState('all');
   const [filterDate, setFilterDate] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   useEffect(() => {
     loadMovements();
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, [currentRestaurant]);
 
   const loadMovements = async () => {
@@ -29,16 +33,13 @@ const Movements = () => {
 
   // Aplicar filtros
   const filteredMovements = movements.filter(mov => {
-    // Búsqueda por nombre de producto o usuario
     const matchesSearch = !searchTerm || 
       mov.products?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       mov.users?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       mov.reason?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    // Filtro por tipo (entrada / salida)
     const matchesType = filterType === 'all' || mov.type === filterType;
     
-    // Filtro por fecha
     let matchesDate = true;
     if (filterDate !== 'all') {
       const movDate = new Date(mov.created_at);
@@ -57,7 +58,6 @@ const Movements = () => {
     return matchesSearch && matchesType && matchesDate;
   });
 
-  // Estadísticas rápidas
   const totalEntries = filteredMovements
     .filter(m => m.type === 'entrada')
     .reduce((sum, m) => sum + (m.quantity || 0), 0);
@@ -173,7 +173,7 @@ const Movements = () => {
         )}
       </div>
 
-      {/* Lista de movimientos */}
+      {/* Contenido: tarjetas en móvil, tabla en escritorio */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         {filteredMovements.length === 0 ? (
           <div className="text-center py-16">
@@ -183,7 +183,43 @@ const Movements = () => {
               {hasActiveFilters ? 'Prueba con otros filtros' : 'Aún no hay movimientos registrados'}
             </p>
           </div>
+        ) : isMobile ? (
+          /* Vista de tarjetas para móvil */
+          <div className="divide-y divide-gray-100">
+            {filteredMovements.map(mov => (
+              <div key={mov.id} className="p-4 hover:bg-gray-50 transition">
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <h3 className="font-medium text-gray-800">{mov.products?.name || '-'}</h3>
+                    <p className="text-xs text-gray-500">
+                      {new Date(mov.created_at).toLocaleString('es', {
+                        day: '2-digit', month: 'short', year: 'numeric',
+                        hour: '2-digit', minute: '2-digit'
+                      })}
+                    </p>
+                  </div>
+                  <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${
+                    mov.type === 'entrada' 
+                      ? 'bg-green-50 text-green-700 border border-green-200' 
+                      : 'bg-red-50 text-red-700 border border-red-200'
+                  }`}>
+                    {mov.type === 'entrada' ? '📥 Entrada' : '📤 Salida'}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">
+                    {mov.users?.name || '-'}
+                    {mov.reason && <span className="text-gray-400 ml-2">· {mov.reason}</span>}
+                  </span>
+                  <span className={`font-semibold ${mov.type === 'entrada' ? 'text-green-600' : 'text-red-600'}`}>
+                    {mov.type === 'entrada' ? '+' : '-'}{mov.quantity}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
         ) : (
+          /* Tabla para escritorio */
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
@@ -236,7 +272,6 @@ const Movements = () => {
         )}
       </div>
 
-      {/* Contador de resultados */}
       <div className="text-center text-sm text-gray-500">
         Mostrando {filteredMovements.length} de {movements.length} movimientos
         {hasActiveFilters && ' (filtros activos)'}
