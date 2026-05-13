@@ -4,6 +4,7 @@ import {
   PlusIcon, TrashIcon, PencilIcon, CameraIcon,
   XMarkIcon, BookOpenIcon, MagnifyingGlassIcon
 } from '@heroicons/react/24/outline';
+import useLockBodyScroll from '../hooks/useLockBodyScroll';
 
 const Recipes = () => {
   const [recipes, setRecipes] = useState([]);
@@ -17,6 +18,8 @@ const Recipes = () => {
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const { isAdmin, getRecipes, addRecipe, updateRecipe, deleteRecipe, getProducts } = useAuth();
+
+  useLockBodyScroll(showModal || showDetail);
 
   useEffect(() => {
     loadData();
@@ -157,7 +160,6 @@ const Recipes = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header con gradiente suave */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-800 tracking-tight">📖 Recetas</h1>
@@ -174,7 +176,6 @@ const Recipes = () => {
         )}
       </div>
 
-      {/* Barra de búsqueda con diseño mejorado */}
       <div className="relative">
         <MagnifyingGlassIcon className="h-5 w-5 absolute left-4 top-3 text-gray-400" />
         <input
@@ -186,7 +187,6 @@ const Recipes = () => {
         />
       </div>
 
-      {/* Lista de recetas */}
       {filteredRecipes.length === 0 ? (
         <div className="text-center py-20 bg-white rounded-2xl border border-gray-100 shadow-sm">
           <div className="w-20 h-20 mx-auto mb-5 bg-blue-50 rounded-full flex items-center justify-center">
@@ -206,7 +206,6 @@ const Recipes = () => {
               key={recipe.id}
               className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden transition-all hover:shadow-md group"
             >
-              {/* Imagen de la receta (abre detalle) */}
               <div className="relative cursor-pointer overflow-hidden" onClick={() => openDetail(recipe)}>
                 {recipe.image ? (
                   <img
@@ -219,14 +218,12 @@ const Recipes = () => {
                     <BookOpenIcon className="h-14 w-14 text-blue-300" />
                   </div>
                 )}
-                {/* Overlay gradiente en la parte inferior */}
                 <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/60 to-transparent" />
                 <div className="absolute bottom-4 left-4 right-4">
                   <h3 className="text-white font-semibold text-lg leading-tight">{recipe.name}</h3>
                 </div>
               </div>
 
-              {/* Información y acciones */}
               <div className="p-5">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -252,7 +249,6 @@ const Recipes = () => {
                   )}
                 </div>
 
-                {/* Lista de ingredientes (preview) */}
                 {recipe.recipe_ingredients && recipe.recipe_ingredients.length > 0 ? (
                   <ul className="mt-3 space-y-1.5">
                     {recipe.recipe_ingredients.slice(0, 3).map((ing, i) => (
@@ -278,7 +274,6 @@ const Recipes = () => {
         </div>
       )}
 
-      {/* Modal Detalle (vista previa) */}
       {showDetail && selectedRecipe && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex flex-col" onClick={() => setShowDetail(false)}>
           <div className="p-5 flex items-center justify-between">
@@ -321,7 +316,6 @@ const Recipes = () => {
         </div>
       )}
 
-      {/* Modal Crear/Editar Receta */}
       {showModal && isAdmin && (
         <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-4"
@@ -331,8 +325,7 @@ const Recipes = () => {
             className="bg-white rounded-2xl w-full max-w-lg max-h-[85vh] flex flex-col shadow-2xl"
             onClick={e => e.stopPropagation()}
           >
-            {/* Cabecera del modal */}
-            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 flex-shrink-0">
               <h2 className="text-lg font-semibold text-gray-800">
                 {editingRecipe ? '✏️ Editar Receta' : '📖 Nueva Receta'}
               </h2>
@@ -346,7 +339,6 @@ const Recipes = () => {
 
             <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
               <div className="px-6 py-5 space-y-5">
-                {/* Nombre */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">Nombre de la receta *</label>
                   <input
@@ -359,7 +351,6 @@ const Recipes = () => {
                   />
                 </div>
 
-                {/* Imagen */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">📸 Imagen de la receta</label>
                   <div className="flex gap-3">
@@ -396,7 +387,6 @@ const Recipes = () => {
                   )}
                 </div>
 
-                {/* Ingredientes (solo en edición) */}
                 {editingRecipe && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-3">🥄 Ingredientes</label>
@@ -476,8 +466,7 @@ const Recipes = () => {
                 )}
               </div>
 
-              {/* Footer del modal */}
-              <div className="px-6 py-4 border-t border-gray-100 flex gap-3">
+              <div className="px-6 py-4 border-t border-gray-100 flex gap-3 flex-shrink-0">
                 <button
                   type="button"
                   onClick={() => { setShowModal(false); resetForm(); }}
