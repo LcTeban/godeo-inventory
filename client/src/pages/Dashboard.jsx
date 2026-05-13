@@ -68,7 +68,7 @@ const Dashboard = () => {
   return (
     <div className="space-y-6">
       {/* Cabecera del restaurante actual */}
-      <div className={`bg-gradient-to-r ${currentRest?.color} rounded-2xl p-6 text-white shadow-lg`}>
+      <div className={`bg-gradient-to-r ${currentRest?.color} rounded-2xl p-6 text-white shadow-lg animate-fade-in-up`}>
         <div className="flex items-center gap-3 mb-2">
           <span className="text-4xl">{currentRest?.icon}</span>
           <div>
@@ -80,7 +80,7 @@ const Dashboard = () => {
 
       {/* Métricas principales */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-white rounded-2xl p-4 shadow-sm flex flex-col items-start">
+        <div className="bg-white rounded-2xl p-4 shadow-md shadow-slate-100/50 animate-fade-in-up flex flex-col items-start">
           <div className="p-2 bg-blue-50 rounded-xl mb-3">
             <CubeIcon className="h-5 w-5 text-blue-600" />
           </div>
@@ -89,7 +89,7 @@ const Dashboard = () => {
           </div>
           <div className="text-xs text-slate-500 mt-1 tracking-wide">Productos</div>
         </div>
-        <div className="bg-white rounded-2xl p-4 shadow-sm flex flex-col items-start">
+        <div className="bg-white rounded-2xl p-4 shadow-md shadow-slate-100/50 animate-fade-in-up flex flex-col items-start" style={{ animationDelay: '0.1s' }}>
           <div className="p-2 bg-amber-50 rounded-xl mb-3">
             <ExclamationTriangleIcon className="h-5 w-5 text-amber-600" />
           </div>
@@ -98,7 +98,7 @@ const Dashboard = () => {
           </div>
           <div className="text-xs text-slate-500 mt-1 tracking-wide">Stock Bajo</div>
         </div>
-        <div className="bg-white rounded-2xl p-4 shadow-sm flex flex-col items-start">
+        <div className="bg-white rounded-2xl p-4 shadow-md shadow-slate-100/50 animate-fade-in-up flex flex-col items-start" style={{ animationDelay: '0.2s' }}>
           <div className="p-2 bg-emerald-50 rounded-xl mb-3">
             <TruckIcon className="h-5 w-5 text-emerald-600" />
           </div>
@@ -114,8 +114,8 @@ const Dashboard = () => {
         <>
           {/* Tarjetas de las 3 sucursales */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {restaurants.map(rest => (
-              <div key={rest.id} className={`rounded-2xl p-5 shadow-sm ${rest.bg}`}>
+            {restaurants.map((rest, i) => (
+              <div key={rest.id} className={`rounded-2xl p-5 shadow-md shadow-slate-100/50 ${rest.bg} animate-fade-in-up`} style={{ animationDelay: `${0.1 * i}s` }}>
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-2xl">{rest.icon}</span>
                   <h3 className="font-semibold text-slate-900 tracking-tight">{rest.name}</h3>
@@ -138,7 +138,7 @@ const Dashboard = () => {
 
           {/* Alertas urgentes */}
           {(stats.pendingTransfers > 0 || pendingRequests.length > 0 || (stats.restaurants[currentRestaurant]?.lowStock || 0) > 0) && (
-            <div className="bg-amber-50 rounded-2xl p-4 shadow-sm">
+            <div className="bg-amber-50 rounded-2xl p-4 shadow-sm animate-fade-in-up">
               <h3 className="font-semibold text-amber-800 mb-3 flex items-center gap-2 tracking-tight">
                 <ExclamationTriangleIcon className="h-5 w-5" />
                 Alertas Pendientes
@@ -166,7 +166,7 @@ const Dashboard = () => {
       )}
 
       {/* Actividad reciente */}
-      <div className="bg-white rounded-2xl p-5 shadow-sm">
+      <div className="bg-white rounded-2xl p-5 shadow-md shadow-slate-100/50 animate-fade-in-up">
         <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2 tracking-tight">
           <ClockIcon className="h-5 w-5" />
           Actividad Reciente
@@ -198,33 +198,33 @@ const Dashboard = () => {
 
       {/* Accesos rápidos */}
       <div className="grid grid-cols-2 gap-3">
-        <Link to="/inventory" className="bg-white rounded-2xl p-5 shadow-sm text-center hover:bg-slate-50 transition-colors">
+        <Link to="/inventory" className="bg-white rounded-2xl p-5 shadow-md shadow-slate-100/50 text-center hover:bg-slate-50 transition-colors animate-fade-in-up">
           <div className="p-2 bg-blue-50 rounded-xl inline-block mb-2">
             <CubeIcon className="h-5 w-5 text-blue-600" />
           </div>
           <p className="font-medium text-sm tracking-wide text-slate-700">Inventario</p>
         </Link>
-        <Link to="/movements" className="bg-white rounded-2xl p-5 shadow-sm text-center hover:bg-slate-50 transition-colors">
+        <Link to="/movements" className="bg-white rounded-2xl p-5 shadow-md shadow-slate-100/50 text-center hover:bg-slate-50 transition-colors animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
           <div className="p-2 bg-emerald-50 rounded-xl inline-block mb-2">
             <ShoppingCartIcon className="h-5 w-5 text-emerald-600" />
           </div>
           <p className="font-medium text-sm tracking-wide text-slate-700">Movimientos</p>
         </Link>
-        <Link to="/requests" className="bg-white rounded-2xl p-5 shadow-sm text-center hover:bg-slate-50 transition-colors">
+        <Link to="/requests" className="bg-white rounded-2xl p-5 shadow-md shadow-slate-100/50 text-center hover:bg-slate-50 transition-colors animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
           <div className="p-2 bg-amber-50 rounded-xl inline-block mb-2">
             <ClockIcon className="h-5 w-5 text-amber-600" />
           </div>
           <p className="font-medium text-sm tracking-wide text-slate-700">Pedidos</p>
         </Link>
         {isAdmin ? (
-          <Link to="/reports" className="bg-white rounded-2xl p-5 shadow-sm text-center hover:bg-slate-50 transition-colors">
+          <Link to="/reports" className="bg-white rounded-2xl p-5 shadow-md shadow-slate-100/50 text-center hover:bg-slate-50 transition-colors animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
             <div className="p-2 bg-purple-50 rounded-xl inline-block mb-2">
               <ChartBarIcon className="h-5 w-5 text-purple-600" />
             </div>
             <p className="font-medium text-sm tracking-wide text-slate-700">Reportes</p>
           </Link>
         ) : (
-          <Link to="/recipes" className="bg-white rounded-2xl p-5 shadow-sm text-center hover:bg-slate-50 transition-colors">
+          <Link to="/recipes" className="bg-white rounded-2xl p-5 shadow-md shadow-slate-100/50 text-center hover:bg-slate-50 transition-colors animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
             <div className="p-2 bg-pink-50 rounded-xl inline-block mb-2">
               <BookOpenIcon className="h-5 w-5 text-pink-600" />
             </div>
