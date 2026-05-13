@@ -50,6 +50,14 @@ const Inventory = () => {
   const isAnyModalOpen = showAddModal || showMovementModal || showCopyModal || showDeleteAllModal || showScanner;
   useLockBodyScroll(isAnyModalOpen);
 
+  // Detección de móvil para aplicar bottom sheet
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   useEffect(() => {
     fetchProducts();
     fetchSuppliers();
@@ -362,7 +370,7 @@ const Inventory = () => {
         const status = getStockStatus(product);
         const isExpiring = product.expiry_date && (new Date(product.expiry_date) - new Date()) / (1000 * 60 * 60 * 24) <= 7;
         return (
-          <div key={product.id} className="bg-white rounded-xl p-3 shadow-sm">
+          <div key={product.id} className="bg-white rounded-2xl p-3 shadow-sm">
             <div className="flex items-start gap-3">
               <LazyImage productId={product.id} fetchImage={getProductImage} />
               <div className="flex-1 min-w-0">
@@ -429,7 +437,7 @@ const Inventory = () => {
               <ArrowLeftIcon className="h-5 w-5 text-gray-600" />
             </button>
           )}
-          <h1 className="text-xl font-bold">
+          <h1 className="text-xl font-bold tracking-tight">
             {currentFolderId ? currentFolderName : 'Inventario'}
           </h1>
         </div>
@@ -461,7 +469,7 @@ const Inventory = () => {
               setFolderPath([]);
             }
           }}
-          className="w-full p-3 border rounded-xl pl-10"
+          className="w-full p-3 bg-white rounded-2xl shadow-sm pl-10 text-sm"
         />
         <QrCodeIcon className="h-5 w-5 absolute left-3 top-3.5 text-gray-400" />
       </div>
@@ -470,7 +478,7 @@ const Inventory = () => {
       {isLoadingProducts ? (
         <div className="animate-pulse space-y-3">
           {[1,2,3,4,5].map(i => (
-            <div key={i} className="h-20 bg-gray-200 rounded-xl"></div>
+            <div key={i} className="h-20 bg-gray-200 rounded-2xl"></div>
           ))}
         </div>
       ) : searchTerm.trim() !== '' ? (
@@ -491,14 +499,14 @@ const Inventory = () => {
                   <button
                     key={cat.id}
                     onClick={() => navigateToFolder(cat.id)}
-                    className="flex flex-col items-center p-3 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow border border-gray-200 hover:border-blue-300 group"
+                    className="flex flex-col items-center p-3 bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow"
                   >
                     {hasChildren ? (
-                      <FolderIcon className="h-12 w-12 text-yellow-500 mb-1 group-hover:scale-105 transition-transform" />
+                      <FolderIcon className="h-12 w-12 text-yellow-500 mb-1" />
                     ) : (
-                      <FolderOpenIcon className="h-12 w-12 text-blue-500 mb-1 group-hover:scale-105 transition-transform" />
+                      <FolderOpenIcon className="h-12 w-12 text-blue-500 mb-1" />
                     )}
-                    <span className="text-xs sm:text-sm font-medium text-gray-800 text-center leading-tight break-words">
+                    <span className="text-xs font-medium text-gray-800 text-center leading-tight break-words">
                       {cat.name}
                     </span>
                     {!hasChildren && (
@@ -520,7 +528,7 @@ const Inventory = () => {
             </div>
           )}
 
-          {/* Productos sin categoría con botón de eliminar masivo */}
+          {/* Productos sin categoría */}
           {uncategorizedProducts.length > 0 && (
             <div className="mt-6">
               <div className="flex items-center justify-between mb-2">
@@ -528,7 +536,7 @@ const Inventory = () => {
                 {isAdmin && (
                   <button
                     onClick={() => setShowDeleteAllModal(true)}
-                    className="px-3 py-1.5 bg-red-50 text-red-600 border border-red-200 rounded-lg text-xs font-medium hover:bg-red-100 transition flex items-center gap-1"
+                    className="px-3 py-1.5 bg-red-50 text-red-600 border border-red-200 rounded-lg text-xs font-medium hover:bg-red-100 transition"
                   >
                     <TrashIcon className="h-3.5 w-3.5" />
                     Eliminar todos
@@ -539,7 +547,6 @@ const Inventory = () => {
             </div>
           )}
 
-          {/* Estado completamente vacío */}
           {currentCategories.length === 0 && currentProductsInFolder.length === 0 && uncategorizedProducts.length === 0 && (
             <div className="text-center py-10 text-gray-500">
               <FolderIcon className="h-12 w-12 mx-auto mb-3 text-gray-300" />
@@ -549,21 +556,25 @@ const Inventory = () => {
         </>
       )}
 
-      {/* Modal Agregar/Editar Producto */}
+      {/* Modal Agregar/Editar Producto (Bottom Sheet en móvil) */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" onClick={resetModal}>
+        <div className={`fixed inset-0 z-50 flex ${isMobile ? 'items-end' : 'items-center justify-center'} bg-black/30`} onClick={resetModal}>
           <div
-            className="bg-white rounded-2xl w-full max-w-md shadow-xl flex flex-col"
-            style={{ maxHeight: 'calc(100dvh - 100px)' }}
+            className={`bg-white w-full max-w-md flex flex-col shadow-2xl ${
+              isMobile
+                ? 'rounded-t-[32px] animate-slide-up max-h-[85dvh]'
+                : 'rounded-2xl max-h-[90vh]'
+            }`}
             onClick={e => e.stopPropagation()}
           >
+            {isMobile && <div className="bottom-sheet-handle" />}
             <div className="px-6 py-4 border-b border-gray-100 flex-shrink-0">
               <h2 className="text-lg font-semibold text-gray-800">
                 {editingProduct ? 'Editar Producto' : 'Nuevo Producto'}
               </h2>
             </div>
-
-            <div className="overflow-y-auto flex-1 px-6 py-4 space-y-4" style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom))' }}>
+            <div className="overflow-y-auto flex-1 px-6 py-4 space-y-4 modal-scroll" style={{ paddingBottom: isMobile ? 'calc(80px + env(safe-area-inset-bottom))' : '16px' }}>
+              {/* (contenido del formulario sin cambios) */}
               <div>
                 <label className="block text-sm font-medium mb-2">📸 Foto del producto</label>
                 <div className="flex gap-2">
@@ -581,28 +592,17 @@ const Inventory = () => {
                   </div>
                 )}
               </div>
-
               <div>
                 <label className="block text-sm font-medium mb-1">Nombre *</label>
                 <input type="text" placeholder="Nombre*" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full p-3 border rounded-xl" required />
               </div>
-
               <div>
                 <label className="block text-sm font-medium mb-1">📁 Categoría</label>
-                <select
-                  value={formData.category_id}
-                  onChange={(e) => setFormData({...formData, category_id: e.target.value})}
-                  className="w-full p-3 border rounded-xl"
-                >
+                <select value={formData.category_id} onChange={(e) => setFormData({...formData, category_id: e.target.value})} className="w-full p-3 border rounded-xl">
                   <option value="">General (sin categoría)</option>
-                  {allCategories.map(cat => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.label || cat.name}
-                    </option>
-                  ))}
+                  {allCategories.map(cat => (<option key={cat.id} value={cat.id}>{cat.label || cat.name}</option>))}
                 </select>
               </div>
-
               <div>
                 <label className="block text-sm font-medium mb-1">🏢 Proveedor</label>
                 <select value={formData.supplier_id} onChange={(e) => setFormData({...formData, supplier_id: e.target.value})} className="w-full p-3 border rounded-xl">
@@ -610,14 +610,12 @@ const Inventory = () => {
                   {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select>
               </div>
-
               {isAdmin && (
                 <div>
                   <label className="block text-sm font-medium mb-1">💰 Precio (€)</label>
                   <input type="number" step="0.01" placeholder="Precio unitario" value={formData.price || ''} onChange={(e) => setFormData({...formData, price: e.target.value})} className="w-full p-3 border rounded-xl" />
                 </div>
               )}
-
               <div className="flex gap-2">
                 <div className="flex-1">
                   <label className="block text-sm font-medium mb-1">Stock inicial *</label>
@@ -630,17 +628,14 @@ const Inventory = () => {
                   </select>
                 </div>
               </div>
-
               <div>
                 <label className="block text-sm font-medium mb-1">Stock mínimo</label>
                 <input type="number" placeholder="Stock mínimo" value={formData.min_stock} onChange={(e) => setFormData({...formData, min_stock: e.target.value})} className="w-full p-3 border rounded-xl" />
               </div>
-
               <div>
                 <label className="block text-sm font-medium mb-1">Fecha caducidad</label>
                 <input type="date" placeholder="Fecha caducidad" value={formData.expiry_date} onChange={(e) => setFormData({...formData, expiry_date: e.target.value})} className="w-full p-3 border rounded-xl" />
               </div>
-
               <div className="flex gap-2">
                 <div className="flex-1">
                   <label className="block text-sm font-medium mb-1">Código de barras</label>
@@ -651,7 +646,6 @@ const Inventory = () => {
                 </div>
               </div>
             </div>
-
             <div className="px-6 py-4 border-t border-gray-100 flex gap-3 flex-shrink-0">
               <button type="button" onClick={resetModal} className="flex-1 p-3 border rounded-xl">Cancelar</button>
               <button onClick={handleAddProduct} disabled={isSaving} className="flex-1 p-3 bg-blue-600 text-white rounded-xl disabled:opacity-50">
@@ -662,81 +656,82 @@ const Inventory = () => {
         </div>
       )}
 
-      {/* Modal Movimiento */}
+      {/* Modal Movimiento (Bottom Sheet) */}
       {showMovementModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setShowMovementModal(false)}>
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
-            <h2 className="text-xl font-bold mb-4">
-              {movementData.type === 'entrada' ? '📥 Entrada' : '📤 Salida'} - {selectedProduct?.name}
-            </h2>
-            <form onSubmit={handleMovement} className="space-y-3">
-              <div className="text-center p-4 bg-gray-100 rounded-xl">
-                <span className="text-3xl font-bold">{selectedProduct?.stock}</span>
-                <span className="text-gray-600 ml-1">{selectedProduct?.unit}</span>
-                <p className="text-sm text-gray-500">Stock actual</p>
-              </div>
-              <input type="number" step="0.01" placeholder="Cantidad" value={movementData.quantity}
-                onChange={(e) => setMovementData({...movementData, quantity: e.target.value})}
-                className="w-full p-3 border rounded-xl text-lg text-center" required autoFocus />
-              <input type="text" placeholder="Motivo (opcional)" value={movementData.reason}
-                onChange={(e) => setMovementData({...movementData, reason: e.target.value})}
-                className="w-full p-3 border rounded-xl" />
-              <div className="flex gap-2 pt-2">
-                <button type="button" onClick={() => setShowMovementModal(false)} className="flex-1 p-3 border rounded-xl">Cancelar</button>
-                <button type="submit" disabled={isSaving} className={`flex-1 p-3 text-white rounded-xl disabled:opacity-50 ${movementData.type === 'entrada' ? 'bg-green-600' : 'bg-red-600'}`}>
-                  {isSaving ? 'Registrando...' : 'Confirmar'}
-                </button>
-              </div>
-            </form>
+        <div className={`fixed inset-0 z-50 flex ${isMobile ? 'items-end' : 'items-center justify-center'} bg-black/30`} onClick={() => setShowMovementModal(false)}>
+          <div className={`bg-white w-full max-w-md flex flex-col shadow-2xl ${
+            isMobile ? 'rounded-t-[32px] animate-slide-up' : 'rounded-2xl'
+          }`} onClick={e => e.stopPropagation()}>
+            {isMobile && <div className="bottom-sheet-handle" />}
+            <div className="p-6">
+              <h2 className="text-xl font-bold mb-4">
+                {movementData.type === 'entrada' ? '📥 Entrada' : '📤 Salida'} - {selectedProduct?.name}
+              </h2>
+              <form onSubmit={handleMovement} className="space-y-3">
+                <div className="text-center p-4 bg-gray-100 rounded-xl">
+                  <span className="text-3xl font-bold">{selectedProduct?.stock}</span>
+                  <span className="text-gray-600 ml-1">{selectedProduct?.unit}</span>
+                  <p className="text-sm text-gray-500">Stock actual</p>
+                </div>
+                <input type="number" step="0.01" placeholder="Cantidad" value={movementData.quantity}
+                  onChange={(e) => setMovementData({...movementData, quantity: e.target.value})}
+                  className="w-full p-3 border rounded-xl text-lg text-center" required autoFocus />
+                <input type="text" placeholder="Motivo (opcional)" value={movementData.reason}
+                  onChange={(e) => setMovementData({...movementData, reason: e.target.value})}
+                  className="w-full p-3 border rounded-xl" />
+                <div className="flex gap-2 pt-2">
+                  <button type="button" onClick={() => setShowMovementModal(false)} className="flex-1 p-3 border rounded-xl">Cancelar</button>
+                  <button type="submit" disabled={isSaving} className={`flex-1 p-3 text-white rounded-xl disabled:opacity-50 ${movementData.type === 'entrada' ? 'bg-green-600' : 'bg-red-600'}`}>
+                    {isSaving ? 'Registrando...' : 'Confirmar'}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}
 
       {/* Modal Copiar Producto */}
       {showCopyModal && selectedProduct && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" onClick={() => setShowCopyModal(false)}>
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
-            <h2 className="text-xl font-bold mb-4">📋 Copiar Producto</h2>
-            <p className="text-sm text-gray-600 mb-4">
-              Copiarás <strong>{selectedProduct.name}</strong> a otro restaurante.
-            </p>
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium mb-1">🏢 Restaurante destino</label>
-                <select
-                  value={copyTarget}
-                  onChange={(e) => setCopyTarget(e.target.value)}
-                  className="w-full p-3 border rounded-xl"
-                >
-                  <option value="">Seleccionar destino</option>
-                  {['POZOBLANCO', 'FUERTEVENTURA', 'GRAN_CAPITAN']
-                    .filter(r => r !== currentRestaurant)
-                    .map(r => (
-                      <option key={r} value={r}>
-                        {r === 'POZOBLANCO' ? '🍽️ Pozoblanco' : r === 'FUERTEVENTURA' ? '🏖️ Fuerteventura' : '🏛️ Gran Capitán'}
-                      </option>
+        <div className={`fixed inset-0 z-50 flex ${isMobile ? 'items-end' : 'items-center justify-center'} bg-black/30`} onClick={() => setShowCopyModal(false)}>
+          <div className={`bg-white w-full max-w-md flex flex-col shadow-2xl ${
+            isMobile ? 'rounded-t-[32px] animate-slide-up' : 'rounded-2xl'
+          }`} onClick={e => e.stopPropagation()}>
+            {isMobile && <div className="bottom-sheet-handle" />}
+            <div className="p-6">
+              <h2 className="text-xl font-bold mb-4">📋 Copiar Producto</h2>
+              <p className="text-sm text-gray-600 mb-4">
+                Copiarás <strong>{selectedProduct.name}</strong> a otro restaurante.
+              </p>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium mb-1">🏢 Restaurante destino</label>
+                  <select value={copyTarget} onChange={(e) => setCopyTarget(e.target.value)} className="w-full p-3 border rounded-xl">
+                    <option value="">Seleccionar destino</option>
+                    {['POZOBLANCO', 'FUERTEVENTURA', 'GRAN_CAPITAN'].filter(r => r !== currentRestaurant).map(r => (
+                      <option key={r} value={r}>{r === 'POZOBLANCO' ? '🍽️ Pozoblanco' : r === 'FUERTEVENTURA' ? '🏖️ Fuerteventura' : '🏛️ Gran Capitán'}</option>
                     ))}
-                </select>
-              </div>
-              <div className="flex gap-2 pt-2">
-                <button onClick={() => setShowCopyModal(false)} className="flex-1 p-3 border rounded-xl">Cancelar</button>
-                <button
-                  onClick={handleCopyProduct}
-                  disabled={isCopying || !copyTarget}
-                  className="flex-1 p-3 bg-blue-600 text-white rounded-xl disabled:opacity-50"
-                >
-                  {isCopying ? 'Copiando...' : 'Copiar'}
-                </button>
+                  </select>
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <button onClick={() => setShowCopyModal(false)} className="flex-1 p-3 border rounded-xl">Cancelar</button>
+                  <button onClick={handleCopyProduct} disabled={isCopying || !copyTarget} className="flex-1 p-3 bg-blue-600 text-white rounded-xl disabled:opacity-50">
+                    {isCopying ? 'Copiando...' : 'Copiar'}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Modal de confirmación para eliminar todos los productos sin categoría */}
+      {/* Modal eliminar todos */}
       {showDeleteAllModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-xl" onClick={e => e.stopPropagation()}>
+        <div className={`fixed inset-0 z-50 flex ${isMobile ? 'items-end' : 'items-center justify-center'} bg-black/30`} onClick={() => setShowDeleteAllModal(false)}>
+          <div className={`bg-white w-full max-w-md flex flex-col shadow-2xl ${
+            isMobile ? 'rounded-t-[32px] animate-slide-up' : 'rounded-2xl'
+          }`} onClick={e => e.stopPropagation()}>
+            {isMobile && <div className="bottom-sheet-handle" />}
             <div className="p-6">
               <div className="flex items-center gap-3 mb-4">
                 <div className="p-2 bg-red-100 rounded-full">
@@ -744,35 +739,15 @@ const Inventory = () => {
                 </div>
                 <h2 className="text-lg font-semibold text-gray-800">Eliminar productos sin categoría</h2>
               </div>
-              <p className="text-sm text-gray-600 mb-2">
-                Esta acción eliminará <strong>permanentemente</strong> los {uncategorizedProducts.length} productos que están en "General" o sin categoría asignada.
-              </p>
-              <p className="text-sm text-gray-600 mb-4">
-                Para confirmar, escribe <span className="font-bold text-red-600">ELIMINAR</span> en el campo de abajo.
-              </p>
-              <input
-                type="text"
-                value={deleteConfirmText}
-                onChange={(e) => setDeleteConfirmText(e.target.value)}
+              <p className="text-sm text-gray-600 mb-2">Esta acción eliminará permanentemente los {uncategorizedProducts.length} productos sin categoría.</p>
+              <p className="text-sm text-gray-600 mb-4">Escribe <span className="font-bold text-red-600">ELIMINAR</span> para confirmar.</p>
+              <input type="text" value={deleteConfirmText} onChange={(e) => setDeleteConfirmText(e.target.value)}
                 placeholder="Escribe ELIMINAR para confirmar"
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition mb-4"
-                autoFocus
-              />
+                className="w-full px-4 py-2.5 border rounded-lg text-sm mb-4" autoFocus />
               <div className="flex gap-3">
-                <button
-                  onClick={() => {
-                    setShowDeleteAllModal(false);
-                    setDeleteConfirmText('');
-                  }}
-                  className="flex-1 py-2.5 border border-gray-200 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-50 transition"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleDeleteAllUncategorized}
-                  disabled={deleteConfirmText !== 'ELIMINAR' || isDeletingAll}
-                  className="flex-1 py-2.5 bg-red-600 text-white rounded-xl text-sm font-medium hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                >
+                <button onClick={() => { setShowDeleteAllModal(false); setDeleteConfirmText(''); }} className="flex-1 py-2.5 border rounded-xl">Cancelar</button>
+                <button onClick={handleDeleteAllUncategorized} disabled={deleteConfirmText !== 'ELIMINAR' || isDeletingAll}
+                  className="flex-1 py-2.5 bg-red-600 text-white rounded-xl disabled:opacity-50">
                   {isDeletingAll ? 'Eliminando...' : 'Eliminar todos'}
                 </button>
               </div>
