@@ -3,7 +3,10 @@ import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
 import {
   ExclamationTriangleIcon,
-  ClockIcon
+  ClockIcon,
+  CubeIcon,
+  ShoppingCartIcon,
+  TruckIcon,
 } from '@heroicons/react/24/outline';
 
 const Dashboard = () => {
@@ -49,13 +52,13 @@ const Dashboard = () => {
   if (loading) {
     return (
       <div className="space-y-6 animate-pulse">
-        <div className="h-24 bg-gray-200 rounded-2xl"></div>
+        <div className="h-24 bg-white rounded-2xl shadow-sm"></div>
         <div className="grid grid-cols-3 gap-3">
-          <div className="h-20 bg-gray-200 rounded-xl"></div>
-          <div className="h-20 bg-gray-200 rounded-xl"></div>
-          <div className="h-20 bg-gray-200 rounded-xl"></div>
+          <div className="h-20 bg-white rounded-2xl shadow-sm"></div>
+          <div className="h-20 bg-white rounded-2xl shadow-sm"></div>
+          <div className="h-20 bg-white rounded-2xl shadow-sm"></div>
         </div>
-        <div className="h-40 bg-gray-200 rounded-xl"></div>
+        <div className="h-40 bg-white rounded-2xl shadow-sm"></div>
       </div>
     );
   }
@@ -67,7 +70,7 @@ const Dashboard = () => {
         <div className="flex items-center gap-3 mb-2">
           <span className="text-4xl">{currentRest?.icon}</span>
           <div>
-            <h1 className="text-2xl font-bold">{currentRest?.name}</h1>
+            <h1 className="text-2xl font-bold tracking-tight">{currentRest?.name}</h1>
             <p className="opacity-90 text-sm">Panel de Control de Inventario</p>
           </div>
         </div>
@@ -75,26 +78,32 @@ const Dashboard = () => {
 
       {/* Métricas principales */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-white rounded-xl p-4 shadow-sm">
-          <div className="text-2xl mb-1">📦</div>
+        <div className="bg-white rounded-2xl p-4 shadow-sm flex flex-col items-start">
+          <div className="p-2 bg-blue-50 rounded-lg mb-3">
+            <CubeIcon className="h-5 w-5 text-blue-600" />
+          </div>
           <div className="text-2xl font-bold text-gray-800">
             {stats.restaurants[currentRestaurant]?.totalProducts || 0}
           </div>
-          <div className="text-xs text-gray-500">Productos</div>
+          <div className="text-xs text-gray-500 mt-1 tracking-wide">Productos</div>
         </div>
-        <div className="bg-white rounded-xl p-4 shadow-sm">
-          <div className="text-2xl mb-1">⚠️</div>
+        <div className="bg-white rounded-2xl p-4 shadow-sm flex flex-col items-start">
+          <div className="p-2 bg-orange-50 rounded-lg mb-3">
+            <ExclamationTriangleIcon className="h-5 w-5 text-orange-600" />
+          </div>
           <div className={`text-2xl font-bold ${(stats.restaurants[currentRestaurant]?.lowStock || 0) > 0 ? 'text-orange-600' : 'text-gray-800'}`}>
             {stats.restaurants[currentRestaurant]?.lowStock || 0}
           </div>
-          <div className="text-xs text-gray-500">Stock Bajo</div>
+          <div className="text-xs text-gray-500 mt-1 tracking-wide">Stock Bajo</div>
         </div>
-        <div className="bg-white rounded-xl p-4 shadow-sm">
-          <div className="text-2xl mb-1">🚚</div>
+        <div className="bg-white rounded-2xl p-4 shadow-sm flex flex-col items-start">
+          <div className="p-2 bg-emerald-50 rounded-lg mb-3">
+            <TruckIcon className="h-5 w-5 text-emerald-600" />
+          </div>
           <div className={`text-2xl font-bold ${stats.pendingTransfers > 0 ? 'text-blue-600' : 'text-gray-800'}`}>
             {stats.pendingTransfers}
           </div>
-          <div className="text-xs text-gray-500">Pendientes</div>
+          <div className="text-xs text-gray-500 mt-1 tracking-wide">Pendientes</div>
         </div>
       </div>
 
@@ -104,10 +113,10 @@ const Dashboard = () => {
           {/* Tarjetas de las 3 sucursales */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {restaurants.map(rest => (
-              <div key={rest.id} className={`rounded-xl p-5 shadow-sm ${rest.bg} border border-gray-100`}>
+              <div key={rest.id} className={`rounded-2xl p-5 shadow-sm ${rest.bg} border border-gray-100/50`}>
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-2xl">{rest.icon}</span>
-                  <h3 className="font-semibold text-gray-800">{rest.name}</h3>
+                  <h3 className="font-semibold text-gray-800 tracking-tight">{rest.name}</h3>
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
@@ -127,8 +136,8 @@ const Dashboard = () => {
 
           {/* Alertas urgentes */}
           {(stats.pendingTransfers > 0 || pendingRequests.length > 0 || (stats.restaurants[currentRestaurant]?.lowStock || 0) > 0) && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
-              <h3 className="font-semibold text-yellow-800 mb-3 flex items-center gap-2">
+            <div className="bg-yellow-50 border border-yellow-100 rounded-2xl p-4 shadow-sm">
+              <h3 className="font-semibold text-yellow-800 mb-3 flex items-center gap-2 tracking-tight">
                 <ExclamationTriangleIcon className="h-5 w-5" />
                 Alertas Pendientes
               </h3>
@@ -155,14 +164,14 @@ const Dashboard = () => {
       )}
 
       {/* Actividad reciente */}
-      <div className="bg-white rounded-xl p-4 shadow-sm">
-        <h3 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+      <div className="bg-white rounded-2xl p-5 shadow-sm">
+        <h3 className="font-semibold text-gray-800 mb-3 flex items-center gap-2 tracking-tight">
           <ClockIcon className="h-5 w-5" />
           Actividad Reciente
         </h3>
-        <div className="space-y-2">
+        <div className="space-y-3">
           {recentMovements.slice(0, 5).map(mov => (
-            <div key={mov.id} className="flex items-center justify-between text-sm border-b pb-2">
+            <div key={mov.id} className="flex items-center justify-between text-sm border-b border-gray-100 pb-2">
               <div>
                 <span className="font-medium">{mov.products?.name || mov.product_name}</span>
                 <span className={`ml-2 px-1.5 py-0.5 rounded-full text-xs ${
@@ -171,7 +180,7 @@ const Dashboard = () => {
                   {mov.type === 'entrada' ? '+' : '-'}{mov.quantity}
                 </span>
               </div>
-              <span className="text-gray-500 text-xs">
+              <span className="text-gray-400 text-xs">
                 {new Date(mov.created_at).toLocaleString('es', { hour: '2-digit', minute: '2-digit' })}
               </span>
             </div>
@@ -187,32 +196,45 @@ const Dashboard = () => {
 
       {/* Accesos rápidos */}
       <div className="grid grid-cols-2 gap-3">
-        <Link to="/inventory" className="bg-white rounded-xl p-4 shadow-sm text-center hover:bg-gray-50 transition">
-          <span className="text-3xl">📦</span>
-          <p className="font-medium mt-1 text-sm">Inventario</p>
+        <Link to="/inventory" className="bg-white rounded-2xl p-5 shadow-sm text-center hover:bg-gray-50 transition-colors">
+          <div className="p-2 bg-blue-50 rounded-lg inline-block mb-2">
+            <CubeIcon className="h-5 w-5 text-blue-600" />
+          </div>
+          <p className="font-medium text-sm tracking-wide">Inventario</p>
         </Link>
-        <Link to="/movements" className="bg-white rounded-xl p-4 shadow-sm text-center hover:bg-gray-50 transition">
-          <span className="text-3xl">🔄</span>
-          <p className="font-medium mt-1 text-sm">Movimientos</p>
+        <Link to="/movements" className="bg-white rounded-2xl p-5 shadow-sm text-center hover:bg-gray-50 transition-colors">
+          <div className="p-2 bg-green-50 rounded-lg inline-block mb-2">
+            <ShoppingCartIcon className="h-5 w-5 text-green-600" />
+          </div>
+          <p className="font-medium text-sm tracking-wide">Movimientos</p>
         </Link>
-        <Link to="/requests" className="bg-white rounded-xl p-4 shadow-sm text-center hover:bg-gray-50 transition">
-          <span className="text-3xl">📋</span>
-          <p className="font-medium mt-1 text-sm">Pedidos</p>
+        <Link to="/requests" className="bg-white rounded-2xl p-5 shadow-sm text-center hover:bg-gray-50 transition-colors">
+          <div className="p-2 bg-yellow-50 rounded-lg inline-block mb-2">
+            <ClockIcon className="h-5 w-5 text-yellow-600" />
+          </div>
+          <p className="font-medium text-sm tracking-wide">Pedidos</p>
         </Link>
         {isAdmin ? (
-          <Link to="/reports" className="bg-white rounded-xl p-4 shadow-sm text-center hover:bg-gray-50 transition">
-            <span className="text-3xl">📊</span>
-            <p className="font-medium mt-1 text-sm">Reportes</p>
+          <Link to="/reports" className="bg-white rounded-2xl p-5 shadow-sm text-center hover:bg-gray-50 transition-colors">
+            <div className="p-2 bg-purple-50 rounded-lg inline-block mb-2">
+              <ChartBarIcon className="h-5 w-5 text-purple-600" />
+            </div>
+            <p className="font-medium text-sm tracking-wide">Reportes</p>
           </Link>
         ) : (
-          <Link to="/recipes" className="bg-white rounded-xl p-4 shadow-sm text-center hover:bg-gray-50 transition">
-            <span className="text-3xl">📖</span>
-            <p className="font-medium mt-1 text-sm">Recetas</p>
+          <Link to="/recipes" className="bg-white rounded-2xl p-5 shadow-sm text-center hover:bg-gray-50 transition-colors">
+            <div className="p-2 bg-pink-50 rounded-lg inline-block mb-2">
+              <BookOpenIcon className="h-5 w-5 text-pink-600" />
+            </div>
+            <p className="font-medium text-sm tracking-wide">Recetas</p>
           </Link>
         )}
       </div>
     </div>
   );
 };
+
+// Agregar los iconos faltantes en los imports
+import { ChartBarIcon, BookOpenIcon } from '@heroicons/react/24/outline';
 
 export default Dashboard;
