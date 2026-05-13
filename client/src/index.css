@@ -7,7 +7,7 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Animación para menú lateral desde derecha */
+/* Animación para el menú lateral desde la derecha */
 @keyframes slide-in-right {
   from { transform: translateX(100%); }
   to { transform: translateX(0); }
