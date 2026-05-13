@@ -4,7 +4,7 @@ import {
   PlusIcon, PencilIcon, TrashIcon, MagnifyingGlassIcon,
   BuildingOffice2Icon, PhoneIcon, EnvelopeIcon, MapPinIcon,
   UserIcon, CubeIcon, Squares2X2Icon, ListBulletIcon,
-  XMarkIcon, ArrowUpIcon, ArrowDownIcon
+  XMarkIcon, FunnelIcon, ArrowUpIcon, ArrowDownIcon
 } from '@heroicons/react/24/outline';
 import useLockBodyScroll from '../hooks/useLockBodyScroll';
 
@@ -105,9 +105,11 @@ const Suppliers = () => {
     }
   };
 
+  // Filtrado y ordenación
   const filteredSuppliers = useMemo(() => {
     let result = [...suppliers];
     
+    // Búsqueda
     if (searchTerm) {
       const search = searchTerm.toLowerCase();
       result = result.filter(s => 
@@ -118,6 +120,7 @@ const Suppliers = () => {
       );
     }
     
+    // Ordenación
     result.sort((a, b) => {
       let valA = a[sortBy] || '';
       let valB = b[sortBy] || '';
@@ -144,6 +147,8 @@ const Suppliers = () => {
   };
 
   const totalProductsWithSupplier = products.filter(p => p.supplier_id).length;
+
+  // Forzar vista de tarjetas en móvil
   const effectiveViewMode = isMobile ? 'grid' : viewMode;
 
   if (loading) {
@@ -166,9 +171,10 @@ const Suppliers = () => {
 
   return (
     <div className="space-y-5">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-gray-800">🏢 Proveedores</h1>
+          <h1 className="text-xl font-bold text-gray-800 tracking-tight">🏢 Proveedores</h1>
           <p className="text-sm text-gray-500 mt-1">Gestiona tus proveedores y su información de contacto</p>
         </div>
         {isAdmin && (
@@ -181,22 +187,23 @@ const Suppliers = () => {
         )}
       </div>
 
+      {/* KPIs */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-2xl p-4 shadow-sm">
           <div className="flex items-center gap-2">
             <BuildingOffice2Icon className="h-5 w-5 text-blue-500" />
             <span className="text-sm text-gray-500">Total proveedores</span>
           </div>
           <p className="text-2xl font-bold text-gray-800 mt-1">{suppliers.length}</p>
         </div>
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-2xl p-4 shadow-sm">
           <div className="flex items-center gap-2">
             <CubeIcon className="h-5 w-5 text-indigo-500" />
-            <span className="text-sm text-gray-500">Productos asignados</span>
+            <span className="text-sm text-gray-500">Prod. asignados</span>
           </div>
           <p className="text-2xl font-bold text-gray-800 mt-1">{totalProductsWithSupplier}</p>
         </div>
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-2xl p-4 shadow-sm">
           <div className="flex items-center gap-2">
             <UserIcon className="h-5 w-5 text-emerald-500" />
             <span className="text-sm text-gray-500">Con contacto</span>
@@ -207,7 +214,8 @@ const Suppliers = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 p-3">
+      {/* Barra de herramientas */}
+      <div className="bg-white rounded-2xl shadow-sm p-3">
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex-1 relative min-w-[200px]">
             <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-2.5 text-gray-400" />
@@ -240,10 +248,11 @@ const Suppliers = () => {
         </div>
       </div>
 
+      {/* Vista Cuadrícula (móvil y opción grid) */}
       {effectiveViewMode === 'grid' && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredSuppliers.map(supplier => (
-            <div key={supplier.id} className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition p-5 group">
+            <div key={supplier.id} className="bg-white rounded-2xl shadow-sm p-5 group">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
@@ -301,8 +310,9 @@ const Suppliers = () => {
         </div>
       )}
 
+      {/* Vista Lista (solo escritorio) */}
       {!isMobile && effectiveViewMode === 'list' && (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
@@ -366,7 +376,7 @@ const Suppliers = () => {
       )}
 
       {filteredSuppliers.length === 0 && (
-        <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
+        <div className="text-center py-16 bg-white rounded-2xl shadow-sm">
           <BuildingOffice2Icon className="h-12 w-12 mx-auto mb-3 text-gray-300" />
           <p className="text-gray-500 font-medium">No se encontraron proveedores</p>
           <p className="text-gray-400 text-sm mt-1">
@@ -375,9 +385,13 @@ const Suppliers = () => {
         </div>
       )}
 
+      {/* Modal Agregar/Editar como Bottom Sheet en móvil */}
       {showModal && isAdmin && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowModal(false)}>
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-xl" onClick={e => e.stopPropagation()}>
+        <div className={`fixed inset-0 z-50 flex ${isMobile ? 'items-end' : 'items-center justify-center'} bg-black/30`} onClick={() => setShowModal(false)}>
+          <div className={`bg-white w-full max-w-md flex flex-col shadow-2xl ${
+            isMobile ? 'rounded-t-[32px] animate-slide-up max-h-[85dvh]' : 'rounded-2xl max-h-[90vh]'
+          }`} onClick={e => e.stopPropagation()}>
+            {isMobile && <div className="bottom-sheet-handle" />}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
               <h2 className="text-lg font-semibold text-gray-800">
                 {editingSupplier ? '✏️ Editar Proveedor' : '🏢 Nuevo Proveedor'}
@@ -386,7 +400,7 @@ const Suppliers = () => {
                 <XMarkIcon className="h-5 w-5" />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="p-6 space-y-4" style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom))' }}>
+            <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-4 space-y-4 modal-scroll" style={{ paddingBottom: isMobile ? 'calc(80px + env(safe-area-inset-bottom))' : '16px' }}>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">🏢 Nombre *</label>
                 <input
