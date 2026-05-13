@@ -6,17 +6,15 @@ body {
   @apply bg-gray-50;
 }
 
-/* Animación para el menú lateral desde la derecha */
 @keyframes slide-in-right {
   from { transform: translateX(100%); }
   to { transform: translateX(0); }
 }
-
 .animate-slide-in-right {
   animation: slide-in-right 0.3s ease-out;
 }
 
-/* Asegurar que los modales no desborden la pantalla */
-.modal-scroll-content {
-  -webkit-overflow-scrolling: touch;
+/* Evitar saltos de ancho al bloquear scroll */
+body.fixed-scroll {
+  overflow: hidden;
 }
