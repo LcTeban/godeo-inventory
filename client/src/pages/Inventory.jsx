@@ -8,6 +8,7 @@ import {
 } from '@heroicons/react/24/outline';
 import BarcodeScanner from '../components/BarcodeScanner';
 import LazyImage from '../components/LazyImage';
+import useLockBodyScroll from '../hooks/useLockBodyScroll';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -45,6 +46,9 @@ const Inventory = () => {
     addMovement, getSuppliers, getProductById, getProductImage, getAllCategoriesFlat,
     duplicateProduct, deleteUncategorizedProducts
   } = useAuth();
+
+  const isAnyModalOpen = showAddModal || showMovementModal || showCopyModal || showDeleteAllModal || showScanner;
+  useLockBodyScroll(isAnyModalOpen);
 
   useEffect(() => {
     fetchProducts();
@@ -546,7 +550,7 @@ const Inventory = () => {
         </>
       )}
 
-      {/* Modal Agregar/Editar Producto - CORREGIDO EL SCROLL */}
+      {/* Modal Agregar/Editar Producto */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end sm:items-center justify-center" onClick={resetModal}>
           <div
@@ -554,14 +558,12 @@ const Inventory = () => {
             style={{ maxHeight: '90vh' }}
             onClick={e => e.stopPropagation()}
           >
-            {/* Cabecera fija */}
             <div className="px-6 py-4 border-b border-gray-100 flex-shrink-0">
               <h2 className="text-lg font-semibold text-gray-800">
                 {editingProduct ? 'Editar Producto' : 'Nuevo Producto'}
               </h2>
             </div>
 
-            {/* Cuerpo del modal con scroll interno */}
             <div className="overflow-y-auto flex-1 px-6 py-4 space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-2">📸 Foto del producto</label>
@@ -651,7 +653,6 @@ const Inventory = () => {
               </div>
             </div>
 
-            {/* Pie del modal fijo */}
             <div className="px-6 py-4 border-t border-gray-100 flex gap-3 flex-shrink-0">
               <button type="button" onClick={resetModal} className="flex-1 p-3 border rounded-xl">Cancelar</button>
               <button onClick={handleAddProduct} disabled={isSaving} className="flex-1 p-3 bg-blue-600 text-white rounded-xl disabled:opacity-50">
