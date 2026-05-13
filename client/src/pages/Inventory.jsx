@@ -219,9 +219,9 @@ const Inventory = () => {
   };
 
   const getStockStatus = (product) => {
-    if (product.stock === 0) return { color: 'bg-red-100 text-red-800', text: 'Agotado' };
-    if (product.stock <= product.min_stock) return { color: 'bg-orange-100 text-orange-800', text: 'Bajo' };
-    return { color: 'bg-green-100 text-green-800', text: 'OK' };
+    if (product.stock === 0) return { color: 'bg-red-100 text-red-700', text: 'Agotado' };
+    if (product.stock <= product.min_stock) return { color: 'bg-amber-100 text-amber-700', text: 'Bajo' };
+    return { color: 'bg-emerald-100 text-emerald-700', text: 'OK' };
   };
 
   const getDisplayedProducts = () => {
@@ -375,12 +375,12 @@ const Inventory = () => {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="font-semibold text-sm truncate">{product.name}</h3>
+                    <h3 className="font-semibold text-sm text-slate-900 truncate">{product.name}</h3>
                     <span className={`text-xs px-2 py-0.5 rounded-full ${status.color}`}>{status.text}</span>
-                    {isExpiring && <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800">⏰ Próximo</span>}
+                    {isExpiring && <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">⏰ Próximo</span>}
                   </div>
                 </div>
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs text-gray-500">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs text-slate-500">
                   {product.categories?.name && <span>📁 {product.categories.name}</span>}
                   {product.suppliers?.name && <span>🏢 {product.suppliers.name}</span>}
                   {product.barcode && <span>🏷️ {product.barcode}</span>}
@@ -389,30 +389,30 @@ const Inventory = () => {
                 </div>
                 <div className="flex items-end justify-between mt-2">
                   <div>
-                    <span className="text-xl font-bold">{product.stock}</span>
-                    <span className="text-sm text-gray-500 ml-1">{product.unit}</span>
+                    <span className="text-xl font-bold text-slate-900">{product.stock}</span>
+                    <span className="text-sm text-slate-500 ml-1">{product.unit}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     {isAdmin && (
                       <>
-                        <button onClick={() => openEditModal(product)} className="p-1.5 text-yellow-600 hover:bg-yellow-100 rounded-lg" title="Editar">
+                        <button onClick={() => openEditModal(product)} className="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg" title="Editar">
                           <PencilIcon className="h-4 w-4" />
                         </button>
-                        <button onClick={() => openCopyModal(product)} className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-lg" title="Copiar a otro restaurante">
+                        <button onClick={() => openCopyModal(product)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg" title="Copiar a otro restaurante">
                           <DocumentDuplicateIcon className="h-4 w-4" />
                         </button>
                       </>
                     )}
                     <button onClick={() => { setSelectedProduct(product); setMovementData({ type: 'entrada', quantity: '', reason: '' }); setShowMovementModal(true); }}
-                      className="p-1.5 text-green-600 hover:bg-green-100 rounded-lg" title="Entrada">
+                      className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg" title="Entrada">
                       <PlusIcon className="h-4 w-4" />
                     </button>
                     <button onClick={() => { setSelectedProduct(product); setMovementData({ type: 'salida', quantity: '', reason: '' }); setShowMovementModal(true); }}
-                      className="p-1.5 text-red-600 hover:bg-red-100 rounded-lg" disabled={product.stock === 0} title="Salida">
+                      className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg" disabled={product.stock === 0} title="Salida">
                       <MinusIcon className="h-4 w-4" />
                     </button>
                     {isAdmin && (
-                      <button onClick={() => handleDelete(product.id)} className="p-1.5 text-gray-500 hover:bg-gray-200 rounded-lg" title="Eliminar">
+                      <button onClick={() => handleDelete(product.id)} className="p-1.5 text-slate-400 hover:bg-slate-100 rounded-lg" title="Eliminar">
                         <TrashIcon className="h-4 w-4" />
                       </button>
                     )}
@@ -432,23 +432,23 @@ const Inventory = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           {currentFolderId !== null && (
-            <button onClick={goBack} className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200" title="Volver">
-              <ArrowLeftIcon className="h-5 w-5 text-gray-600" />
+            <button onClick={goBack} className="p-2 bg-slate-100 rounded-lg hover:bg-slate-200" title="Volver">
+              <ArrowLeftIcon className="h-5 w-5 text-slate-600" />
             </button>
           )}
-          <h1 className="text-xl font-bold tracking-tight">
+          <h1 className="text-xl font-bold text-slate-900 tracking-tight">
             {currentFolderId ? currentFolderName : 'Inventario'}
           </h1>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={exportToExcel} className="p-2 bg-green-100 text-green-700 rounded-lg" title="Excel">
+          <button onClick={exportToExcel} className="p-2 bg-emerald-50 text-emerald-700 rounded-lg" title="Excel">
             <TableCellsIcon className="h-5 w-5" />
           </button>
-          <button onClick={exportToPDF} className="p-2 bg-red-100 text-red-700 rounded-lg" title="PDF">
+          <button onClick={exportToPDF} className="p-2 bg-red-50 text-red-700 rounded-lg" title="PDF">
             <DocumentArrowDownIcon className="h-5 w-5" />
           </button>
           {isAdmin && (
-            <button onClick={() => openAddModal(currentFolderId)} className="bg-blue-600 text-white p-3 rounded-full shadow-lg">
+            <button onClick={() => openAddModal(currentFolderId)} className="bg-blue-600 text-white p-3 rounded-full shadow-lg shadow-blue-200">
               <PlusIcon className="h-6 w-6" />
             </button>
           )}
@@ -468,21 +468,21 @@ const Inventory = () => {
               setFolderPath([]);
             }
           }}
-          className="w-full p-3 bg-white rounded-2xl shadow-sm pl-10 text-sm"
+          className="w-full p-3 bg-white rounded-2xl shadow-sm pl-10 text-sm text-slate-700 placeholder-slate-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition"
         />
-        <QrCodeIcon className="h-5 w-5 absolute left-3 top-3.5 text-gray-400" />
+        <QrCodeIcon className="h-5 w-5 absolute left-3 top-3.5 text-slate-400" />
       </div>
 
       {/* Contenido principal */}
       {isLoadingProducts ? (
         <div className="animate-pulse space-y-3">
           {[1,2,3,4,5].map(i => (
-            <div key={i} className="h-20 bg-gray-200 rounded-2xl"></div>
+            <div key={i} className="h-20 bg-white rounded-2xl shadow-sm"></div>
           ))}
         </div>
       ) : searchTerm.trim() !== '' ? (
         <>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-slate-500">
             Resultados para «{searchTerm}» ({displayedProducts.length})
           </p>
           <ProductList products={displayedProducts} />
@@ -501,15 +501,15 @@ const Inventory = () => {
                     className="flex flex-col items-center p-3 bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow"
                   >
                     {hasChildren ? (
-                      <FolderIcon className="h-12 w-12 text-yellow-500 mb-1" />
+                      <FolderIcon className="h-12 w-12 text-amber-500 mb-1" />
                     ) : (
                       <FolderOpenIcon className="h-12 w-12 text-blue-500 mb-1" />
                     )}
-                    <span className="text-xs font-medium text-gray-800 text-center leading-tight break-words">
+                    <span className="text-xs font-medium text-slate-800 text-center leading-tight break-words">
                       {cat.name}
                     </span>
                     {!hasChildren && (
-                      <span className="text-xs text-gray-500 mt-0.5">
+                      <span className="text-xs text-slate-500 mt-0.5">
                         {products.filter(p => p.category_id === cat.id).length} prod.
                       </span>
                     )}
@@ -522,7 +522,7 @@ const Inventory = () => {
           {/* Productos en carpeta actual */}
           {currentFolderId && currentProductsInFolder.length > 0 && (
             <div className="mt-4">
-              <h2 className="text-sm font-semibold text-gray-600 mb-2">Productos en {currentFolderName}</h2>
+              <h2 className="text-sm font-semibold text-slate-600 mb-2">Productos en {currentFolderName}</h2>
               <ProductList products={currentProductsInFolder} />
             </div>
           )}
@@ -531,11 +531,11 @@ const Inventory = () => {
           {uncategorizedProducts.length > 0 && (
             <div className="mt-6">
               <div className="flex items-center justify-between mb-2">
-                <h2 className="text-sm font-semibold text-gray-600">📂 Productos sin categoría ({uncategorizedProducts.length})</h2>
+                <h2 className="text-sm font-semibold text-slate-600">📂 Productos sin categoría ({uncategorizedProducts.length})</h2>
                 {isAdmin && (
                   <button
                     onClick={() => setShowDeleteAllModal(true)}
-                    className="px-3 py-1.5 bg-red-50 text-red-600 border border-red-200 rounded-lg text-xs font-medium hover:bg-red-100 transition flex items-center gap-1"
+                    className="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-medium hover:bg-red-100 transition flex items-center gap-1"
                   >
                     <TrashIcon className="h-3.5 w-3.5" />
                     Eliminar todos
@@ -548,17 +548,17 @@ const Inventory = () => {
 
           {/* Estado completamente vacío */}
           {currentCategories.length === 0 && currentProductsInFolder.length === 0 && uncategorizedProducts.length === 0 && (
-            <div className="text-center py-10 text-gray-500">
-              <FolderIcon className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+            <div className="text-center py-10 text-slate-400">
+              <FolderIcon className="h-12 w-12 mx-auto mb-3 text-slate-300" />
               <p>No hay productos ni categorías</p>
             </div>
           )}
         </>
       )}
 
-      {/* Modal Agregar/Editar Producto (Bottom Sheet en móvil) */}
+      {/* Modal Agregar/Editar Producto (Bottom Sheet) */}
       {showAddModal && (
-        <div className={`fixed inset-0 z-50 flex ${isMobile ? 'items-end' : 'items-center justify-center'} bg-black/30`} onClick={resetModal}>
+        <div className={`fixed inset-0 z-50 flex ${isMobile ? 'items-end' : 'items-center justify-center'} bg-black/30 backdrop-blur-sm`} onClick={resetModal}>
           <div
             className={`bg-white w-full max-w-md flex flex-col shadow-2xl ${
               isMobile
@@ -568,19 +568,19 @@ const Inventory = () => {
             onClick={e => e.stopPropagation()}
           >
             {isMobile && <div className="bottom-sheet-handle" />}
-            <div className="px-6 py-4 border-b border-gray-100 flex-shrink-0">
-              <h2 className="text-lg font-semibold text-gray-800">
+            <div className="px-6 py-4 border-b border-slate-100 flex-shrink-0">
+              <h2 className="text-lg font-semibold text-slate-900">
                 {editingProduct ? 'Editar Producto' : 'Nuevo Producto'}
               </h2>
             </div>
             <div className="overflow-y-auto flex-1 px-6 py-4 space-y-4 modal-scroll" style={{ paddingBottom: isMobile ? 'calc(80px + env(safe-area-inset-bottom))' : '16px' }}>
               <div>
-                <label className="block text-sm font-medium mb-2">📸 Foto del producto</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">📸 Foto del producto</label>
                 <div className="flex gap-2">
                   <button type="button" onClick={openCamera} className="flex-1 p-3 bg-blue-50 text-blue-700 rounded-xl text-sm flex items-center justify-center gap-2 border border-blue-200">
                     <CameraIcon className="h-5 w-5" /> Cámara
                   </button>
-                  <button type="button" onClick={openGallery} className="flex-1 p-3 bg-gray-50 text-gray-700 rounded-xl text-sm flex items-center justify-center gap-2 border border-gray-200">
+                  <button type="button" onClick={openGallery} className="flex-1 p-3 bg-slate-50 text-slate-700 rounded-xl text-sm flex items-center justify-center gap-2 border border-slate-200">
                     🖼️ Galería
                   </button>
                 </div>
@@ -593,21 +593,21 @@ const Inventory = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">Nombre *</label>
-                <input type="text" placeholder="Nombre*" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full p-3 border rounded-xl" required />
+                <label className="block text-sm font-medium text-slate-700 mb-1">Nombre *</label>
+                <input type="text" placeholder="Nombre*" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition" required />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">📁 Categoría</label>
-                <select value={formData.category_id} onChange={(e) => setFormData({...formData, category_id: e.target.value})} className="w-full p-3 border rounded-xl">
+                <label className="block text-sm font-medium text-slate-700 mb-1">📁 Categoría</label>
+                <select value={formData.category_id} onChange={(e) => setFormData({...formData, category_id: e.target.value})} className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition">
                   <option value="">General (sin categoría)</option>
                   {allCategories.map(cat => (<option key={cat.id} value={cat.id}>{cat.label || cat.name}</option>))}
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">🏢 Proveedor</label>
-                <select value={formData.supplier_id} onChange={(e) => setFormData({...formData, supplier_id: e.target.value})} className="w-full p-3 border rounded-xl">
+                <label className="block text-sm font-medium text-slate-700 mb-1">🏢 Proveedor</label>
+                <select value={formData.supplier_id} onChange={(e) => setFormData({...formData, supplier_id: e.target.value})} className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition">
                   <option value="">Sin proveedor</option>
                   {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select>
@@ -615,48 +615,48 @@ const Inventory = () => {
 
               {isAdmin && (
                 <div>
-                  <label className="block text-sm font-medium mb-1">💰 Precio (€)</label>
-                  <input type="number" step="0.01" placeholder="Precio unitario" value={formData.price || ''} onChange={(e) => setFormData({...formData, price: e.target.value})} className="w-full p-3 border rounded-xl" />
+                  <label className="block text-sm font-medium text-slate-700 mb-1">💰 Precio (€)</label>
+                  <input type="number" step="0.01" placeholder="Precio unitario" value={formData.price || ''} onChange={(e) => setFormData({...formData, price: e.target.value})} className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition" />
                 </div>
               )}
 
               <div className="flex gap-2">
                 <div className="flex-1">
-                  <label className="block text-sm font-medium mb-1">Stock inicial *</label>
-                  <input type="number" step="0.01" placeholder="Stock inicial*" value={formData.stock} onChange={(e) => setFormData({...formData, stock: e.target.value})} className="w-full p-3 border rounded-xl" required />
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Stock inicial *</label>
+                  <input type="number" step="0.01" placeholder="Stock inicial*" value={formData.stock} onChange={(e) => setFormData({...formData, stock: e.target.value})} className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition" required />
                 </div>
                 <div className="w-24">
-                  <label className="block text-sm font-medium mb-1">Unidad</label>
-                  <select value={formData.unit} onChange={(e) => setFormData({...formData, unit: e.target.value})} className="w-full p-3 border rounded-xl">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Unidad</label>
+                  <select value={formData.unit} onChange={(e) => setFormData({...formData, unit: e.target.value})} className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition">
                     <option value="unidad">ud</option><option value="kg">kg</option><option value="L">L</option><option value="caja">caja</option>
                   </select>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">Stock mínimo</label>
-                <input type="number" placeholder="Stock mínimo" value={formData.min_stock} onChange={(e) => setFormData({...formData, min_stock: e.target.value})} className="w-full p-3 border rounded-xl" />
+                <label className="block text-sm font-medium text-slate-700 mb-1">Stock mínimo</label>
+                <input type="number" placeholder="Stock mínimo" value={formData.min_stock} onChange={(e) => setFormData({...formData, min_stock: e.target.value})} className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition" />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">Fecha caducidad</label>
-                <input type="date" placeholder="Fecha caducidad" value={formData.expiry_date} onChange={(e) => setFormData({...formData, expiry_date: e.target.value})} className="w-full p-3 border rounded-xl" />
+                <label className="block text-sm font-medium text-slate-700 mb-1">Fecha caducidad</label>
+                <input type="date" placeholder="Fecha caducidad" value={formData.expiry_date} onChange={(e) => setFormData({...formData, expiry_date: e.target.value})} className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition" />
               </div>
 
               <div className="flex gap-2">
                 <div className="flex-1">
-                  <label className="block text-sm font-medium mb-1">Código de barras</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Código de barras</label>
                   <div className="flex gap-2">
-                    <input type="text" placeholder="Código de barras" value={formData.barcode} onChange={(e) => setFormData({...formData, barcode: e.target.value})} className="flex-1 p-3 border rounded-xl" />
-                    <button type="button" onClick={() => setShowScanner(true)} className="px-4 bg-gray-100 rounded-xl"><QrCodeIcon className="h-5 w-5" /></button>
+                    <input type="text" placeholder="Código de barras" value={formData.barcode} onChange={(e) => setFormData({...formData, barcode: e.target.value})} className="flex-1 p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition" />
+                    <button type="button" onClick={() => setShowScanner(true)} className="px-4 bg-slate-100 rounded-xl"><QrCodeIcon className="h-5 w-5" /></button>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="px-6 py-4 border-t border-gray-100 flex gap-3 flex-shrink-0">
-              <button type="button" onClick={resetModal} className="flex-1 p-3 border rounded-xl">Cancelar</button>
-              <button onClick={handleAddProduct} disabled={isSaving} className="flex-1 p-3 bg-blue-600 text-white rounded-xl disabled:opacity-50">
+            <div className="px-6 py-4 border-t border-slate-100 flex gap-3 flex-shrink-0">
+              <button type="button" onClick={resetModal} className="flex-1 p-3 border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition">Cancelar</button>
+              <button onClick={handleAddProduct} disabled={isSaving} className="flex-1 p-3 bg-blue-600 text-white rounded-xl shadow-sm shadow-blue-200 hover:bg-blue-700 disabled:opacity-50 transition">
                 {isSaving ? 'Guardando...' : editingProduct ? 'Actualizar' : 'Guardar'}
               </button>
             </div>
@@ -666,30 +666,30 @@ const Inventory = () => {
 
       {/* Modal Movimiento (Bottom Sheet) */}
       {showMovementModal && (
-        <div className={`fixed inset-0 z-50 flex ${isMobile ? 'items-end' : 'items-center justify-center'} bg-black/30`} onClick={() => setShowMovementModal(false)}>
+        <div className={`fixed inset-0 z-50 flex ${isMobile ? 'items-end' : 'items-center justify-center'} bg-black/30 backdrop-blur-sm`} onClick={() => setShowMovementModal(false)}>
           <div className={`bg-white w-full max-w-md flex flex-col shadow-2xl ${
             isMobile ? 'rounded-t-[32px] animate-slide-up mb-12' : 'rounded-2xl'
           }`} onClick={e => e.stopPropagation()}>
             {isMobile && <div className="bottom-sheet-handle" />}
             <div className="p-6">
-              <h2 className="text-xl font-bold mb-4">
+              <h2 className="text-xl font-bold text-slate-900 mb-4">
                 {movementData.type === 'entrada' ? '📥 Entrada' : '📤 Salida'} - {selectedProduct?.name}
               </h2>
               <form onSubmit={handleMovement} className="space-y-3">
-                <div className="text-center p-4 bg-gray-100 rounded-xl">
-                  <span className="text-3xl font-bold">{selectedProduct?.stock}</span>
-                  <span className="text-gray-600 ml-1">{selectedProduct?.unit}</span>
-                  <p className="text-sm text-gray-500">Stock actual</p>
+                <div className="text-center p-4 bg-slate-50 rounded-xl">
+                  <span className="text-3xl font-bold text-slate-900">{selectedProduct?.stock}</span>
+                  <span className="text-slate-500 ml-1">{selectedProduct?.unit}</span>
+                  <p className="text-sm text-slate-400">Stock actual</p>
                 </div>
                 <input type="number" step="0.01" placeholder="Cantidad" value={movementData.quantity}
                   onChange={(e) => setMovementData({...movementData, quantity: e.target.value})}
-                  className="w-full p-3 border rounded-xl text-lg text-center" required autoFocus />
+                  className="w-full p-3 border border-slate-200 rounded-xl text-lg text-center focus:ring-2 focus:ring-blue-500/20 outline-none transition" required autoFocus />
                 <input type="text" placeholder="Motivo (opcional)" value={movementData.reason}
                   onChange={(e) => setMovementData({...movementData, reason: e.target.value})}
-                  className="w-full p-3 border rounded-xl" />
+                  className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none transition" />
                 <div className="flex gap-2 pt-2">
-                  <button type="button" onClick={() => setShowMovementModal(false)} className="flex-1 p-3 border rounded-xl">Cancelar</button>
-                  <button type="submit" disabled={isSaving} className={`flex-1 p-3 text-white rounded-xl disabled:opacity-50 ${movementData.type === 'entrada' ? 'bg-green-600' : 'bg-red-600'}`}>
+                  <button type="button" onClick={() => setShowMovementModal(false)} className="flex-1 p-3 border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition">Cancelar</button>
+                  <button type="submit" disabled={isSaving} className={`flex-1 p-3 text-white rounded-xl shadow-sm disabled:opacity-50 transition ${movementData.type === 'entrada' ? 'bg-emerald-600 shadow-emerald-200 hover:bg-emerald-700' : 'bg-red-600 shadow-red-200 hover:bg-red-700'}`}>
                     {isSaving ? 'Registrando...' : 'Confirmar'}
                   </button>
                 </div>
@@ -701,20 +701,20 @@ const Inventory = () => {
 
       {/* Modal Copiar Producto */}
       {showCopyModal && selectedProduct && (
-        <div className={`fixed inset-0 z-50 flex ${isMobile ? 'items-end' : 'items-center justify-center'} bg-black/30`} onClick={() => setShowCopyModal(false)}>
+        <div className={`fixed inset-0 z-50 flex ${isMobile ? 'items-end' : 'items-center justify-center'} bg-black/30 backdrop-blur-sm`} onClick={() => setShowCopyModal(false)}>
           <div className={`bg-white w-full max-w-md flex flex-col shadow-2xl ${
             isMobile ? 'rounded-t-[32px] animate-slide-up mb-12' : 'rounded-2xl'
           }`} onClick={e => e.stopPropagation()}>
             {isMobile && <div className="bottom-sheet-handle" />}
             <div className="p-6">
-              <h2 className="text-xl font-bold mb-4">📋 Copiar Producto</h2>
-              <p className="text-sm text-gray-600 mb-4">
-                Copiarás <strong>{selectedProduct.name}</strong> a otro restaurante.
+              <h2 className="text-xl font-bold text-slate-900 mb-4">📋 Copiar Producto</h2>
+              <p className="text-sm text-slate-500 mb-4">
+                Copiarás <strong className="text-slate-700">{selectedProduct.name}</strong> a otro restaurante.
               </p>
               <div className="space-y-3">
                 <div>
-                  <label className="block text-sm font-medium mb-1">🏢 Restaurante destino</label>
-                  <select value={copyTarget} onChange={(e) => setCopyTarget(e.target.value)} className="w-full p-3 border rounded-xl">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">🏢 Restaurante destino</label>
+                  <select value={copyTarget} onChange={(e) => setCopyTarget(e.target.value)} className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none transition">
                     <option value="">Seleccionar destino</option>
                     {['POZOBLANCO', 'FUERTEVENTURA', 'GRAN_CAPITAN'].filter(r => r !== currentRestaurant).map(r => (
                       <option key={r} value={r}>{r === 'POZOBLANCO' ? '🍽️ Pozoblanco' : r === 'FUERTEVENTURA' ? '🏖️ Fuerteventura' : '🏛️ Gran Capitán'}</option>
@@ -722,8 +722,8 @@ const Inventory = () => {
                   </select>
                 </div>
                 <div className="flex gap-2 pt-2">
-                  <button onClick={() => setShowCopyModal(false)} className="flex-1 p-3 border rounded-xl">Cancelar</button>
-                  <button onClick={handleCopyProduct} disabled={isCopying || !copyTarget} className="flex-1 p-3 bg-blue-600 text-white rounded-xl disabled:opacity-50">
+                  <button onClick={() => setShowCopyModal(false)} className="flex-1 p-3 border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition">Cancelar</button>
+                  <button onClick={handleCopyProduct} disabled={isCopying || !copyTarget} className="flex-1 p-3 bg-blue-600 text-white rounded-xl shadow-sm shadow-blue-200 hover:bg-blue-700 disabled:opacity-50 transition">
                     {isCopying ? 'Copiando...' : 'Copiar'}
                   </button>
                 </div>
@@ -733,9 +733,9 @@ const Inventory = () => {
         </div>
       )}
 
-      {/* Modal de confirmación para eliminar todos los productos sin categoría */}
+      {/* Modal eliminar todos sin categoría */}
       {showDeleteAllModal && (
-        <div className={`fixed inset-0 z-50 flex ${isMobile ? 'items-end' : 'items-center justify-center'} bg-black/30`} onClick={() => setShowDeleteAllModal(false)}>
+        <div className={`fixed inset-0 z-50 flex ${isMobile ? 'items-end' : 'items-center justify-center'} bg-black/30 backdrop-blur-sm`} onClick={() => setShowDeleteAllModal(false)}>
           <div className={`bg-white w-full max-w-md flex flex-col shadow-2xl ${
             isMobile ? 'rounded-t-[32px] animate-slide-up mb-12' : 'rounded-2xl'
           }`} onClick={e => e.stopPropagation()}>
@@ -745,37 +745,17 @@ const Inventory = () => {
                 <div className="p-2 bg-red-100 rounded-full">
                   <ExclamationTriangleIcon className="h-6 w-6 text-red-600" />
                 </div>
-                <h2 className="text-lg font-semibold text-gray-800">Eliminar productos sin categoría</h2>
+                <h2 className="text-lg font-semibold text-slate-900">Eliminar productos sin categoría</h2>
               </div>
-              <p className="text-sm text-gray-600 mb-2">
-                Esta acción eliminará <strong>permanentemente</strong> los {uncategorizedProducts.length} productos que están en "General" o sin categoría asignada.
-              </p>
-              <p className="text-sm text-gray-600 mb-4">
-                Para confirmar, escribe <span className="font-bold text-red-600">ELIMINAR</span> en el campo de abajo.
-              </p>
-              <input
-                type="text"
-                value={deleteConfirmText}
-                onChange={(e) => setDeleteConfirmText(e.target.value)}
+              <p className="text-sm text-slate-500 mb-2">Esta acción eliminará permanentemente los {uncategorizedProducts.length} productos sin categoría.</p>
+              <p className="text-sm text-slate-500 mb-4">Escribe <span className="font-bold text-red-600">ELIMINAR</span> para confirmar.</p>
+              <input type="text" value={deleteConfirmText} onChange={(e) => setDeleteConfirmText(e.target.value)}
                 placeholder="Escribe ELIMINAR para confirmar"
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition mb-4"
-                autoFocus
-              />
+                className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-red-500/20 focus:border-red-400 outline-none transition mb-4" autoFocus />
               <div className="flex gap-3">
-                <button
-                  onClick={() => {
-                    setShowDeleteAllModal(false);
-                    setDeleteConfirmText('');
-                  }}
-                  className="flex-1 py-2.5 border border-gray-200 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-50 transition"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleDeleteAllUncategorized}
-                  disabled={deleteConfirmText !== 'ELIMINAR' || isDeletingAll}
-                  className="flex-1 py-2.5 bg-red-600 text-white rounded-xl text-sm font-medium hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                >
+                <button onClick={() => { setShowDeleteAllModal(false); setDeleteConfirmText(''); }} className="flex-1 py-2.5 border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition">Cancelar</button>
+                <button onClick={handleDeleteAllUncategorized} disabled={deleteConfirmText !== 'ELIMINAR' || isDeletingAll}
+                  className="flex-1 py-2.5 bg-red-600 text-white rounded-xl shadow-sm shadow-red-200 hover:bg-red-700 disabled:opacity-50 transition">
                   {isDeletingAll ? 'Eliminando...' : 'Eliminar todos'}
                 </button>
               </div>
