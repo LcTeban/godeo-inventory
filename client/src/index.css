@@ -3,11 +3,11 @@
 @tailwind utilities;
 
 body {
-  @apply bg-[#F9FAFB] text-gray-800;
+  @apply bg-slate-50 text-slate-800;
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Animación para el menú lateral desde la derecha */
+/* Animación para menú lateral desde derecha */
 @keyframes slide-in-right {
   from { transform: translateX(100%); }
   to { transform: translateX(0); }
@@ -27,10 +27,10 @@ body {
 
 /* Handle del bottom sheet */
 .bottom-sheet-handle {
-  width: 36px;
+  width: 40px;
   height: 4px;
   border-radius: 999px;
-  background-color: #D1D5DB;
+  background-color: #cbd5e1; /* slate-300 */
   margin: 8px auto 12px auto;
   opacity: 0.8;
 }
