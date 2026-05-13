@@ -25,12 +25,27 @@ body {
   animation: slide-up 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* Fade-in con desplazamiento hacia arriba */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
 /* Handle del bottom sheet */
 .bottom-sheet-handle {
   width: 40px;
   height: 4px;
   border-radius: 999px;
-  background-color: #cbd5e1; /* slate-300 */
+  background-color: #cbd5e1;
   margin: 8px auto 12px auto;
   opacity: 0.8;
 }
