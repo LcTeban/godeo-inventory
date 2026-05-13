@@ -208,7 +208,7 @@ const Categories = () => {
       </div>
 
       {showCopyModal && copyCategory && (
-        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4" onClick={() => setShowCopyModal(false)}>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowCopyModal(false)}>
           <div className="bg-white rounded-2xl w-full max-w-md shadow-xl" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
               <h2 className="text-lg font-semibold text-gray-800">📋 Copiar categoría</h2>
@@ -216,7 +216,7 @@ const Categories = () => {
                 <XMarkIcon className="h-5 w-5" />
               </button>
             </div>
-            <div className="p-6 space-y-4">
+            <div className="p-6 space-y-4" style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom))' }}>
               <p className="text-sm text-gray-600">
                 Vas a copiar la categoría <strong>{copyCategory.name}</strong> y todas sus subcategorías y productos al restaurante seleccionado.
               </p>
