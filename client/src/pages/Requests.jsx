@@ -335,10 +335,10 @@ const Requests = () => {
       )}
 
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div
             className="bg-white rounded-2xl w-full max-w-lg shadow-xl flex flex-col"
-            style={{ maxHeight: '85vh' }}
+            style={{ maxHeight: 'calc(100dvh - 100px)' }}
             onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
@@ -356,7 +356,7 @@ const Requests = () => {
               </button>
             </div>
             
-            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4" style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom))' }}>
               {formData.items.map((item, index) => (
                 <div key={index} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                   <div className="flex items-center justify-between mb-3">
