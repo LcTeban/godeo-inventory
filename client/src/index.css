@@ -3,9 +3,11 @@
 @tailwind utilities;
 
 body {
-  @apply bg-gray-50;
+  @apply bg-[#F9FAFB] text-gray-800;
+  -webkit-tap-highlight-color: transparent;
 }
 
+/* Animación para menú lateral desde derecha */
 @keyframes slide-in-right {
   from { transform: translateX(100%); }
   to { transform: translateX(0); }
@@ -14,7 +16,33 @@ body {
   animation: slide-in-right 0.3s ease-out;
 }
 
-/* Evitar saltos de ancho al bloquear scroll */
-body.fixed-scroll {
+/* Bottom sheet animación */
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.animate-slide-up {
+  animation: slide-up 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Handle del bottom sheet */
+.bottom-sheet-handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 999px;
+  background-color: #D1D5DB;
+  margin: 8px auto 12px auto;
+  opacity: 0.8;
+}
+
+/* Scroll suave en modales */
+.modal-scroll {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Evitar saltos de layout al bloquear scroll */
+body.modal-open {
   overflow: hidden;
+  position: fixed;
+  width: 100%;
 }
