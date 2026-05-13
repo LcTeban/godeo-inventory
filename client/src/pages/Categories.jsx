@@ -64,6 +64,13 @@ const Categories = () => {
 
   useLockBodyScroll(showCopyModal);
 
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   useEffect(() => { loadCategories(); }, []);
 
   const loadCategories = async () => {
@@ -130,7 +137,7 @@ const Categories = () => {
   return (
     <div className="space-y-5">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <h1 className="text-xl font-bold text-gray-800">📁 Gestión de Categorías</h1>
+        <h1 className="text-xl font-bold text-gray-800 tracking-tight">📁 Gestión de Categorías</h1>
         <button
           onClick={() => { setShowAddRoot(true); setParentForNew(null); setEditId(null); setIsGlobal(false); }}
           className="w-full sm:w-auto bg-blue-600 text-white px-4 py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-1.5 hover:bg-blue-700 transition"
@@ -180,7 +187,7 @@ const Categories = () => {
         </div>
       )}
 
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+      <div className="bg-white rounded-2xl shadow-sm p-4">
         {roots.length === 0 && !showAddRoot && parentForNew === null && editId === null && (
           <div className="text-center py-10">
             <FolderIcon className="h-12 w-12 text-gray-300 mx-auto mb-3" />
@@ -208,15 +215,18 @@ const Categories = () => {
       </div>
 
       {showCopyModal && copyCategory && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowCopyModal(false)}>
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-xl" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-              <h2 className="text-lg font-semibold text-gray-800">📋 Copiar categoría</h2>
-              <button onClick={() => setShowCopyModal(false)} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition">
-                <XMarkIcon className="h-5 w-5" />
-              </button>
-            </div>
-            <div className="p-6 space-y-4" style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom))' }}>
+        <div className={`fixed inset-0 z-50 flex ${isMobile ? 'items-end' : 'items-center justify-center'} bg-black/30`} onClick={() => setShowCopyModal(false)}>
+          <div className={`bg-white w-full max-w-md flex flex-col shadow-2xl ${
+            isMobile ? 'rounded-t-[32px] animate-slide-up' : 'rounded-2xl'
+          }`} onClick={e => e.stopPropagation()}>
+            {isMobile && <div className="bottom-sheet-handle" />}
+            <div className="p-6 space-y-4" style={{ paddingBottom: isMobile ? 'calc(80px + env(safe-area-inset-bottom))' : '16px' }}>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-800">📋 Copiar categoría</h2>
+                <button onClick={() => setShowCopyModal(false)} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition">
+                  <XMarkIcon className="h-5 w-5" />
+                </button>
+              </div>
               <p className="text-sm text-gray-600">
                 Vas a copiar la categoría <strong>{copyCategory.name}</strong> y todas sus subcategorías y productos al restaurante seleccionado.
               </p>
