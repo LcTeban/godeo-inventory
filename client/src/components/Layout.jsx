@@ -79,27 +79,27 @@ const Layout = () => {
         </div>
       )}
 
-      {/* Sidebar móvil: ahora se desliza desde la DERECHA */}
+      {/* Sidebar móvil: se desliza desde la derecha */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-50 lg:hidden" onClick={() => setSidebarOpen(false)}>
           <div
             className="bg-white w-64 h-full flex flex-col fixed right-0 top-0 shadow-xl animate-slide-in-right"
             onClick={e => e.stopPropagation()}
           >
-            <div className="p-4 flex justify-between items-center border-b">
+            <div className="p-4 flex justify-between items-center border-b flex-shrink-0">
               <h2 className="text-xl font-bold">🍴 Godeo</h2>
               <button onClick={() => setSidebarOpen(false)}>
                 <XMarkIcon className="h-6 w-6" />
               </button>
             </div>
 
-            <div className="p-4 bg-gray-50">
+            <div className="p-4 bg-gray-50 flex-shrink-0">
               <p className="text-sm text-gray-600">{user?.name}</p>
               <p className="text-xs text-purple-600 font-semibold">{user?.role}</p>
             </div>
 
             {isAdmin && (
-              <div className="px-4 pt-2">
+              <div className="px-4 pt-2 flex-shrink-0">
                 <select
                   value={currentRestaurant}
                   onChange={(e) => { switchRestaurant(e.target.value); setSidebarOpen(false); }}
@@ -113,7 +113,7 @@ const Layout = () => {
             )}
 
             {isAdmin && (
-              <div className="px-4 pt-2">
+              <div className="px-4 pt-2 flex-shrink-0">
                 <button
                   onClick={enableNotifications}
                   className="w-full p-2 border rounded-lg text-sm flex items-center justify-center gap-2 hover:bg-gray-100"
@@ -128,6 +128,7 @@ const Layout = () => {
               </div>
             )}
 
+            {/* Navegación scrollable */}
             <nav className="flex-1 overflow-y-auto px-2 py-2">
               {navigation.map(item => {
                 if (item.adminOnly && !isAdmin) return null;
@@ -145,7 +146,8 @@ const Layout = () => {
               })}
             </nav>
 
-            <div className="border-t p-4">
+            {/* Botón de cerrar sesión siempre visible al final */}
+            <div className="border-t p-4 flex-shrink-0">
               <button
                 onClick={handleLogout}
                 className="w-full flex items-center px-3 py-3 text-red-600 hover:bg-red-50 rounded-lg"
@@ -162,7 +164,7 @@ const Layout = () => {
       {!isMobile && (
         <div className="hidden lg:flex lg:w-64 lg:fixed lg:inset-y-0">
           <div className="w-64 bg-white shadow-lg flex flex-col h-full">
-            <div className="p-6 border-b">
+            <div className="p-6 border-b flex-shrink-0">
               <h1 className="text-2xl font-bold">🍴 Godeo</h1>
               <p className="text-sm text-gray-600 mt-1">{user?.name}</p>
               <span className="inline-block mt-1 px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded">
@@ -212,7 +214,7 @@ const Layout = () => {
               })}
             </nav>
 
-            <div className="border-t p-4">
+            <div className="border-t p-4 flex-shrink-0">
               <button
                 onClick={handleLogout}
                 className="w-full flex items-center px-3 py-3 text-red-600 hover:bg-red-50 rounded-lg"
