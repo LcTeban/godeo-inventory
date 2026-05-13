@@ -17,12 +17,16 @@ import {
 } from '@heroicons/react/24/outline';
 import { useState, useEffect } from 'react';
 import MobileBottomBar from './MobileBottomBar';
+import useLockBodyScroll from '../hooks/useLockBodyScroll';
 
 const Layout = () => {
   const { user, logout, currentRestaurant, switchRestaurant, isAdmin, notificationsEnabled, enableNotifications } = useAuth();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+
+  // Bloquear scroll del body cuando el sidebar está abierto en móvil
+  useLockBodyScroll(sidebarOpen && isMobile);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 1024);
