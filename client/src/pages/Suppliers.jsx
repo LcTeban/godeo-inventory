@@ -22,9 +22,13 @@ const Suppliers = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('name');
   const [sortOrder, setSortOrder] = useState('asc');
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   useEffect(() => {
     loadData();
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const loadData = async () => {
@@ -102,7 +106,6 @@ const Suppliers = () => {
   const filteredSuppliers = useMemo(() => {
     let result = [...suppliers];
     
-    // Búsqueda
     if (searchTerm) {
       const search = searchTerm.toLowerCase();
       result = result.filter(s => 
@@ -113,7 +116,6 @@ const Suppliers = () => {
       );
     }
     
-    // Ordenación
     result.sort((a, b) => {
       let valA = a[sortBy] || '';
       let valB = b[sortBy] || '';
@@ -140,6 +142,9 @@ const Suppliers = () => {
   };
 
   const totalProductsWithSupplier = products.filter(p => p.supplier_id).length;
+
+  // Forzar vista de tarjetas en móvil
+  const effectiveViewMode = isMobile ? 'grid' : viewMode;
 
   if (loading) {
     return (
@@ -217,28 +222,30 @@ const Suppliers = () => {
               className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
             />
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`p-2 rounded-lg transition ${viewMode === 'grid' ? 'bg-blue-100 text-blue-600' : 'text-gray-400 hover:bg-gray-100'}`}
-              title="Vista cuadrícula"
-            >
-              <Squares2X2Icon className="h-5 w-5" />
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`p-2 rounded-lg transition ${viewMode === 'list' ? 'bg-blue-100 text-blue-600' : 'text-gray-400 hover:bg-gray-100'}`}
-              title="Vista lista"
-            >
-              <ListBulletIcon className="h-5 w-5" />
-            </button>
-          </div>
+          {!isMobile && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-2 rounded-lg transition ${viewMode === 'grid' ? 'bg-blue-100 text-blue-600' : 'text-gray-400 hover:bg-gray-100'}`}
+                title="Vista cuadrícula"
+              >
+                <Squares2X2Icon className="h-5 w-5" />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-2 rounded-lg transition ${viewMode === 'list' ? 'bg-blue-100 text-blue-600' : 'text-gray-400 hover:bg-gray-100'}`}
+                title="Vista lista"
+              >
+                <ListBulletIcon className="h-5 w-5" />
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Vista Cuadrícula */}
-      {viewMode === 'grid' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Vista de tarjetas (móvil y opción grid) */}
+      {effectiveViewMode === 'grid' && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredSuppliers.map(supplier => (
             <div key={supplier.id} className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition p-5 group">
               <div className="flex items-start justify-between mb-4">
@@ -252,7 +259,7 @@ const Suppliers = () => {
                   </div>
                 </div>
                 {isAdmin && (
-                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition">
+                  <div className="flex gap-1">
                     <button onClick={() => openEdit(supplier)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition">
                       <PencilIcon className="h-4 w-4" />
                     </button>
@@ -298,8 +305,8 @@ const Suppliers = () => {
         </div>
       )}
 
-      {/* Vista Lista */}
-      {viewMode === 'list' && (
+      {/* Vista de tabla solo en escritorio (cuando no es móvil y viewMode='list') */}
+      {!isMobile && effectiveViewMode === 'list' && (
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
