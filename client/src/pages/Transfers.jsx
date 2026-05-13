@@ -26,6 +26,13 @@ const Transfers = () => {
 
   useLockBodyScroll(showModal);
 
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   useEffect(() => {
     loadData();
   }, [currentRestaurant]);
@@ -77,6 +84,7 @@ const Transfers = () => {
     }
   };
 
+  // Filtrado
   const filteredTransfers = transfers.filter(t => {
     const matchesSearch = !searchTerm || 
       t.products?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -132,9 +140,10 @@ const Transfers = () => {
 
   return (
     <div className="space-y-5">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-gray-800">🚚 Transferencias</h1>
+          <h1 className="text-xl font-bold text-gray-800 tracking-tight">🚚 Transferencias</h1>
           <p className="text-sm text-gray-500 mt-1">Envía y recibe productos entre sucursales</p>
         </div>
         <button
@@ -145,22 +154,23 @@ const Transfers = () => {
         </button>
       </div>
 
+      {/* KPIs rápidos */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-2xl p-4 shadow-sm">
           <div className="flex items-center gap-2">
             <ClockIcon className="h-5 w-5 text-amber-500" />
             <span className="text-sm text-gray-500">Pendientes</span>
           </div>
           <p className="text-2xl font-bold text-gray-800 mt-1">{pendingCount}</p>
         </div>
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-2xl p-4 shadow-sm">
           <div className="flex items-center gap-2">
             <CheckCircleIcon className="h-5 w-5 text-emerald-500" />
             <span className="text-sm text-gray-500">Completadas hoy</span>
           </div>
           <p className="text-2xl font-bold text-gray-800 mt-1">{completedToday}</p>
         </div>
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-2xl p-4 shadow-sm">
           <div className="flex items-center gap-2">
             <ArrowPathIcon className="h-5 w-5 text-blue-500" />
             <span className="text-sm text-gray-500">Total</span>
@@ -169,7 +179,8 @@ const Transfers = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 p-3 space-y-3">
+      {/* Barra de búsqueda y filtros */}
+      <div className="bg-white rounded-2xl shadow-sm p-3 space-y-3">
         <div className="flex gap-2">
           <div className="flex-1 relative">
             <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-2.5 text-gray-400" />
@@ -233,11 +244,12 @@ const Transfers = () => {
         )}
       </div>
 
+      {/* Lista de transferencias */}
       <div className="space-y-2">
         {filteredTransfers.map(transfer => (
           <div 
             key={transfer.id} 
-            className={`bg-white rounded-xl p-4 shadow-sm border transition ${
+            className={`bg-white rounded-2xl p-4 shadow-sm border transition ${
               transfer.status === 'pendiente' ? 'border-amber-200' : 'border-gray-100'
             }`}
           >
@@ -285,7 +297,7 @@ const Transfers = () => {
           </div>
         ))}
         {filteredTransfers.length === 0 && (
-          <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
+          <div className="text-center py-16 bg-white rounded-2xl shadow-sm">
             <TruckIcon className="h-12 w-12 mx-auto mb-3 text-gray-300" />
             <p className="text-gray-500 font-medium">No hay transferencias</p>
             <p className="text-gray-400 text-sm mt-1">
@@ -295,16 +307,20 @@ const Transfers = () => {
         )}
       </div>
 
+      {/* Modal Nueva Transferencia */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowModal(false)}>
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-xl" onClick={e => e.stopPropagation()}>
+        <div className={`fixed inset-0 z-50 flex ${isMobile ? 'items-end' : 'items-center justify-center'} bg-black/30`} onClick={() => setShowModal(false)}>
+          <div className={`bg-white w-full max-w-md flex flex-col shadow-2xl ${
+            isMobile ? 'rounded-t-[32px] animate-slide-up max-h-[85dvh]' : 'rounded-2xl max-h-[90vh]'
+          }`} onClick={e => e.stopPropagation()}>
+            {isMobile && <div className="bottom-sheet-handle" />}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
               <h2 className="text-lg font-semibold text-gray-800">Nueva Transferencia</h2>
               <button onClick={() => setShowModal(false)} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition">
                 <XMarkIcon className="h-5 w-5" />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="p-6 space-y-4" style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom))' }}>
+            <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-4 space-y-4 modal-scroll" style={{ paddingBottom: isMobile ? 'calc(80px + env(safe-area-inset-bottom))' : '16px' }}>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">📦 Producto *</label>
                 <select
