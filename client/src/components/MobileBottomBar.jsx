@@ -13,7 +13,6 @@ const MobileBottomBar = ({ onMenuToggle }) => {
   const location = useLocation();
   const { isAdmin } = useAuth();
 
-  // Cinco botones fijos para todos los roles, con Movimientos como tercera opción
   const navItems = [
     { path: '/dashboard', icon: HomeIcon, label: 'Inicio' },
     { path: '/inventory', icon: CubeIcon, label: 'Inventario' },
@@ -23,7 +22,7 @@ const MobileBottomBar = ({ onMenuToggle }) => {
   ];
 
   const isActive = (path) => {
-    if (path === '') return false; // El botón "Más" nunca está activo
+    if (path === '') return false;
     return location.pathname === path;
   };
 
@@ -37,32 +36,31 @@ const MobileBottomBar = ({ onMenuToggle }) => {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 rounded-t-2xl border-t border-white/30 bg-white/80 backdrop-blur-lg shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.02),0_-2px_4px_-2px_rgba(0,0,0,0.03)]"
+      className="fixed bottom-0 left-0 right-0 z-50 rounded-t-[20px] bg-white/80 backdrop-blur-xl shadow-[0_-4px_20px_rgba(0,0,0,0.05)]"
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
-      <div className="flex justify-around items-center h-14 px-1">
+      <div className="flex justify-around items-center h-12 px-2">
         {navItems.map((item, index) => {
           const active = isActive(item.path);
           return (
             <button
               key={index}
               onClick={() => handleAction(item)}
-              className={`flex flex-col items-center justify-center w-full h-full transition-all duration-200 ${
-                active ? 'text-blue-600' : 'text-gray-400'
+              className={`flex flex-col items-center justify-center w-full h-full transition-all duration-300 ${
+                active ? 'text-orange-500' : 'text-gray-400'
               }`}
             >
               <item.icon
-                className={`w-6 h-6 transition-all duration-200 ${
+                className={`w-5 h-5 transition-transform duration-300 ${
                   active ? 'scale-110' : 'scale-100'
                 }`}
+                strokeWidth={active ? 2 : 1.5}
               />
-              {/* Indicador de punto activo */}
               <span
-                className={`mt-0.5 w-1 h-1 rounded-full transition-all duration-200 ${
-                  active ? 'bg-blue-600 opacity-100' : 'bg-transparent opacity-0'
+                className={`mt-0.5 text-[10px] tracking-widest font-medium leading-none ${
+                  active ? 'text-orange-500' : 'text-gray-500'
                 }`}
-              />
-              <span className="text-[10px] tracking-wider font-medium leading-none mt-0.5">
+              >
                 {item.label}
               </span>
             </button>
