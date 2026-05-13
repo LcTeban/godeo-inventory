@@ -56,7 +56,6 @@ const Inventory = () => {
     loadCategories();
   }, [currentRestaurant]);
 
-  // Escuchar evento de la barra inferior para abrir el formulario de añadir producto
   useEffect(() => {
     const handleOpenAddProduct = () => {
       setEditingProduct(null);
@@ -552,10 +551,10 @@ const Inventory = () => {
 
       {/* Modal Agregar/Editar Producto */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end sm:items-center justify-center" onClick={resetModal}>
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" onClick={resetModal}>
           <div
-            className="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-md shadow-xl flex flex-col"
-            style={{ maxHeight: '90vh' }}
+            className="bg-white rounded-2xl w-full max-w-md shadow-xl flex flex-col"
+            style={{ maxHeight: 'calc(100dvh - 100px)' }}
             onClick={e => e.stopPropagation()}
           >
             <div className="px-6 py-4 border-b border-gray-100 flex-shrink-0">
@@ -564,7 +563,7 @@ const Inventory = () => {
               </h2>
             </div>
 
-            <div className="overflow-y-auto flex-1 px-6 py-4 space-y-4">
+            <div className="overflow-y-auto flex-1 px-6 py-4 space-y-4" style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom))' }}>
               <div>
                 <label className="block text-sm font-medium mb-2">📸 Foto del producto</label>
                 <div className="flex gap-2">
@@ -665,8 +664,8 @@ const Inventory = () => {
 
       {/* Modal Movimiento */}
       {showMovementModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50" onClick={() => setShowMovementModal(false)}>
-          <div className="bg-white rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setShowMovementModal(false)}>
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
             <h2 className="text-xl font-bold mb-4">
               {movementData.type === 'entrada' ? '📥 Entrada' : '📤 Salida'} - {selectedProduct?.name}
             </h2>
@@ -695,8 +694,8 @@ const Inventory = () => {
 
       {/* Modal Copiar Producto */}
       {showCopyModal && selectedProduct && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end sm:items-center justify-center" onClick={() => setShowCopyModal(false)}>
-          <div className="bg-white rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" onClick={() => setShowCopyModal(false)}>
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
             <h2 className="text-xl font-bold mb-4">📋 Copiar Producto</h2>
             <p className="text-sm text-gray-600 mb-4">
               Copiarás <strong>{selectedProduct.name}</strong> a otro restaurante.
