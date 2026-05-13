@@ -167,7 +167,7 @@ const Recipes = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Header con gradiente suave */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">📖 Recetas</h1>
@@ -176,7 +176,7 @@ const Recipes = () => {
         {isAdmin && (
           <button
             onClick={openAdd}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 transition-all shadow-sm shadow-blue-200 active:scale-95"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-orange-500 text-white text-sm font-medium rounded-xl hover:bg-orange-600 transition-all shadow-sm shadow-orange-200 active:scale-95"
           >
             <PlusIcon className="h-4 w-4" />
             Nueva Receta
@@ -192,7 +192,7 @@ const Recipes = () => {
           placeholder="Buscar receta por nombre..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition-all shadow-sm"
+          className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition-all shadow-sm"
         />
       </div>
 
@@ -211,10 +211,11 @@ const Recipes = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filteredRecipes.map(recipe => (
+          {filteredRecipes.map((recipe, index) => (
             <div
               key={recipe.id}
-              className="bg-white rounded-2xl shadow-sm overflow-hidden transition-all hover:shadow-md group"
+              className="bg-white rounded-2xl shadow-md shadow-slate-100/50 overflow-hidden transition-all hover:shadow-lg group animate-fade-in-up"
+              style={{ animationDelay: `${index * 0.05}s` }}
             >
               {/* Imagen de la receta (abre detalle) */}
               <div className="relative cursor-pointer overflow-hidden" onClick={() => openDetail(recipe)}>
@@ -367,7 +368,7 @@ const Recipes = () => {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Ej: Tarta de queso"
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 focus:bg-white outline-none transition-all"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 focus:bg-white outline-none transition-all"
                     required
                   />
                 </div>
@@ -434,7 +435,7 @@ const Recipes = () => {
                             <select
                               value={ing.product_id}
                               onChange={(e) => handleIngredientChange(idx, 'product_id', e.target.value)}
-                              className="flex-1 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition-all"
+                              className="flex-1 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition-all"
                               required
                             >
                               <option value="">Seleccionar producto</option>
@@ -451,13 +452,13 @@ const Recipes = () => {
                                 placeholder="Cant."
                                 value={ing.quantity}
                                 onChange={(e) => handleIngredientChange(idx, 'quantity', e.target.value)}
-                                className="w-28 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition-all"
+                                className="w-28 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition-all"
                                 required
                               />
                               <select
                                 value={ing.unit}
                                 onChange={(e) => handleIngredientChange(idx, 'unit', e.target.value)}
-                                className="w-24 px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition-all"
+                                className="w-24 px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition-all"
                               >
                                 <option value="g">g</option>
                                 <option value="kg">kg</option>
@@ -472,7 +473,7 @@ const Recipes = () => {
                       <button
                         type="button"
                         onClick={handleAddIngredient}
-                        className="w-full py-3 border-2 border-dashed border-slate-200 text-slate-500 rounded-xl text-sm font-medium hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50/50 transition-all"
+                        className="w-full py-3 border-2 border-dashed border-slate-200 text-slate-500 rounded-xl text-sm font-medium hover:border-orange-300 hover:text-orange-600 hover:bg-orange-50/50 transition-all"
                       >
                         + Agregar ingrediente
                       </button>
@@ -500,7 +501,7 @@ const Recipes = () => {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-3 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm shadow-blue-200"
+                  className="flex-1 py-3 bg-orange-500 text-white rounded-xl text-sm font-medium hover:bg-orange-600 transition-colors shadow-sm shadow-orange-200"
                 >
                   {editingRecipe ? 'Actualizar Receta' : 'Crear Receta'}
                 </button>
