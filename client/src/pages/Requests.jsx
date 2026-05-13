@@ -13,7 +13,6 @@ const Requests = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   
-  // Formulario
   const [formData, setFormData] = useState({
     items: [{ productName: '', quantity: '', unit: 'unidad' }],
     notes: ''
@@ -153,7 +152,6 @@ const Requests = () => {
       .slice(0, 5);
   };
 
-  // Filtrado
   const myRequests = requests.filter(r => r.user_id === user?.id);
   const pendingRequests = isAdmin ? requests.filter(r => r.status === 'pendiente') : [];
 
@@ -337,11 +335,16 @@ const Requests = () => {
         </div>
       )}
 
-      {/* Modal Nueva Lista */}
+      {/* Modal Nueva Lista con estructura fixed header/footer */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-lg max-h-[85vh] flex flex-col shadow-xl">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <div
+            className="bg-white rounded-2xl w-full max-w-lg shadow-xl flex flex-col"
+            style={{ maxHeight: '85vh' }}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Header fijo */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
               <h2 className="text-lg font-semibold text-gray-800">📋 Nueva Lista de Pedidos</h2>
               <button
                 onClick={() => {
@@ -356,135 +359,135 @@ const Requests = () => {
               </button>
             </div>
             
-            <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
-              <div className="px-6 py-4 space-y-4">
-                {formData.items.map((item, index) => (
-                  <div key={index} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                        Producto {index + 1}
-                      </span>
-                      {formData.items.length > 1 && (
-                        <button type="button" onClick={() => handleRemoveItem(index)} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition">
-                          <TrashIcon className="h-4 w-4" />
-                        </button>
-                      )}
-                    </div>
+            {/* Cuerpo con scroll */}
+            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+              {formData.items.map((item, index) => (
+                <div key={index} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Producto {index + 1}
+                    </span>
+                    {formData.items.length > 1 && (
+                      <button type="button" onClick={() => handleRemoveItem(index)} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition">
+                        <TrashIcon className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                  
+                  <div className="relative mb-3">
+                    <input
+                      type="text"
+                      placeholder="Buscar producto o escribir nombre..."
+                      value={item.productName}
+                      onChange={(e) => handleItemChange(index, 'productName', e.target.value)}
+                      onFocus={() => setActiveSuggestionIndex(index)}
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                      autoComplete="off"
+                    />
                     
-                    <div className="relative mb-3">
-                      <input
-                        type="text"
-                        placeholder="Buscar producto o escribir nombre..."
-                        value={item.productName}
-                        onChange={(e) => handleItemChange(index, 'productName', e.target.value)}
-                        onFocus={() => setActiveSuggestionIndex(index)}
-                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                        autoComplete="off"
-                      />
-                      
-                      {item.productName && (
-                        <div className="mt-1">
-                          {productExists[index] ? (
-                            <span className="text-xs text-emerald-600 flex items-center gap-1">✓ Producto del inventario</span>
-                          ) : (
-                            <span className="text-xs text-amber-600 flex items-center gap-1">⚠️ Producto nuevo</span>
-                          )}
-                        </div>
-                      )}
-                      
-                      {activeSuggestionIndex === index && getSuggestions(item.productName).length > 0 && (
-                        <div className="absolute z-10 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
-                          {getSuggestions(item.productName).map(product => (
-                            <button
-                              key={product.id}
-                              type="button"
-                              onClick={() => handleSelectSuggestion(index, product)}
-                              className="w-full px-4 py-3 text-left hover:bg-blue-50 transition flex items-center justify-between"
-                            >
-                              <div>
-                                <span className="text-sm font-medium text-gray-800">{product.name}</span>
-                                <span className="text-xs text-gray-400 ml-2">{product.category}</span>
-                              </div>
-                              <span className="text-xs text-gray-500">{product.stock} {product.unit}</span>
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                    {item.productName && (
+                      <div className="mt-1">
+                        {productExists[index] ? (
+                          <span className="text-xs text-emerald-600 flex items-center gap-1">✓ Producto del inventario</span>
+                        ) : (
+                          <span className="text-xs text-amber-600 flex items-center gap-1">⚠️ Producto nuevo</span>
+                        )}
+                      </div>
+                    )}
+                    
+                    {activeSuggestionIndex === index && getSuggestions(item.productName).length > 0 && (
+                      <div className="absolute z-10 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
+                        {getSuggestions(item.productName).map(product => (
+                          <button
+                            key={product.id}
+                            type="button"
+                            onClick={() => handleSelectSuggestion(index, product)}
+                            className="w-full px-4 py-3 text-left hover:bg-blue-50 transition flex items-center justify-between"
+                          >
+                            <div>
+                              <span className="text-sm font-medium text-gray-800">{product.name}</span>
+                              <span className="text-xs text-gray-400 ml-2">{product.category}</span>
+                            </div>
+                            <span className="text-xs text-gray-500">{product.stock} {product.unit}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
 
-                    <div className="flex gap-2">
-                      <div className="flex-1">
-                        <label className="block text-xs text-gray-500 mb-1">Cantidad</label>
-                        <input
-                          type="number"
-                          step="0.01"
-                          placeholder="0"
-                          value={item.quantity}
-                          onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
-                          className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                          required
-                        />
-                      </div>
-                      <div className="w-24">
-                        <label className="block text-xs text-gray-500 mb-1">Unidad</label>
-                        <select
-                          value={item.unit}
-                          onChange={(e) => handleItemChange(index, 'unit', e.target.value)}
-                          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white"
-                        >
-                          <option value="unidad">ud</option>
-                          <option value="kg">kg</option>
-                          <option value="L">L</option>
-                          <option value="caja">caja</option>
-                          <option value="g">g</option>
-                          <option value="ml">ml</option>
-                        </select>
-                      </div>
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <label className="block text-xs text-gray-500 mb-1">Cantidad</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        placeholder="0"
+                        value={item.quantity}
+                        onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                        required
+                      />
+                    </div>
+                    <div className="w-24">
+                      <label className="block text-xs text-gray-500 mb-1">Unidad</label>
+                      <select
+                        value={item.unit}
+                        onChange={(e) => handleItemChange(index, 'unit', e.target.value)}
+                        className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                      >
+                        <option value="unidad">ud</option>
+                        <option value="kg">kg</option>
+                        <option value="L">L</option>
+                        <option value="caja">caja</option>
+                        <option value="g">g</option>
+                        <option value="ml">ml</option>
+                      </select>
                     </div>
                   </div>
-                ))}
-                
-                <button
-                  type="button"
-                  onClick={handleAddItem}
-                  className="w-full py-3 border-2 border-dashed border-gray-200 text-gray-500 rounded-xl text-sm font-medium hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50/50 transition"
-                >
-                  + Agregar otro producto
-                </button>
-
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">📝 Notas generales</label>
-                  <textarea
-                    value={formData.notes}
-                    onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                    placeholder="Instrucciones adicionales..."
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition resize-none"
-                    rows="2"
-                  />
                 </div>
-              </div>
+              ))}
+              
+              <button
+                type="button"
+                onClick={handleAddItem}
+                className="w-full py-3 border-2 border-dashed border-gray-200 text-gray-500 rounded-xl text-sm font-medium hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50/50 transition"
+              >
+                + Agregar otro producto
+              </button>
 
-              <div className="px-6 py-4 border-t border-gray-100 flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowModal(false);
-                    setFormData({ items: [{ productName: '', quantity: '', unit: 'unidad' }], notes: '' });
-                    setActiveSuggestionIndex(null);
-                    setProductExists({});
-                  }}
-                  className="flex-1 py-2.5 border border-gray-200 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-50 transition"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition shadow-sm"
-                >
-                  Enviar Lista
-                </button>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">📝 Notas generales</label>
+                <textarea
+                  value={formData.notes}
+                  onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                  placeholder="Instrucciones adicionales..."
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition resize-none"
+                  rows="2"
+                />
               </div>
-            </form>
+            </div>
+
+            {/* Footer fijo */}
+            <div className="px-6 py-4 border-t border-gray-100 flex gap-3 flex-shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowModal(false);
+                  setFormData({ items: [{ productName: '', quantity: '', unit: 'unidad' }], notes: '' });
+                  setActiveSuggestionIndex(null);
+                  setProductExists({});
+                }}
+                className="flex-1 py-2.5 border border-gray-200 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-50 transition"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSubmit}
+                className="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition shadow-sm"
+              >
+                Enviar Lista
+              </button>
+            </div>
           </div>
         </div>
       )}
