@@ -4,6 +4,7 @@ import {
   MagnifyingGlassIcon, FunnelIcon, XMarkIcon,
   TruckIcon, CheckCircleIcon, ClockIcon, ArrowPathIcon
 } from '@heroicons/react/24/outline';
+import useLockBodyScroll from '../hooks/useLockBodyScroll';
 
 const Transfers = () => {
   const { currentRestaurant, isAdmin, getTransfers, getProducts, addTransfer, completeTransfer } = useAuth();
@@ -12,18 +13,18 @@ const Transfers = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   
-  // Filtros
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterDirection, setFilterDirection] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
   
-  // Modal nueva transferencia
   const [formData, setFormData] = useState({
     productId: '', quantity: '', toRestaurant: '', reason: ''
   });
   const [isSaving, setIsSaving] = useState(false);
   const [isCompleting, setIsCompleting] = useState(null);
+
+  useLockBodyScroll(showModal);
 
   useEffect(() => {
     loadData();
@@ -76,7 +77,6 @@ const Transfers = () => {
     }
   };
 
-  // Filtrado
   const filteredTransfers = transfers.filter(t => {
     const matchesSearch = !searchTerm || 
       t.products?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -132,7 +132,6 @@ const Transfers = () => {
 
   return (
     <div className="space-y-5">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold text-gray-800">🚚 Transferencias</h1>
@@ -146,7 +145,6 @@ const Transfers = () => {
         </button>
       </div>
 
-      {/* KPIs rápidos */}
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
           <div className="flex items-center gap-2">
@@ -171,7 +169,6 @@ const Transfers = () => {
         </div>
       </div>
 
-      {/* Barra de búsqueda y filtros */}
       <div className="bg-white rounded-xl border border-gray-200 p-3 space-y-3">
         <div className="flex gap-2">
           <div className="flex-1 relative">
@@ -236,7 +233,6 @@ const Transfers = () => {
         )}
       </div>
 
-      {/* Lista de transferencias */}
       <div className="space-y-2">
         {filteredTransfers.map(transfer => (
           <div 
@@ -299,7 +295,6 @@ const Transfers = () => {
         )}
       </div>
 
-      {/* Modal Nueva Transferencia */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4" onClick={() => setShowModal(false)}>
           <div className="bg-white rounded-2xl w-full max-w-md shadow-xl" onClick={e => e.stopPropagation()}>
