@@ -350,7 +350,7 @@ const Requests = () => {
         <div className={`fixed inset-0 z-50 flex ${isMobile ? 'items-end' : 'items-center justify-center'} bg-black/30`} onClick={() => setShowModal(false)}>
           <div
             className={`bg-white w-full max-w-lg flex flex-col shadow-2xl ${
-              isMobile ? 'rounded-t-[32px] animate-slide-up max-h-[85dvh]' : 'rounded-2xl max-h-[85vh]'
+              isMobile ? 'rounded-t-[32px] animate-slide-up max-h-[85dvh] mb-12' : 'rounded-2xl max-h-[85vh]'
             }`}
             onClick={e => e.stopPropagation()}
           >
