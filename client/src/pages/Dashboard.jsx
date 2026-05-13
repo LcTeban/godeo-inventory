@@ -81,31 +81,31 @@ const Dashboard = () => {
       {/* Métricas principales */}
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-white rounded-2xl p-4 shadow-sm flex flex-col items-start">
-          <div className="p-2 bg-blue-50 rounded-lg mb-3">
+          <div className="p-2 bg-blue-50 rounded-xl mb-3">
             <CubeIcon className="h-5 w-5 text-blue-600" />
           </div>
-          <div className="text-2xl font-bold text-gray-800">
+          <div className="text-2xl font-bold text-slate-900">
             {stats.restaurants[currentRestaurant]?.totalProducts || 0}
           </div>
-          <div className="text-xs text-gray-500 mt-1 tracking-wide">Productos</div>
+          <div className="text-xs text-slate-500 mt-1 tracking-wide">Productos</div>
         </div>
         <div className="bg-white rounded-2xl p-4 shadow-sm flex flex-col items-start">
-          <div className="p-2 bg-orange-50 rounded-lg mb-3">
-            <ExclamationTriangleIcon className="h-5 w-5 text-orange-600" />
+          <div className="p-2 bg-amber-50 rounded-xl mb-3">
+            <ExclamationTriangleIcon className="h-5 w-5 text-amber-600" />
           </div>
-          <div className={`text-2xl font-bold ${(stats.restaurants[currentRestaurant]?.lowStock || 0) > 0 ? 'text-orange-600' : 'text-gray-800'}`}>
+          <div className={`text-2xl font-bold ${(stats.restaurants[currentRestaurant]?.lowStock || 0) > 0 ? 'text-amber-600' : 'text-slate-900'}`}>
             {stats.restaurants[currentRestaurant]?.lowStock || 0}
           </div>
-          <div className="text-xs text-gray-500 mt-1 tracking-wide">Stock Bajo</div>
+          <div className="text-xs text-slate-500 mt-1 tracking-wide">Stock Bajo</div>
         </div>
         <div className="bg-white rounded-2xl p-4 shadow-sm flex flex-col items-start">
-          <div className="p-2 bg-emerald-50 rounded-lg mb-3">
+          <div className="p-2 bg-emerald-50 rounded-xl mb-3">
             <TruckIcon className="h-5 w-5 text-emerald-600" />
           </div>
-          <div className={`text-2xl font-bold ${stats.pendingTransfers > 0 ? 'text-blue-600' : 'text-gray-800'}`}>
+          <div className={`text-2xl font-bold ${stats.pendingTransfers > 0 ? 'text-blue-600' : 'text-slate-900'}`}>
             {stats.pendingTransfers}
           </div>
-          <div className="text-xs text-gray-500 mt-1 tracking-wide">Pendientes</div>
+          <div className="text-xs text-slate-500 mt-1 tracking-wide">Pendientes</div>
         </div>
       </div>
 
@@ -115,19 +115,19 @@ const Dashboard = () => {
           {/* Tarjetas de las 3 sucursales */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {restaurants.map(rest => (
-              <div key={rest.id} className={`rounded-2xl p-5 shadow-sm ${rest.bg} border border-gray-100/50`}>
+              <div key={rest.id} className={`rounded-2xl p-5 shadow-sm ${rest.bg}`}>
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-2xl">{rest.icon}</span>
-                  <h3 className="font-semibold text-gray-800 tracking-tight">{rest.name}</h3>
+                  <h3 className="font-semibold text-slate-900 tracking-tight">{rest.name}</h3>
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Productos</span>
-                    <span className="font-bold text-gray-800">{stats.restaurants[rest.id]?.totalProducts || 0}</span>
+                    <span className="text-slate-500">Productos</span>
+                    <span className="font-bold text-slate-900">{stats.restaurants[rest.id]?.totalProducts || 0}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Stock Bajo</span>
-                    <span className={`font-bold ${(stats.restaurants[rest.id]?.lowStock || 0) > 0 ? 'text-orange-600' : 'text-gray-800'}`}>
+                    <span className="text-slate-500">Stock Bajo</span>
+                    <span className={`font-bold ${(stats.restaurants[rest.id]?.lowStock || 0) > 0 ? 'text-amber-600' : 'text-slate-900'}`}>
                       {stats.restaurants[rest.id]?.lowStock || 0}
                     </span>
                   </div>
@@ -138,24 +138,24 @@ const Dashboard = () => {
 
           {/* Alertas urgentes */}
           {(stats.pendingTransfers > 0 || pendingRequests.length > 0 || (stats.restaurants[currentRestaurant]?.lowStock || 0) > 0) && (
-            <div className="bg-yellow-50 border border-yellow-100 rounded-2xl p-4 shadow-sm">
-              <h3 className="font-semibold text-yellow-800 mb-3 flex items-center gap-2 tracking-tight">
+            <div className="bg-amber-50 rounded-2xl p-4 shadow-sm">
+              <h3 className="font-semibold text-amber-800 mb-3 flex items-center gap-2 tracking-tight">
                 <ExclamationTriangleIcon className="h-5 w-5" />
                 Alertas Pendientes
               </h3>
               <div className="space-y-2">
                 {stats.pendingTransfers > 0 && (
-                  <Link to="/transfers" className="block text-sm text-yellow-700 hover:text-yellow-900">
+                  <Link to="/transfers" className="block text-sm text-amber-700 hover:text-amber-900">
                     🚚 {stats.pendingTransfers} transferencia(s) pendiente(s) de confirmar
                   </Link>
                 )}
                 {(stats.restaurants[currentRestaurant]?.lowStock || 0) > 0 && (
-                  <Link to="/inventory" className="block text-sm text-yellow-700 hover:text-yellow-900">
+                  <Link to="/inventory" className="block text-sm text-amber-700 hover:text-amber-900">
                     ⚠️ {stats.restaurants[currentRestaurant]?.lowStock} producto(s) con stock bajo
                   </Link>
                 )}
                 {pendingRequests.length > 0 && (
-                  <Link to="/requests" className="block text-sm text-yellow-700 hover:text-yellow-900">
+                  <Link to="/requests" className="block text-sm text-amber-700 hover:text-amber-900">
                     📋 {pendingRequests.length} pedido(s) de empleados sin revisar
                   </Link>
                 )}
@@ -167,28 +167,28 @@ const Dashboard = () => {
 
       {/* Actividad reciente */}
       <div className="bg-white rounded-2xl p-5 shadow-sm">
-        <h3 className="font-semibold text-gray-800 mb-3 flex items-center gap-2 tracking-tight">
+        <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2 tracking-tight">
           <ClockIcon className="h-5 w-5" />
           Actividad Reciente
         </h3>
         <div className="space-y-3">
           {recentMovements.slice(0, 5).map(mov => (
-            <div key={mov.id} className="flex items-center justify-between text-sm border-b border-gray-100 pb-2">
+            <div key={mov.id} className="flex items-center justify-between text-sm border-b border-slate-100 pb-2">
               <div>
-                <span className="font-medium">{mov.products?.name || mov.product_name}</span>
+                <span className="font-medium text-slate-700">{mov.products?.name || mov.product_name}</span>
                 <span className={`ml-2 px-1.5 py-0.5 rounded-full text-xs ${
-                  mov.type === 'entrada' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  mov.type === 'entrada' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'
                 }`}>
                   {mov.type === 'entrada' ? '+' : '-'}{mov.quantity}
                 </span>
               </div>
-              <span className="text-gray-400 text-xs">
+              <span className="text-slate-400 text-xs">
                 {new Date(mov.created_at).toLocaleString('es', { hour: '2-digit', minute: '2-digit' })}
               </span>
             </div>
           ))}
           {recentMovements.length === 0 && (
-            <p className="text-gray-500 text-sm text-center py-2">Sin movimientos recientes</p>
+            <p className="text-slate-400 text-sm text-center py-2">Sin movimientos recientes</p>
           )}
         </div>
         <Link to="/movements" className="block mt-3 text-blue-600 text-sm font-medium hover:underline">
@@ -198,37 +198,37 @@ const Dashboard = () => {
 
       {/* Accesos rápidos */}
       <div className="grid grid-cols-2 gap-3">
-        <Link to="/inventory" className="bg-white rounded-2xl p-5 shadow-sm text-center hover:bg-gray-50 transition-colors">
-          <div className="p-2 bg-blue-50 rounded-lg inline-block mb-2">
+        <Link to="/inventory" className="bg-white rounded-2xl p-5 shadow-sm text-center hover:bg-slate-50 transition-colors">
+          <div className="p-2 bg-blue-50 rounded-xl inline-block mb-2">
             <CubeIcon className="h-5 w-5 text-blue-600" />
           </div>
-          <p className="font-medium text-sm tracking-wide">Inventario</p>
+          <p className="font-medium text-sm tracking-wide text-slate-700">Inventario</p>
         </Link>
-        <Link to="/movements" className="bg-white rounded-2xl p-5 shadow-sm text-center hover:bg-gray-50 transition-colors">
-          <div className="p-2 bg-green-50 rounded-lg inline-block mb-2">
-            <ShoppingCartIcon className="h-5 w-5 text-green-600" />
+        <Link to="/movements" className="bg-white rounded-2xl p-5 shadow-sm text-center hover:bg-slate-50 transition-colors">
+          <div className="p-2 bg-emerald-50 rounded-xl inline-block mb-2">
+            <ShoppingCartIcon className="h-5 w-5 text-emerald-600" />
           </div>
-          <p className="font-medium text-sm tracking-wide">Movimientos</p>
+          <p className="font-medium text-sm tracking-wide text-slate-700">Movimientos</p>
         </Link>
-        <Link to="/requests" className="bg-white rounded-2xl p-5 shadow-sm text-center hover:bg-gray-50 transition-colors">
-          <div className="p-2 bg-yellow-50 rounded-lg inline-block mb-2">
-            <ClockIcon className="h-5 w-5 text-yellow-600" />
+        <Link to="/requests" className="bg-white rounded-2xl p-5 shadow-sm text-center hover:bg-slate-50 transition-colors">
+          <div className="p-2 bg-amber-50 rounded-xl inline-block mb-2">
+            <ClockIcon className="h-5 w-5 text-amber-600" />
           </div>
-          <p className="font-medium text-sm tracking-wide">Pedidos</p>
+          <p className="font-medium text-sm tracking-wide text-slate-700">Pedidos</p>
         </Link>
         {isAdmin ? (
-          <Link to="/reports" className="bg-white rounded-2xl p-5 shadow-sm text-center hover:bg-gray-50 transition-colors">
-            <div className="p-2 bg-purple-50 rounded-lg inline-block mb-2">
+          <Link to="/reports" className="bg-white rounded-2xl p-5 shadow-sm text-center hover:bg-slate-50 transition-colors">
+            <div className="p-2 bg-purple-50 rounded-xl inline-block mb-2">
               <ChartBarIcon className="h-5 w-5 text-purple-600" />
             </div>
-            <p className="font-medium text-sm tracking-wide">Reportes</p>
+            <p className="font-medium text-sm tracking-wide text-slate-700">Reportes</p>
           </Link>
         ) : (
-          <Link to="/recipes" className="bg-white rounded-2xl p-5 shadow-sm text-center hover:bg-gray-50 transition-colors">
-            <div className="p-2 bg-pink-50 rounded-lg inline-block mb-2">
+          <Link to="/recipes" className="bg-white rounded-2xl p-5 shadow-sm text-center hover:bg-slate-50 transition-colors">
+            <div className="p-2 bg-pink-50 rounded-xl inline-block mb-2">
               <BookOpenIcon className="h-5 w-5 text-pink-600" />
             </div>
-            <p className="font-medium text-sm tracking-wide">Recetas</p>
+            <p className="font-medium text-sm tracking-wide text-slate-700">Recetas</p>
           </Link>
         )}
       </div>
