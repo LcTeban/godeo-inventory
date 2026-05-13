@@ -7,6 +7,8 @@ import {
   CubeIcon,
   ShoppingCartIcon,
   TruckIcon,
+  ChartBarIcon,
+  BookOpenIcon
 } from '@heroicons/react/24/outline';
 
 const Dashboard = () => {
@@ -233,8 +235,5 @@ const Dashboard = () => {
     </div>
   );
 };
-
-// Agregar los iconos faltantes en los imports
-import { ChartBarIcon, BookOpenIcon } from '@heroicons/react/24/outline';
 
 export default Dashboard;
