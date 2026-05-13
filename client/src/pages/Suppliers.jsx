@@ -4,8 +4,9 @@ import {
   PlusIcon, PencilIcon, TrashIcon, MagnifyingGlassIcon,
   BuildingOffice2Icon, PhoneIcon, EnvelopeIcon, MapPinIcon,
   UserIcon, CubeIcon, Squares2X2Icon, ListBulletIcon,
-  XMarkIcon, FunnelIcon, ArrowUpIcon, ArrowDownIcon
+  XMarkIcon, ArrowUpIcon, ArrowDownIcon
 } from '@heroicons/react/24/outline';
+import useLockBodyScroll from '../hooks/useLockBodyScroll';
 
 const Suppliers = () => {
   const { isAdmin, getSuppliers, addSupplier, updateSupplier, deleteSupplier, getProducts } = useAuth();
@@ -23,6 +24,8 @@ const Suppliers = () => {
   const [sortBy, setSortBy] = useState('name');
   const [sortOrder, setSortOrder] = useState('asc');
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useLockBodyScroll(showModal);
 
   useEffect(() => {
     loadData();
@@ -102,7 +105,6 @@ const Suppliers = () => {
     }
   };
 
-  // Filtrado y ordenación
   const filteredSuppliers = useMemo(() => {
     let result = [...suppliers];
     
@@ -142,8 +144,6 @@ const Suppliers = () => {
   };
 
   const totalProductsWithSupplier = products.filter(p => p.supplier_id).length;
-
-  // Forzar vista de tarjetas en móvil
   const effectiveViewMode = isMobile ? 'grid' : viewMode;
 
   if (loading) {
@@ -166,7 +166,6 @@ const Suppliers = () => {
 
   return (
     <div className="space-y-5">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold text-gray-800">🏢 Proveedores</h1>
@@ -182,7 +181,6 @@ const Suppliers = () => {
         )}
       </div>
 
-      {/* KPIs */}
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
           <div className="flex items-center gap-2">
@@ -209,7 +207,6 @@ const Suppliers = () => {
         </div>
       </div>
 
-      {/* Barra de herramientas */}
       <div className="bg-white rounded-xl border border-gray-200 p-3">
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex-1 relative min-w-[200px]">
@@ -243,7 +240,6 @@ const Suppliers = () => {
         </div>
       </div>
 
-      {/* Vista de tarjetas (móvil y opción grid) */}
       {effectiveViewMode === 'grid' && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredSuppliers.map(supplier => (
@@ -305,7 +301,6 @@ const Suppliers = () => {
         </div>
       )}
 
-      {/* Vista de tabla solo en escritorio (cuando no es móvil y viewMode='list') */}
       {!isMobile && effectiveViewMode === 'list' && (
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <div className="overflow-x-auto">
@@ -380,7 +375,6 @@ const Suppliers = () => {
         </div>
       )}
 
-      {/* Modal Agregar/Editar */}
       {showModal && isAdmin && (
         <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4" onClick={() => setShowModal(false)}>
           <div className="bg-white rounded-2xl w-full max-w-md shadow-xl" onClick={e => e.stopPropagation()}>
