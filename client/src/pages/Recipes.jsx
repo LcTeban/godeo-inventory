@@ -167,16 +167,16 @@ const Recipes = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header con gradiente suave */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800 tracking-tight">📖 Recetas</h1>
-          <p className="text-sm text-gray-500 mt-1">Gestiona las recetas y sus ingredientes</p>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">📖 Recetas</h1>
+          <p className="text-sm text-slate-500 mt-1">Gestiona las recetas y sus ingredientes</p>
         </div>
         {isAdmin && (
           <button
             onClick={openAdd}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 transition-all shadow-sm hover:shadow-md active:scale-95"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 transition-all shadow-sm shadow-blue-200 active:scale-95"
           >
             <PlusIcon className="h-4 w-4" />
             Nueva Receta
@@ -186,26 +186,26 @@ const Recipes = () => {
 
       {/* Barra de búsqueda */}
       <div className="relative">
-        <MagnifyingGlassIcon className="h-5 w-5 absolute left-4 top-3 text-gray-400" />
+        <MagnifyingGlassIcon className="h-5 w-5 absolute left-4 top-3 text-slate-400" />
         <input
           type="text"
           placeholder="Buscar receta por nombre..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-2xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition-all shadow-sm"
+          className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition-all shadow-sm"
         />
       </div>
 
       {/* Lista de recetas */}
       {filteredRecipes.length === 0 ? (
-        <div className="text-center py-20 bg-white rounded-2xl border border-gray-100 shadow-sm">
+        <div className="text-center py-20 bg-white rounded-2xl shadow-sm">
           <div className="w-20 h-20 mx-auto mb-5 bg-blue-50 rounded-full flex items-center justify-center">
             <BookOpenIcon className="h-10 w-10 text-blue-400" />
           </div>
-          <p className="text-gray-500 font-medium text-lg">
+          <p className="text-slate-500 font-medium text-lg">
             {recipes.length === 0 ? 'No hay recetas creadas' : 'No se encontraron recetas'}
           </p>
-          <p className="text-gray-400 text-sm mt-1">
+          <p className="text-slate-400 text-sm mt-1">
             {recipes.length === 0 ? 'Crea la primera receta para empezar' : 'Prueba con otro término de búsqueda'}
           </p>
         </div>
@@ -214,7 +214,7 @@ const Recipes = () => {
           {filteredRecipes.map(recipe => (
             <div
               key={recipe.id}
-              className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden transition-all hover:shadow-md group"
+              className="bg-white rounded-2xl shadow-sm overflow-hidden transition-all hover:shadow-md group"
             >
               {/* Imagen de la receta (abre detalle) */}
               <div className="relative cursor-pointer overflow-hidden" onClick={() => openDetail(recipe)}>
@@ -239,7 +239,7 @@ const Recipes = () => {
               {/* Información y acciones */}
               <div className="p-5">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
                     {recipe.recipe_ingredients?.length || 0} ingredientes
                   </span>
                   {isAdmin && (
@@ -267,9 +267,9 @@ const Recipes = () => {
                   <ul className="mt-3 space-y-1.5">
                     {recipe.recipe_ingredients.slice(0, 3).map((ing, i) => (
                       <li key={i} className="flex items-center justify-between text-sm">
-                        <span className="text-gray-700 truncate mr-2">{ing.products?.name || 'Producto'}</span>
-                        <span className="font-medium text-gray-900 whitespace-nowrap tabular-nums">
-                          {ing.quantity} <span className="text-gray-500 font-normal">{ing.unit}</span>
+                        <span className="text-slate-700 truncate mr-2">{ing.products?.name || 'Producto'}</span>
+                        <span className="font-medium text-slate-900 whitespace-nowrap tabular-nums">
+                          {ing.quantity} <span className="text-slate-500 font-normal">{ing.unit}</span>
                         </span>
                       </li>
                     ))}
@@ -280,7 +280,7 @@ const Recipes = () => {
                     )}
                   </ul>
                 ) : (
-                  <p className="text-sm text-gray-400 italic mt-3">Sin ingredientes aún</p>
+                  <p className="text-sm text-slate-400 italic mt-3">Sin ingredientes aún</p>
                 )}
               </div>
             </div>
@@ -308,24 +308,24 @@ const Recipes = () => {
                 className="w-full h-64 object-cover rounded-2xl mb-6 shadow-lg"
               />
             ) : (
-              <div className="w-full h-64 bg-gray-800 rounded-2xl flex items-center justify-center mb-6">
-                <BookOpenIcon className="h-16 w-16 text-gray-600" />
+              <div className="w-full h-64 bg-slate-800 rounded-2xl flex items-center justify-center mb-6">
+                <BookOpenIcon className="h-16 w-16 text-slate-600" />
               </div>
             )}
             <h3 className="text-white font-semibold mb-4 text-lg">🥄 Ingredientes</h3>
             {selectedRecipe.recipe_ingredients && selectedRecipe.recipe_ingredients.length > 0 ? (
               <ul className="space-y-2.5">
                 {selectedRecipe.recipe_ingredients.map((ing, i) => (
-                  <li key={i} className="bg-gray-800/80 backdrop-blur-sm rounded-xl p-4 flex justify-between items-center">
-                    <span className="text-gray-200 font-medium">{ing.products?.name || `Producto #${ing.product_id}`}</span>
+                  <li key={i} className="bg-slate-800/80 backdrop-blur-sm rounded-xl p-4 flex justify-between items-center">
+                    <span className="text-slate-200 font-medium">{ing.products?.name || `Producto #${ing.product_id}`}</span>
                     <span className="text-white font-semibold tabular-nums">
-                      {ing.quantity} <span className="text-gray-400 font-normal">{ing.unit}</span>
+                      {ing.quantity} <span className="text-slate-400 font-normal">{ing.unit}</span>
                     </span>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-gray-400 text-center py-8">No hay ingredientes registrados</p>
+              <p className="text-slate-400 text-center py-8">No hay ingredientes registrados</p>
             )}
           </div>
         </div>
@@ -334,7 +334,7 @@ const Recipes = () => {
       {/* Modal Crear/Editar Receta */}
       {showModal && isAdmin && (
         <div
-          className={`fixed inset-0 z-50 flex ${isMobile ? 'items-end' : 'items-center justify-center'} bg-black/30`}
+          className={`fixed inset-0 z-50 flex ${isMobile ? 'items-end' : 'items-center justify-center'} bg-black/30 backdrop-blur-sm`}
           onClick={() => setShowModal(false)}
         >
           <div
@@ -345,13 +345,13 @@ const Recipes = () => {
           >
             {isMobile && <div className="bottom-sheet-handle" />}
             {/* Cabecera del modal */}
-            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 flex-shrink-0">
-              <h2 className="text-lg font-semibold text-gray-800">
+            <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 flex-shrink-0">
+              <h2 className="text-lg font-semibold text-slate-900">
                 {editingRecipe ? '✏️ Editar Receta' : '📖 Nueva Receta'}
               </h2>
               <button
                 onClick={() => { setShowModal(false); resetForm(); }}
-                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
               >
                 <XMarkIcon className="h-5 w-5" />
               </button>
@@ -361,20 +361,20 @@ const Recipes = () => {
               <div className="px-6 py-5 space-y-5" style={{ paddingBottom: isMobile ? 'calc(80px + env(safe-area-inset-bottom))' : '16px' }}>
                 {/* Nombre */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Nombre de la receta *</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Nombre de la receta *</label>
                   <input
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Ej: Tarta de queso"
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 focus:bg-white outline-none transition-all"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 focus:bg-white outline-none transition-all"
                     required
                   />
                 </div>
 
                 {/* Imagen */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">📸 Imagen de la receta</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">📸 Imagen de la receta</label>
                   <div className="flex gap-3">
                     <button
                       type="button"
@@ -386,7 +386,7 @@ const Recipes = () => {
                     <button
                       type="button"
                       onClick={openGallery}
-                      className="flex-1 py-3 px-4 bg-gray-50 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-100 transition-colors flex items-center justify-center gap-2 border border-gray-200"
+                      className="flex-1 py-3 px-4 bg-slate-50 text-slate-700 rounded-xl text-sm font-medium hover:bg-slate-100 transition-colors flex items-center justify-center gap-2 border border-slate-200"
                     >
                       🖼️ Galería
                     </button>
@@ -396,7 +396,7 @@ const Recipes = () => {
                       <img
                         src={image}
                         alt="Vista previa"
-                        className="w-28 h-28 object-cover rounded-xl border-2 border-gray-100 shadow-sm"
+                        className="w-28 h-28 object-cover rounded-xl border-2 border-slate-100 shadow-sm"
                       />
                       <button
                         type="button"
@@ -412,12 +412,12 @@ const Recipes = () => {
                 {/* Ingredientes (solo en edición) */}
                 {editingRecipe && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">🥄 Ingredientes</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-3">🥄 Ingredientes</label>
                     <div className="space-y-3">
                       {ingredients.map((ing, idx) => (
-                        <div key={idx} className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                        <div key={idx} className="bg-slate-50 border border-slate-200 rounded-xl p-4">
                           <div className="flex items-center justify-between mb-3">
-                            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
                               Ingrediente {idx + 1}
                             </span>
                             {ingredients.length > 1 && (
@@ -434,7 +434,7 @@ const Recipes = () => {
                             <select
                               value={ing.product_id}
                               onChange={(e) => handleIngredientChange(idx, 'product_id', e.target.value)}
-                              className="flex-1 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition-all"
+                              className="flex-1 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition-all"
                               required
                             >
                               <option value="">Seleccionar producto</option>
@@ -451,13 +451,13 @@ const Recipes = () => {
                                 placeholder="Cant."
                                 value={ing.quantity}
                                 onChange={(e) => handleIngredientChange(idx, 'quantity', e.target.value)}
-                                className="w-28 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition-all"
+                                className="w-28 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition-all"
                                 required
                               />
                               <select
                                 value={ing.unit}
                                 onChange={(e) => handleIngredientChange(idx, 'unit', e.target.value)}
-                                className="w-24 px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition-all"
+                                className="w-24 px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition-all"
                               >
                                 <option value="g">g</option>
                                 <option value="kg">kg</option>
@@ -472,7 +472,7 @@ const Recipes = () => {
                       <button
                         type="button"
                         onClick={handleAddIngredient}
-                        className="w-full py-3 border-2 border-dashed border-gray-200 text-gray-500 rounded-xl text-sm font-medium hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50/50 transition-all"
+                        className="w-full py-3 border-2 border-dashed border-slate-200 text-slate-500 rounded-xl text-sm font-medium hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50/50 transition-all"
                       >
                         + Agregar ingrediente
                       </button>
@@ -490,17 +490,17 @@ const Recipes = () => {
               </div>
 
               {/* Footer del modal */}
-              <div className="px-6 py-4 border-t border-gray-100 flex gap-3 flex-shrink-0">
+              <div className="px-6 py-4 border-t border-slate-100 flex gap-3 flex-shrink-0">
                 <button
                   type="button"
                   onClick={() => { setShowModal(false); resetForm(); }}
-                  className="flex-1 py-3 border border-gray-200 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors"
+                  className="flex-1 py-3 border border-slate-200 text-slate-600 rounded-xl text-sm font-medium hover:bg-slate-50 transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-3 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md"
+                  className="flex-1 py-3 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm shadow-blue-200"
                 >
                   {editingRecipe ? 'Actualizar Receta' : 'Crear Receta'}
                 </button>
