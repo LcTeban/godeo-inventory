@@ -27,6 +27,10 @@ const MobileBottomBar = ({ onMenuToggle }) => {
   };
 
   const handleAction = (item) => {
+    // Vibración háptica sutil (10ms)
+    if (window.navigator && window.navigator.vibrate) {
+      window.navigator.vibrate(10);
+    }
     if (item.action === 'menu') {
       onMenuToggle();
     } else {
@@ -56,7 +60,6 @@ const MobileBottomBar = ({ onMenuToggle }) => {
                 }`}
                 strokeWidth={active ? 2 : 1.5}
               />
-              {/* Indicador de punto activo */}
               <span
                 className={`w-1 h-1 rounded-full mt-0.5 transition-all duration-300 ${
                   active ? 'bg-orange-500 opacity-100' : 'bg-transparent opacity-0'
