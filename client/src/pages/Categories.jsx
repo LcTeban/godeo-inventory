@@ -217,7 +217,7 @@ const Categories = () => {
       {showCopyModal && copyCategory && (
         <div className={`fixed inset-0 z-50 flex ${isMobile ? 'items-end' : 'items-center justify-center'} bg-black/30`} onClick={() => setShowCopyModal(false)}>
           <div className={`bg-white w-full max-w-md flex flex-col shadow-2xl ${
-            isMobile ? 'rounded-t-[32px] animate-slide-up' : 'rounded-2xl'
+            isMobile ? 'rounded-t-[32px] animate-slide-up'mb-12 : 'rounded-2xl'
           }`} onClick={e => e.stopPropagation()}>
             {isMobile && <div className="bottom-sheet-handle" />}
             <div className="p-6 space-y-4" style={{ paddingBottom: isMobile ? 'calc(80px + env(safe-area-inset-bottom))' : '16px' }}>
