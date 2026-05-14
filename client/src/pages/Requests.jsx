@@ -190,7 +190,7 @@ const Requests = () => {
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="bg-blue-600 text-white px-5 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-blue-700 transition shadow-sm shadow-blue-200"
+          className="bg-orange-500 text-white px-5 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-orange-600 transition shadow-sm shadow-orange-200"
         >
           <PlusIcon className="h-4 w-4" />
           Nueva Lista
@@ -200,17 +200,16 @@ const Requests = () => {
       {/* KPIs (solo admin) */}
       {isAdmin && (
         <div className="grid grid-cols-3 gap-3">
-          <div className="bg-white rounded-2xl p-4 shadow-sm">
-            <div className="flex items-center gap-2">
-              <ClockIcon className="h-5 w-5 text-amber-500" />
-              <span className="text-sm text-slate-500">Pendientes</span>
+          <div className="bg-white rounded-2xl p-4 shadow-md shadow-slate-100/50 animate-fade-in-up flex flex-col items-start">
+            <div className="p-2 bg-amber-50 rounded-xl mb-3">
+              <ClockIcon className="h-5 w-5 text-amber-600" />
             </div>
             <p className="text-2xl font-bold text-slate-900 mt-1">{pendingCount}</p>
+            <p className="text-xs text-slate-500 mt-1 tracking-wide">Pendientes</p>
           </div>
-          <div className="bg-white rounded-2xl p-4 shadow-sm">
-            <div className="flex items-center gap-2">
-              <CheckCircleIcon className="h-5 w-5 text-emerald-500" />
-              <span className="text-sm text-slate-500">Aprobados hoy</span>
+          <div className="bg-white rounded-2xl p-4 shadow-md shadow-slate-100/50 animate-fade-in-up flex flex-col items-start" style={{ animationDelay: '0.1s' }}>
+            <div className="p-2 bg-emerald-50 rounded-xl mb-3">
+              <CheckCircleIcon className="h-5 w-5 text-emerald-600" />
             </div>
             <p className="text-2xl font-bold text-slate-900 mt-1">
               {requests.filter(r => {
@@ -220,13 +219,14 @@ const Requests = () => {
                 return date.toDateString() === today.toDateString();
               }).length}
             </p>
+            <p className="text-xs text-slate-500 mt-1 tracking-wide">Aprobados hoy</p>
           </div>
-          <div className="bg-white rounded-2xl p-4 shadow-sm">
-            <div className="flex items-center gap-2">
-              <ClipboardDocumentListIcon className="h-5 w-5 text-blue-500" />
-              <span className="text-sm text-slate-500">Total solicitudes</span>
+          <div className="bg-white rounded-2xl p-4 shadow-md shadow-slate-100/50 animate-fade-in-up flex flex-col items-start" style={{ animationDelay: '0.2s' }}>
+            <div className="p-2 bg-blue-50 rounded-xl mb-3">
+              <ClipboardDocumentListIcon className="h-5 w-5 text-blue-600" />
             </div>
             <p className="text-2xl font-bold text-slate-900 mt-1">{requests.length}</p>
+            <p className="text-xs text-slate-500 mt-1 tracking-wide">Total solicitudes</p>
           </div>
         </div>
       )}
@@ -240,13 +240,13 @@ const Requests = () => {
             placeholder="Buscar por nombre de producto..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition"
+            className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition"
           />
         </div>
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
-          className="px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 outline-none bg-white"
+          className="px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-500/20 outline-none bg-white"
         >
           <option value="all">Todos</option>
           <option value="pendiente">Pendientes</option>
@@ -256,13 +256,13 @@ const Requests = () => {
       </div>
 
       {/* Mis Solicitudes */}
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-md shadow-slate-100/50 overflow-hidden">
         <div className="px-5 py-4 border-b border-slate-100">
           <h2 className="font-semibold text-slate-900">📝 Mis Solicitudes ({filteredMyRequests.length})</h2>
         </div>
         <div className="divide-y divide-slate-100">
-          {filteredMyRequests.map(req => (
-            <div key={req.id} className="px-5 py-4 hover:bg-slate-50 transition">
+          {filteredMyRequests.map((req, index) => (
+            <div key={req.id} className="px-5 py-4 hover:bg-slate-50 transition animate-fade-in-up" style={{ animationDelay: `${index * 0.03}s` }}>
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-slate-900 truncate">{req.product_name}</p>
@@ -296,7 +296,7 @@ const Requests = () => {
 
       {/* Panel Admin - Pendientes de aprobar */}
       {isAdmin && pendingRequests.length > 0 && (
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-md shadow-slate-100/50 overflow-hidden">
           <div className="px-5 py-4 border-b border-slate-100">
             <h2 className="font-semibold text-slate-900">
               ⏳ Pendientes de aprobar
@@ -306,8 +306,8 @@ const Requests = () => {
             </h2>
           </div>
           <div className="divide-y divide-slate-100">
-            {filteredPending.map(req => (
-              <div key={req.id} className="px-5 py-4 hover:bg-slate-50 transition">
+            {filteredPending.map((req, index) => (
+              <div key={req.id} className="px-5 py-4 hover:bg-slate-50 transition animate-fade-in-up" style={{ animationDelay: `${index * 0.03}s` }}>
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
@@ -391,7 +391,7 @@ const Requests = () => {
                       value={item.productName}
                       onChange={(e) => handleItemChange(index, 'productName', e.target.value)}
                       onFocus={() => setActiveSuggestionIndex(index)}
-                      className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition"
+                      className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition"
                       autoComplete="off"
                     />
                     
@@ -412,7 +412,7 @@ const Requests = () => {
                             key={product.id}
                             type="button"
                             onClick={() => handleSelectSuggestion(index, product)}
-                            className="w-full px-4 py-3 text-left hover:bg-blue-50 transition flex items-center justify-between"
+                            className="w-full px-4 py-3 text-left hover:bg-orange-50 transition flex items-center justify-between"
                           >
                             <div>
                               <span className="text-sm font-medium text-slate-900">{product.name}</span>
@@ -434,7 +434,7 @@ const Requests = () => {
                         placeholder="0"
                         value={item.quantity}
                         onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition"
+                        className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/20 outline-none transition"
                         required
                       />
                     </div>
@@ -443,7 +443,7 @@ const Requests = () => {
                       <select
                         value={item.unit}
                         onChange={(e) => handleItemChange(index, 'unit', e.target.value)}
-                        className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 outline-none bg-white"
+                        className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/20 outline-none bg-white"
                       >
                         <option value="unidad">ud</option>
                         <option value="kg">kg</option>
@@ -460,7 +460,7 @@ const Requests = () => {
               <button
                 type="button"
                 onClick={handleAddItem}
-                className="w-full py-3 border-2 border-dashed border-slate-200 text-slate-500 rounded-xl text-sm font-medium hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50/50 transition"
+                className="w-full py-3 border-2 border-dashed border-slate-200 text-slate-500 rounded-xl text-sm font-medium hover:border-orange-300 hover:text-orange-600 hover:bg-orange-50/50 transition"
               >
                 + Agregar otro producto
               </button>
@@ -471,7 +471,7 @@ const Requests = () => {
                   value={formData.notes}
                   onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
                   placeholder="Instrucciones adicionales..."
-                  className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition resize-none"
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/20 outline-none transition resize-none"
                   rows="2"
                 />
               </div>
@@ -492,7 +492,7 @@ const Requests = () => {
               </button>
               <button
                 onClick={handleSubmit}
-                className="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition shadow-sm shadow-blue-200"
+                className="flex-1 py-2.5 bg-orange-500 text-white rounded-xl text-sm font-medium hover:bg-orange-600 transition shadow-sm shadow-orange-200"
               >
                 Enviar Lista
               </button>
