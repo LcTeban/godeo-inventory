@@ -20,7 +20,7 @@
     "recharts": "2.10.3",
     "firebase": "10.7.1",
     "@supabase/supabase-js": "2.39.7",
-    "framer-motion": "^10.16.4"
+    "framer-motion": "^10.16.4",
     "react-hot-toast": "^2.4.1"
   },
   "devDependencies": {
