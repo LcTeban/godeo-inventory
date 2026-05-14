@@ -5,6 +5,7 @@ import {
   ClipboardDocumentListIcon, CheckCircleIcon, XCircleIcon, ClockIcon
 } from '@heroicons/react/24/outline';
 import useLockBodyScroll from '../hooks/useLockBodyScroll';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Requests = () => {
   const { isAdmin, user, getRequests, addRequest, updateRequest, getProducts } = useAuth();
@@ -178,6 +179,49 @@ const Requests = () => {
 
   const pendingCount = pendingRequests.length;
 
+  // Variantes de animación stagger para listas
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.05 },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 15 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { type: 'spring', stiffness: 120, damping: 18 },
+    },
+  };
+
+  // Variantes para modal
+  const modalVariants = {
+    hidden: { y: '100%', opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { type: 'spring', stiffness: 300, damping: 30 },
+    },
+    exit: {
+      y: '100%',
+      opacity: 0,
+      transition: { type: 'spring', stiffness: 300, damping: 30 },
+    },
+  };
+
+  const desktopModalVariants = {
+    hidden: { scale: 0.95, opacity: 0 },
+    visible: {
+      scale: 1,
+      opacity: 1,
+      transition: { type: 'spring', stiffness: 400, damping: 25 },
+    },
+    exit: { scale: 0.95, opacity: 0, transition: { duration: 0.2 } },
+  };
+
   return (
     <div className="space-y-5">
       {/* Header */}
@@ -200,14 +244,14 @@ const Requests = () => {
       {/* KPIs (solo admin) */}
       {isAdmin && (
         <div className="grid grid-cols-3 gap-3">
-          <div className="bg-white rounded-2xl p-4 shadow-md shadow-slate-100/50 animate-fade-in-up flex flex-col items-start">
+          <div className="bg-white rounded-2xl p-4 shadow-sm flex flex-col items-start">
             <div className="p-2 bg-amber-50 rounded-xl mb-3">
               <ClockIcon className="h-5 w-5 text-amber-600" />
             </div>
             <p className="text-2xl font-bold text-slate-900 mt-1">{pendingCount}</p>
             <p className="text-xs text-slate-500 mt-1 tracking-wide">Pendientes</p>
           </div>
-          <div className="bg-white rounded-2xl p-4 shadow-md shadow-slate-100/50 animate-fade-in-up flex flex-col items-start" style={{ animationDelay: '0.1s' }}>
+          <div className="bg-white rounded-2xl p-4 shadow-sm flex flex-col items-start">
             <div className="p-2 bg-emerald-50 rounded-xl mb-3">
               <CheckCircleIcon className="h-5 w-5 text-emerald-600" />
             </div>
@@ -221,7 +265,7 @@ const Requests = () => {
             </p>
             <p className="text-xs text-slate-500 mt-1 tracking-wide">Aprobados hoy</p>
           </div>
-          <div className="bg-white rounded-2xl p-4 shadow-md shadow-slate-100/50 animate-fade-in-up flex flex-col items-start" style={{ animationDelay: '0.2s' }}>
+          <div className="bg-white rounded-2xl p-4 shadow-sm flex flex-col items-start">
             <div className="p-2 bg-blue-50 rounded-xl mb-3">
               <ClipboardDocumentListIcon className="h-5 w-5 text-blue-600" />
             </div>
@@ -256,49 +300,52 @@ const Requests = () => {
       </div>
 
       {/* Mis Solicitudes */}
-      <div className="bg-white rounded-2xl shadow-md shadow-slate-100/50 overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
         <div className="px-5 py-4 border-b border-slate-100">
-          <h2 className="font-semibold text-slate-900">📝 Mis Solicitudes ({filteredMyRequests.length})</h2>
+          <h2 className="font-bold text-slate-900">📝 Mis Solicitudes ({filteredMyRequests.length})</h2>
         </div>
         <div className="divide-y divide-slate-100">
-          {filteredMyRequests.map((req, index) => (
-            <div key={req.id} className="px-5 py-4 hover:bg-slate-50 transition animate-fade-in-up" style={{ animationDelay: `${index * 0.03}s` }}>
-              <div className="flex items-center justify-between">
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-slate-900 truncate">{req.product_name}</p>
-                  <p className="text-sm text-slate-500 mt-0.5">
-                    {req.quantity} {req.unit}
-                    {req.notes && <span className="text-slate-400 ml-2">· {req.notes}</span>}
-                  </p>
-                </div>
-                <div className="flex items-center gap-3 ml-4">
-                  <span className="text-xs text-slate-400">
-                    {new Date(req.created_at).toLocaleDateString('es', { day: '2-digit', month: 'short' })}
-                  </span>
-                  <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${
-                    req.status === 'pendiente' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
-                    req.status === 'aprobado' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-                    'bg-red-50 text-red-700 border border-red-200'
-                  }`}>
-                    {req.status === 'pendiente' ? '⏳' : req.status === 'aprobado' ? '✅' : '❌'} {req.status}
-                  </span>
-                </div>
-              </div>
-            </div>
-          ))}
-          {filteredMyRequests.length === 0 && (
+          {filteredMyRequests.length === 0 ? (
             <div className="px-5 py-10 text-center">
               <p className="text-slate-400 text-sm">No se encontraron solicitudes</p>
             </div>
+          ) : (
+            <motion.div variants={containerVariants} initial="hidden" animate="visible">
+              {filteredMyRequests.map((req) => (
+                <motion.div key={req.id} className="px-5 py-4 hover:bg-slate-50 transition" variants={itemVariants}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-slate-900 truncate">{req.product_name}</p>
+                      <p className="text-sm text-slate-500 mt-0.5">
+                        {req.quantity} {req.unit}
+                        {req.notes && <span className="text-slate-400 ml-2">· {req.notes}</span>}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3 ml-4">
+                      <span className="text-xs text-slate-400">
+                        {new Date(req.created_at).toLocaleDateString('es', { day: '2-digit', month: 'short' })}
+                      </span>
+                      <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${
+                        req.status === 'pendiente' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                        req.status === 'aprobado' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                        'bg-red-50 text-red-700 border border-red-200'
+                      }`}>
+                        {req.status === 'pendiente' ? '⏳' : req.status === 'aprobado' ? '✅' : '❌'} {req.status}
+                      </span>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
           )}
         </div>
       </div>
 
       {/* Panel Admin - Pendientes de aprobar */}
       {isAdmin && pendingRequests.length > 0 && (
-        <div className="bg-white rounded-2xl shadow-md shadow-slate-100/50 overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
           <div className="px-5 py-4 border-b border-slate-100">
-            <h2 className="font-semibold text-slate-900">
+            <h2 className="font-bold text-slate-900">
               ⏳ Pendientes de aprobar
               <span className="ml-2 px-2 py-0.5 bg-amber-100 text-amber-700 text-xs rounded-full font-medium">
                 {filteredPending.length}
@@ -306,200 +353,216 @@ const Requests = () => {
             </h2>
           </div>
           <div className="divide-y divide-slate-100">
-            {filteredPending.map((req, index) => (
-              <div key={req.id} className="px-5 py-4 hover:bg-slate-50 transition animate-fade-in-up" style={{ animationDelay: `${index * 0.03}s` }}>
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="font-medium text-slate-900">{req.product_name}</p>
-                      <span className="px-1.5 py-0.5 bg-blue-50 text-blue-600 text-xs rounded font-medium">
-                        {req.restaurant}
-                      </span>
+            <motion.div variants={containerVariants} initial="hidden" animate="visible">
+              {filteredPending.map((req) => (
+                <motion.div key={req.id} className="px-5 py-4 hover:bg-slate-50 transition" variants={itemVariants}>
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="font-bold text-slate-900">{req.product_name}</p>
+                        <span className="px-1.5 py-0.5 bg-blue-50 text-blue-600 text-xs rounded font-medium">
+                          {req.restaurant}
+                        </span>
+                      </div>
+                      <p className="text-sm text-slate-600">
+                        {req.quantity} {req.unit}
+                        <span className="text-slate-400 ml-2">· Solicitado por {req.users?.name || 'Empleado'}</span>
+                      </p>
+                      {req.notes && (
+                        <p className="text-xs text-slate-500 mt-1 italic">"{req.notes}"</p>
+                      )}
                     </div>
-                    <p className="text-sm text-slate-600">
-                      {req.quantity} {req.unit}
-                      <span className="text-slate-400 ml-2">· Solicitado por {req.users?.name || 'Empleado'}</span>
-                    </p>
-                    {req.notes && (
-                      <p className="text-xs text-slate-500 mt-1 italic">"{req.notes}"</p>
-                    )}
+                    <div className="flex gap-2 flex-shrink-0">
+                      <button
+                        onClick={() => handleStatus(req.id, 'aprobado')}
+                        className="px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition shadow-sm shadow-emerald-200"
+                      >
+                        ✓ Aprobar
+                      </button>
+                      <button
+                        onClick={() => handleStatus(req.id, 'rechazado')}
+                        className="px-4 py-2 bg-white border border-slate-200 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-50 transition"
+                      >
+                        ✗ Rechazar
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex gap-2 flex-shrink-0">
-                    <button
-                      onClick={() => handleStatus(req.id, 'aprobado')}
-                      className="px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition shadow-sm shadow-emerald-200"
-                    >
-                      ✓ Aprobar
-                    </button>
-                    <button
-                      onClick={() => handleStatus(req.id, 'rechazado')}
-                      className="px-4 py-2 bg-white border border-slate-200 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-50 transition"
-                    >
-                      ✗ Rechazar
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
+                </motion.div>
+              ))}
+            </motion.div>
           </div>
         </div>
       )}
 
       {/* Modal Nueva Lista */}
-      {showModal && (
-        <div className={`fixed inset-0 z-50 flex ${isMobile ? 'items-end' : 'items-center justify-center'} bg-black/30 backdrop-blur-sm`} onClick={() => setShowModal(false)}>
-          <div
-            className={`bg-white w-full max-w-lg flex flex-col shadow-2xl ${
-              isMobile ? 'rounded-t-[32px] animate-slide-up max-h-[85dvh] mb-12' : 'rounded-2xl max-h-[85vh]'
-            }`}
-            onClick={e => e.stopPropagation()}
+      <AnimatePresence>
+        {showModal && (
+          <motion.div
+            className={`fixed inset-0 z-50 flex ${isMobile ? 'items-end' : 'items-center justify-center'} bg-black/30 backdrop-blur-sm`}
+            onClick={() => setShowModal(false)}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
           >
-            {isMobile && <div className="bottom-sheet-handle" />}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 flex-shrink-0">
-              <h2 className="text-lg font-semibold text-slate-900">📋 Nueva Lista de Pedidos</h2>
-              <button
-                onClick={() => {
-                  setShowModal(false);
-                  setFormData({ items: [{ productName: '', quantity: '', unit: 'unidad' }], notes: '' });
-                  setActiveSuggestionIndex(null);
-                  setProductExists({});
-                }}
-                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition"
-              >
-                <XMarkIcon className="h-5 w-5" />
-              </button>
-            </div>
-            
-            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 modal-scroll" style={{ paddingBottom: isMobile ? 'calc(80px + env(safe-area-inset-bottom))' : '16px' }}>
-              {formData.items.map((item, index) => (
-                <div key={index} className="bg-slate-50 rounded-xl p-4 border border-slate-100">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                      Producto {index + 1}
-                    </span>
-                    {formData.items.length > 1 && (
-                      <button type="button" onClick={() => handleRemoveItem(index)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition">
-                        <TrashIcon className="h-4 w-4" />
-                      </button>
-                    )}
-                  </div>
-                  
-                  <div className="relative mb-3">
-                    <input
-                      type="text"
-                      placeholder="Buscar producto o escribir nombre..."
-                      value={item.productName}
-                      onChange={(e) => handleItemChange(index, 'productName', e.target.value)}
-                      onFocus={() => setActiveSuggestionIndex(index)}
-                      className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition"
-                      autoComplete="off"
-                    />
-                    
-                    {item.productName && (
-                      <div className="mt-1">
-                        {productExists[index] ? (
-                          <span className="text-xs text-emerald-600 flex items-center gap-1">✓ Producto del inventario</span>
-                        ) : (
-                          <span className="text-xs text-amber-600 flex items-center gap-1">⚠️ Producto nuevo</span>
-                        )}
-                      </div>
-                    )}
-                    
-                    {activeSuggestionIndex === index && getSuggestions(item.productName).length > 0 && (
-                      <div className="absolute z-10 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden">
-                        {getSuggestions(item.productName).map(product => (
-                          <button
-                            key={product.id}
-                            type="button"
-                            onClick={() => handleSelectSuggestion(index, product)}
-                            className="w-full px-4 py-3 text-left hover:bg-orange-50 transition flex items-center justify-between"
-                          >
-                            <div>
-                              <span className="text-sm font-medium text-slate-900">{product.name}</span>
-                              <span className="text-xs text-slate-400 ml-2">{product.category}</span>
-                            </div>
-                            <span className="text-xs text-slate-500">{product.stock} {product.unit}</span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex gap-2">
-                    <div className="flex-1">
-                      <label className="block text-xs text-slate-500 mb-1">Cantidad</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        placeholder="0"
-                        value={item.quantity}
-                        onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/20 outline-none transition"
-                        required
-                      />
-                    </div>
-                    <div className="w-24">
-                      <label className="block text-xs text-slate-500 mb-1">Unidad</label>
-                      <select
-                        value={item.unit}
-                        onChange={(e) => handleItemChange(index, 'unit', e.target.value)}
-                        className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/20 outline-none bg-white"
-                      >
-                        <option value="unidad">ud</option>
-                        <option value="kg">kg</option>
-                        <option value="L">L</option>
-                        <option value="caja">caja</option>
-                        <option value="g">g</option>
-                        <option value="ml">ml</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              ))}
-              
-              <button
-                type="button"
-                onClick={handleAddItem}
-                className="w-full py-3 border-2 border-dashed border-slate-200 text-slate-500 rounded-xl text-sm font-medium hover:border-orange-300 hover:text-orange-600 hover:bg-orange-50/50 transition"
-              >
-                + Agregar otro producto
-              </button>
-
-              <div>
-                <label className="block text-xs text-slate-500 mb-1">📝 Notas generales</label>
-                <textarea
-                  value={formData.notes}
-                  onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                  placeholder="Instrucciones adicionales..."
-                  className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/20 outline-none transition resize-none"
-                  rows="2"
-                />
+            <motion.div
+              className={`bg-white w-full max-w-lg flex flex-col shadow-2xl ${
+                isMobile ? 'rounded-t-[32px] mb-12' : 'rounded-2xl'
+              }`}
+              style={isMobile ? { maxHeight: '85dvh' } : { maxHeight: '85vh' }}
+              onClick={e => e.stopPropagation()}
+              variants={isMobile ? modalVariants : desktopModalVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+            >
+              {isMobile && <div className="bottom-sheet-handle" />}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 flex-shrink-0">
+                <h2 className="text-lg font-bold text-slate-900">📋 Nueva Lista de Pedidos</h2>
+                <button
+                  onClick={() => {
+                    setShowModal(false);
+                    setFormData({ items: [{ productName: '', quantity: '', unit: 'unidad' }], notes: '' });
+                    setActiveSuggestionIndex(null);
+                    setProductExists({});
+                  }}
+                  className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition"
+                >
+                  <XMarkIcon className="h-5 w-5" />
+                </button>
               </div>
-            </div>
+              
+              <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 modal-scroll" style={{ paddingBottom: isMobile ? 'calc(80px + env(safe-area-inset-bottom))' : '16px' }}>
+                {formData.items.map((item, index) => (
+                  <div key={index} className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                        Producto {index + 1}
+                      </span>
+                      {formData.items.length > 1 && (
+                        <button type="button" onClick={() => handleRemoveItem(index)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition">
+                          <TrashIcon className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                    
+                    <div className="relative mb-3">
+                      <input
+                        type="text"
+                        placeholder="Buscar producto o escribir nombre..."
+                        value={item.productName}
+                        onChange={(e) => handleItemChange(index, 'productName', e.target.value)}
+                        onFocus={() => setActiveSuggestionIndex(index)}
+                        className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition"
+                        autoComplete="off"
+                      />
+                      
+                      {item.productName && (
+                        <div className="mt-1">
+                          {productExists[index] ? (
+                            <span className="text-xs text-emerald-600 flex items-center gap-1">✓ Producto del inventario</span>
+                          ) : (
+                            <span className="text-xs text-amber-600 flex items-center gap-1">⚠️ Producto nuevo</span>
+                          )}
+                        </div>
+                      )}
+                      
+                      {activeSuggestionIndex === index && getSuggestions(item.productName).length > 0 && (
+                        <div className="absolute z-10 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden">
+                          {getSuggestions(item.productName).map(product => (
+                            <button
+                              key={product.id}
+                              type="button"
+                              onClick={() => handleSelectSuggestion(index, product)}
+                              className="w-full px-4 py-3 text-left hover:bg-orange-50 transition flex items-center justify-between"
+                            >
+                              <div>
+                                <span className="text-sm font-medium text-slate-900">{product.name}</span>
+                                <span className="text-xs text-slate-400 ml-2">{product.category}</span>
+                              </div>
+                              <span className="text-xs text-slate-500">{product.stock} {product.unit}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
 
-            <div className="px-6 py-4 border-t border-slate-100 flex gap-3 flex-shrink-0">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowModal(false);
-                  setFormData({ items: [{ productName: '', quantity: '', unit: 'unidad' }], notes: '' });
-                  setActiveSuggestionIndex(null);
-                  setProductExists({});
-                }}
-                className="flex-1 py-2.5 border border-slate-200 text-slate-600 rounded-xl text-sm font-medium hover:bg-slate-50 transition"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleSubmit}
-                className="flex-1 py-2.5 bg-orange-500 text-white rounded-xl text-sm font-medium hover:bg-orange-600 transition shadow-sm shadow-orange-200"
-              >
-                Enviar Lista
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+                    <div className="flex gap-2">
+                      <div className="flex-1">
+                        <label className="block text-xs text-slate-500 mb-1">Cantidad</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          placeholder="0"
+                          value={item.quantity}
+                          onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
+                          className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/20 outline-none transition"
+                          required
+                        />
+                      </div>
+                      <div className="w-24">
+                        <label className="block text-xs text-slate-500 mb-1">Unidad</label>
+                        <select
+                          value={item.unit}
+                          onChange={(e) => handleItemChange(index, 'unit', e.target.value)}
+                          className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/20 outline-none bg-white"
+                        >
+                          <option value="unidad">ud</option>
+                          <option value="kg">kg</option>
+                          <option value="L">L</option>
+                          <option value="caja">caja</option>
+                          <option value="g">g</option>
+                          <option value="ml">ml</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                
+                <button
+                  type="button"
+                  onClick={handleAddItem}
+                  className="w-full py-3 border-2 border-dashed border-slate-200 text-slate-500 rounded-xl text-sm font-medium hover:border-orange-300 hover:text-orange-600 hover:bg-orange-50/50 transition"
+                >
+                  + Agregar otro producto
+                </button>
+
+                <div>
+                  <label className="block text-xs text-slate-500 mb-1">📝 Notas generales</label>
+                  <textarea
+                    value={formData.notes}
+                    onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                    placeholder="Instrucciones adicionales..."
+                    className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/20 outline-none transition resize-none"
+                    rows="2"
+                  />
+                </div>
+              </div>
+
+              <div className="px-6 py-4 border-t border-slate-100 flex gap-3 flex-shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowModal(false);
+                    setFormData({ items: [{ productName: '', quantity: '', unit: 'unidad' }], notes: '' });
+                    setActiveSuggestionIndex(null);
+                    setProductExists({});
+                  }}
+                  className="flex-1 py-2.5 border border-slate-200 text-slate-600 rounded-xl text-sm font-medium hover:bg-slate-50 transition"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleSubmit}
+                  className="flex-1 py-2.5 bg-orange-500 text-white rounded-xl text-sm font-medium hover:bg-orange-600 transition shadow-sm shadow-orange-200"
+                >
+                  Enviar Lista
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
