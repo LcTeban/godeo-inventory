@@ -1,3 +1,4 @@
+import { Toaster } from 'react-hot-toast';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -62,6 +63,40 @@ const Layout = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Toaster
+  position="top-center"
+  toastOptions={{
+    duration: 3000,
+    style: {
+      background: '#1e293b',
+      color: '#f8fafc',
+      borderRadius: '12px',
+      fontSize: '14px',
+      padding: '12px 16px',
+      boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+    },
+    success: {
+      style: {
+        background: '#065f46',
+        color: '#ecfdf5',
+      },
+      iconTheme: {
+        primary: '#34d399',
+        secondary: '#ecfdf5',
+      },
+    },
+    error: {
+      style: {
+        background: '#991b1b',
+        color: '#fef2f2',
+      },
+      iconTheme: {
+        primary: '#f87171',
+        secondary: '#fef2f2',
+      },
+    },
+  }}
+/>
       {!isMobile && (
         <div className="lg:hidden bg-white shadow-sm p-4 flex items-center justify-between">
           <button onClick={toggleSidebar} className="p-2">
