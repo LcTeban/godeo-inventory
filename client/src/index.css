@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 body {
-  @apply bg-slate-50 text-slate-800;
+  @apply bg-[#F9FAFB] text-slate-800;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -16,7 +16,7 @@ body {
   animation: slide-in-right 0.3s ease-out;
 }
 
-/* Bottom sheet animación */
+/* Bottom sheet animación base (se usará framer-motion en su lugar) */
 @keyframes slide-up {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
@@ -25,7 +25,7 @@ body {
   animation: slide-up 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Fade-in con desplazamiento hacia arriba */
+/* Fade-in con desplazamiento hacia arriba (usado en skeletons y fallbacks) */
 @keyframes fadeInUp {
   from {
     opacity: 0;
