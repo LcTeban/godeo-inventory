@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { MagnifyingGlassIcon, FunnelIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import { motion, AnimatePresence } from 'framer-motion';
+import { MagnifyingGlassIcon, FunnelIcon, XMarkIcon, ClockIcon } from '@heroicons/react/24/outline';
+import { motion } from 'framer-motion';
+import toast from 'react-hot-toast';
+import EmptyState from '../components/EmptyState';
 
 const Movements = () => {
   const { currentRestaurant, getMovements } = useAuth();
@@ -27,6 +29,7 @@ const Movements = () => {
       setMovements(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error loading movements:', error);
+      toast.error('Error al cargar los movimientos');
     } finally {
       setLoading(false);
     }
@@ -56,6 +59,7 @@ const Movements = () => {
     setSearchTerm('');
     setFilterType('all');
     setFilterDate('all');
+    toast.success('Filtros limpiados');
   };
 
   const hasActiveFilters = searchTerm || filterType !== 'all' || filterDate !== 'all';
@@ -164,11 +168,29 @@ const Movements = () => {
 
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
         {filteredMovements.length === 0 ? (
-          <div className="text-center py-16">
-            <FunnelIcon className="h-12 w-12 mx-auto mb-3 text-slate-300" />
-            <p className="text-slate-500 font-medium">No se encontraron movimientos</p>
-            <p className="text-slate-400 text-sm mt-1">{hasActiveFilters ? 'Prueba con otros filtros' : 'Aún no hay movimientos registrados'}</p>
-          </div>
+          hasActiveFilters ? (
+            <EmptyState
+              icon={FunnelIcon}
+              title="Sin resultados"
+              message="Prueba con otros filtros o términos de búsqueda"
+              actionLabel="Limpiar filtros"
+              onAction={clearFilters}
+            />
+          ) : movements.length === 0 ? (
+            <EmptyState
+              icon={ClockIcon}
+              title="Sin movimientos"
+              message="Aún no hay movimientos registrados. Realiza entradas o salidas para ver el historial."
+              actionLabel="Ir al inventario"
+              onAction={() => window.location.href = '/inventory'}
+            />
+          ) : (
+            <EmptyState
+              icon={FunnelIcon}
+              title="Sin resultados"
+              message="Prueba con otros filtros"
+            />
+          )
         ) : isMobile ? (
           <motion.div className="divide-y divide-slate-100" variants={containerVariants} initial="hidden" animate="visible">
             {filteredMovements.map(mov => (
