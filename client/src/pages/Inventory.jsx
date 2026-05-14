@@ -4,15 +4,17 @@ import {
   PlusIcon, MinusIcon, TrashIcon, CameraIcon, QrCodeIcon,
   DocumentArrowDownIcon, TableCellsIcon, PencilIcon,
   FolderIcon, FolderOpenIcon, ArrowLeftIcon, DocumentDuplicateIcon,
-  XMarkIcon, ExclamationTriangleIcon
+  XMarkIcon, ExclamationTriangleIcon, CubeIcon
 } from '@heroicons/react/24/outline';
 import BarcodeScanner from '../components/BarcodeScanner';
 import LazyImage from '../components/LazyImage';
+import EmptyState from '../components/EmptyState';
 import useLockBodyScroll from '../hooks/useLockBodyScroll';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
 
 const Inventory = () => {
   const [products, setProducts] = useState([]);
@@ -89,6 +91,7 @@ const Inventory = () => {
       setProducts(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error:', error);
+      toast.error('Error al cargar productos');
     } finally {
       setIsLoadingProducts(false);
     }
@@ -154,13 +157,15 @@ const Inventory = () => {
     try {
       if (editingProduct) {
         await updateProduct(editingProduct.id, formData);
+        toast.success('Producto actualizado correctamente');
       } else {
         await addProduct(formData);
+        toast.success('Producto creado correctamente');
       }
       resetModal();
       await fetchProducts();
     } catch (error) {
-      alert('Error al guardar: ' + error.message);
+      toast.error('Error al guardar: ' + error.message);
     } finally {
       setIsSaving(false);
     }
@@ -177,8 +182,9 @@ const Inventory = () => {
       setShowMovementModal(false);
       setMovementData({ type: 'entrada', quantity: '', reason: '' });
       fetchProducts();
+      toast.success('Movimiento registrado correctamente');
     } catch (error) {
-      alert(error.message || 'Error al registrar movimiento');
+      toast.error(error.message || 'Error al registrar movimiento');
     } finally {
       setIsSaving(false);
     }
@@ -189,15 +195,16 @@ const Inventory = () => {
       try {
         await deleteProduct(id);
         fetchProducts();
+        toast.success('Producto eliminado');
       } catch (error) {
-        alert('Error al eliminar');
+        toast.error('Error al eliminar');
       }
     }
   };
 
   const handleCopyProduct = async () => {
     if (!copyTarget || copyTarget === currentRestaurant) {
-      alert('Selecciona un restaurante de destino diferente al actual.');
+      toast.error('Selecciona un restaurante de destino diferente al actual.');
       return;
     }
     setIsCopying(true);
@@ -205,9 +212,9 @@ const Inventory = () => {
       await duplicateProduct(selectedProduct.id, copyTarget);
       setShowCopyModal(false);
       setCopyTarget('');
-      alert('✅ Producto copiado con éxito.');
+      toast.success('✅ Producto copiado con éxito.');
     } catch (error) {
-      alert('Error al copiar: ' + error.message);
+      toast.error('Error al copiar: ' + error.message);
     } finally {
       setIsCopying(false);
     }
@@ -353,25 +360,23 @@ const Inventory = () => {
     setIsDeletingAll(true);
     try {
       const result = await deleteUncategorizedProducts(currentRestaurant);
-      alert(`✅ Se eliminaron ${result.deleted} productos sin categoría.`);
+      toast.success(`✅ Se eliminaron ${result.deleted} productos sin categoría.`);
       setShowDeleteAllModal(false);
       setDeleteConfirmText('');
       await fetchProducts();
     } catch (error) {
-      alert('❌ Error al eliminar: ' + error.message);
+      toast.error('❌ Error al eliminar: ' + error.message);
     } finally {
       setIsDeletingAll(false);
     }
   };
 
-  // Variantes de animación para stagger
+  // Variantes framer-motion
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: {
-        staggerChildren: 0.06,
-      },
+      transition: { staggerChildren: 0.06 },
     },
   };
 
@@ -380,34 +385,21 @@ const Inventory = () => {
     visible: {
       opacity: 1,
       y: 0,
-      transition: {
-        type: 'spring',
-        stiffness: 100,
-        damping: 15,
-      },
+      transition: { type: 'spring', stiffness: 100, damping: 15 },
     },
   };
 
-  // Variantes para modales (spring suave)
   const modalVariants = {
     hidden: { y: '100%', opacity: 0 },
     visible: {
       y: 0,
       opacity: 1,
-      transition: {
-        type: 'spring',
-        stiffness: 300,
-        damping: 30,
-      },
+      transition: { type: 'spring', stiffness: 300, damping: 30 },
     },
     exit: {
       y: '100%',
       opacity: 0,
-      transition: {
-        type: 'spring',
-        stiffness: 300,
-        damping: 30,
-      },
+      transition: { type: 'spring', stiffness: 300, damping: 30 },
     },
   };
 
@@ -416,19 +408,9 @@ const Inventory = () => {
     visible: {
       scale: 1,
       opacity: 1,
-      transition: {
-        type: 'spring',
-        stiffness: 400,
-        damping: 25,
-      },
+      transition: { type: 'spring', stiffness: 400, damping: 25 },
     },
-    exit: {
-      scale: 0.95,
-      opacity: 0,
-      transition: {
-        duration: 0.2,
-      },
-    },
+    exit: { scale: 0.95, opacity: 0, transition: { duration: 0.2 } },
   };
 
   const ProductList = ({ products }) => (
@@ -563,7 +545,21 @@ const Inventory = () => {
           <p className="text-sm text-slate-500">
             Resultados para «{searchTerm}» ({displayedProducts.length})
           </p>
-          <ProductList products={displayedProducts} />
+          {displayedProducts.length > 0 ? (
+            <ProductList products={displayedProducts} />
+          ) : (
+            <EmptyState
+              icon={CubeIcon}
+              title="Sin resultados"
+              message="Prueba con otro término de búsqueda"
+              actionLabel="Ver todos los productos"
+              onAction={() => {
+                setSearchTerm('');
+                setCurrentFolderId(null);
+                setFolderPath([]);
+              }}
+            />
+          )}
         </>
       ) : (
         <>
@@ -625,16 +621,29 @@ const Inventory = () => {
           )}
 
           {/* Estado completamente vacío */}
-          {currentCategories.length === 0 && currentProductsInFolder.length === 0 && uncategorizedProducts.length === 0 && (
-            <div className="text-center py-10 text-slate-400">
-              <FolderIcon className="h-12 w-12 mx-auto mb-3 text-slate-300" />
-              <p>No hay productos ni categorías</p>
-            </div>
+          {currentCategories.length === 0 && currentProductsInFolder.length === 0 && uncategorizedProducts.length === 0 && products.length > 0 && currentFolderId !== null && (
+            <EmptyState
+              icon={FolderOpenIcon}
+              title="Carpeta vacía"
+              message="No hay productos en esta categoría"
+              actionLabel="Agregar producto"
+              onAction={() => openAddModal(currentFolderId)}
+            />
+          )}
+
+          {currentCategories.length === 0 && currentProductsInFolder.length === 0 && uncategorizedProducts.length === 0 && products.length === 0 && (
+            <EmptyState
+              icon={CubeIcon}
+              title="Inventario vacío"
+              message="Aún no hay productos registrados. Crea el primero para empezar."
+              actionLabel="Crear primer producto"
+              onAction={() => openAddModal(null)}
+            />
           )}
         </>
       )}
 
-      {/* Modal Agregar/Editar Producto con AnimatePresence y spring */}
+      {/* Modal Agregar/Editar Producto (Bottom Sheet en móvil) */}
       <AnimatePresence>
         {showAddModal && (
           <motion.div
@@ -646,9 +655,7 @@ const Inventory = () => {
             transition={{ duration: 0.2 }}
           >
             <motion.div
-              className={`bg-white w-full max-w-md flex flex-col shadow-2xl ${
-                isMobile ? 'rounded-t-[32px] mb-12' : 'rounded-2xl'
-              }`}
+              className={`bg-white w-full max-w-md flex flex-col shadow-2xl ${isMobile ? 'rounded-t-[32px] mb-12' : 'rounded-2xl'}`}
               style={isMobile ? { maxHeight: '85dvh' } : { maxHeight: '90vh' }}
               onClick={e => e.stopPropagation()}
               variants={isMobile ? modalVariants : desktopModalVariants}
@@ -754,7 +761,7 @@ const Inventory = () => {
         )}
       </AnimatePresence>
 
-      {/* Modal Movimiento con spring */}
+      {/* Modal Movimiento (Bottom Sheet) */}
       <AnimatePresence>
         {showMovementModal && (
           <motion.div
@@ -803,7 +810,7 @@ const Inventory = () => {
         )}
       </AnimatePresence>
 
-      {/* Modal Copiar Producto con spring */}
+      {/* Modal Copiar Producto */}
       <AnimatePresence>
         {showCopyModal && selectedProduct && (
           <motion.div
@@ -851,7 +858,7 @@ const Inventory = () => {
         )}
       </AnimatePresence>
 
-      {/* Modal eliminar todos sin categoría con spring */}
+      {/* Modal eliminar todos sin categoría */}
       <AnimatePresence>
         {showDeleteAllModal && (
           <motion.div
