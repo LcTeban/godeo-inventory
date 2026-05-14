@@ -140,14 +140,14 @@ const Categories = () => {
         <h1 className="text-xl font-bold text-slate-900 tracking-tight">📁 Gestión de Categorías</h1>
         <button
           onClick={() => { setShowAddRoot(true); setParentForNew(null); setEditId(null); setIsGlobal(false); }}
-          className="w-full sm:w-auto bg-blue-600 text-white px-4 py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-1.5 hover:bg-blue-700 transition shadow-sm shadow-blue-200"
+          className="w-full sm:w-auto bg-orange-500 text-white px-4 py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-1.5 hover:bg-orange-600 transition shadow-sm shadow-orange-200"
         >
           <PlusIcon className="h-4 w-4" /> Nueva Carpeta Raíz
         </button>
       </div>
 
       {(showAddRoot || parentForNew !== null || editId !== null) && (
-        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3 animate-fade-in-up">
           <p className="text-sm font-medium text-slate-700">
             {editId ? '✏️ Editar categoría' : parentForNew ? '📂 Nueva subcategoría' : '📁 Nueva carpeta raíz'}
           </p>
@@ -157,7 +157,7 @@ const Categories = () => {
               placeholder={editId ? 'Nuevo nombre' : 'Nombre de la categoría'}
               value={editId ? editName : newName}
               onChange={(e) => editId ? setEditName(e.target.value) : setNewName(e.target.value)}
-              className="flex-1 p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition"
+              className="flex-1 p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition"
               autoFocus
             />
             <div className="flex items-center gap-2">
@@ -166,13 +166,13 @@ const Categories = () => {
                   type="checkbox"
                   checked={editId ? editIsGlobal : isGlobal}
                   onChange={(e) => editId ? setEditIsGlobal(e.target.checked) : setIsGlobal(e.target.checked)}
-                  className="rounded border-slate-300 text-blue-600 shadow-sm focus:ring-blue-500"
+                  className="rounded border-slate-300 text-orange-500 shadow-sm focus:ring-orange-500"
                 />
                 🌍 Global
               </label>
               <button
                 onClick={editId ? handleEdit : () => handleAddSub(parentForNew)}
-                className="px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition shadow-sm shadow-blue-200"
+                className="px-4 py-2.5 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600 transition shadow-sm shadow-orange-200"
               >
                 {editId ? 'Guardar' : 'Crear'}
               </button>
@@ -195,22 +195,23 @@ const Categories = () => {
             <p className="text-slate-400 text-xs mt-1">Crea la primera carpeta para organizar tu inventario</p>
           </div>
         )}
-        {roots.map(root => (
-          <TreeNode
-            key={root.id}
-            category={root}
-            allCategories={categories}
-            onEdit={(cat) => { setEditId(cat.id); setEditName(cat.name); setEditIsGlobal(!cat.restaurant); setShowAddRoot(false); setParentForNew(null); }}
-            onDelete={handleDelete}
-            onAddChild={(parentId) => {
-              setParentForNew(parentId);
-              setNewName('');
-              setIsGlobal(false);
-              setShowAddRoot(false);
-              setEditId(null);
-            }}
-            onCopy={handleCopy}
-          />
+        {roots.map((root, index) => (
+          <div key={root.id} className="animate-fade-in-up" style={{ animationDelay: `${index * 0.05}s` }}>
+            <TreeNode
+              category={root}
+              allCategories={categories}
+              onEdit={(cat) => { setEditId(cat.id); setEditName(cat.name); setEditIsGlobal(!cat.restaurant); setShowAddRoot(false); setParentForNew(null); }}
+              onDelete={handleDelete}
+              onAddChild={(parentId) => {
+                setParentForNew(parentId);
+                setNewName('');
+                setIsGlobal(false);
+                setShowAddRoot(false);
+                setEditId(null);
+              }}
+              onCopy={handleCopy}
+            />
+          </div>
         ))}
       </div>
 
@@ -235,7 +236,7 @@ const Categories = () => {
                 <select
                   value={copyTarget}
                   onChange={(e) => setCopyTarget(e.target.value)}
-                  className="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition"
+                  className="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-500/20 outline-none transition"
                 >
                   <option value="">Seleccionar destino</option>
                   {['POZOBLANCO', 'FUERTEVENTURA', 'GRAN_CAPITAN']
@@ -257,7 +258,7 @@ const Categories = () => {
                 <button
                   onClick={executeCopy}
                   disabled={isCopying || !copyTarget}
-                  className="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition disabled:opacity-50 shadow-sm shadow-blue-200"
+                  className="flex-1 py-2.5 bg-orange-500 text-white rounded-xl text-sm font-medium hover:bg-orange-600 transition disabled:opacity-50 shadow-sm shadow-orange-200"
                 >
                   {isCopying ? 'Copiando...' : 'Copiar todo'}
                 </button>
