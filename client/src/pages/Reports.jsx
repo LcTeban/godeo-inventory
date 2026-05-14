@@ -13,6 +13,7 @@ import {
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { motion } from 'framer-motion';
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316'];
 
@@ -91,7 +92,6 @@ const Reports = () => {
   const pendingTransfers = transfers.filter(t => t.status === 'pendiente').length;
 
   // ---- Datos para gráficos ----
-  // Top 5 productos más consumidos (barras)
   const consumptionMap = {};
   filteredMovements
     .filter(m => m.type === 'salida')
@@ -104,7 +104,6 @@ const Reports = () => {
     .sort((a, b) => b.consumo - a.consumo)
     .slice(0, 5);
 
-  // Distribución por categoría (pastel)
   const categoryMap = {};
   filteredMovements
     .filter(m => m.type === 'salida')
@@ -169,7 +168,7 @@ const Reports = () => {
       body: tableData,
       startY: 35,
       styles: { fontSize: 8 },
-      headStyles: { fillColor: [59, 130, 246] }
+      headStyles: { fillColor: [249, 115, 22] }
     });
     doc.save(`reporte_inventario_${currentRestaurant}_${new Date().toISOString().split('T')[0]}.pdf`);
   };
@@ -186,22 +185,45 @@ const Reports = () => {
     GRAN_CAPITAN: '#8b5cf6'
   };
 
+  // Variantes framer-motion para animaciones sutiles
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.08 },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 15 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { type: 'spring', stiffness: 100, damping: 15 },
+    },
+  };
+
   if (!isAdmin) return null;
-  if (loading) return <div className="text-center py-20 text-gray-500"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>Cargando reportes...</div>;
+  if (loading) return (
+    <div className="text-center py-20">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+      <p className="text-slate-500">Cargando reportes...</p>
+    </div>
+  );
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800 tracking-tight">📊 Reportes Financieros</h1>
-          <p className="text-sm text-gray-500">Panel de control y análisis de inventario</p>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">📊 Reportes Financieros</h1>
+          <p className="text-sm text-slate-500">Panel de control y análisis de inventario</p>
         </div>
         <div className="flex items-center gap-3">
           <select
             value={currentRestaurant}
             onChange={(e) => switchRestaurant(e.target.value)}
-            className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm bg-white shadow-sm focus:ring-2 focus:ring-blue-500/20 outline-none"
+            className="border border-slate-200 rounded-xl px-4 py-2.5 text-sm bg-white shadow-sm focus:ring-2 focus:ring-orange-500/20 outline-none"
           >
             {restaurants.map(rest => (
               <option key={rest} value={rest}>{restaurantNames[rest]}</option>
@@ -210,7 +232,7 @@ const Reports = () => {
           <select
             value={period}
             onChange={(e) => setPeriod(e.target.value)}
-            className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm bg-white shadow-sm focus:ring-2 focus:ring-blue-500/20 outline-none"
+            className="border border-slate-200 rounded-xl px-4 py-2.5 text-sm bg-white shadow-sm focus:ring-2 focus:ring-orange-500/20 outline-none"
           >
             <option value="week">Última semana</option>
             <option value="month">Último mes</option>
@@ -220,52 +242,44 @@ const Reports = () => {
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-5 shadow-sm border border-blue-200">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-blue-500 rounded-xl">
-              <CurrencyDollarIcon className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <p className="text-sm text-blue-700 font-medium">Valor Inventario</p>
-              <p className="text-2xl font-bold text-blue-900">€{totalInventoryValue.toFixed(0)}</p>
-            </div>
+      <motion.div className="grid grid-cols-2 lg:grid-cols-4 gap-4" variants={containerVariants} initial="hidden" animate="visible">
+        <motion.div className="bg-white rounded-2xl p-5 shadow-sm flex items-center gap-3" variants={itemVariants}>
+          <div className="p-3 bg-blue-50 rounded-xl">
+            <CurrencyDollarIcon className="h-6 w-6 text-blue-600" />
           </div>
-        </div>
-        <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-2xl p-5 shadow-sm border border-indigo-200">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-indigo-500 rounded-xl">
-              <CubeIcon className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <p className="text-sm text-indigo-700 font-medium">Total Productos</p>
-              <p className="text-2xl font-bold text-indigo-900">{totalProducts}</p>
-            </div>
+          <div>
+            <p className="text-sm text-slate-500">Valor Inventario</p>
+            <p className="text-2xl font-bold text-slate-900">€{totalInventoryValue.toFixed(0)}</p>
           </div>
-        </div>
-        <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl p-5 shadow-sm border border-amber-200">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-amber-500 rounded-xl">
-              <TruckIcon className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <p className="text-sm text-amber-700 font-medium">Transf. Pendientes</p>
-              <p className="text-2xl font-bold text-amber-900">{pendingTransfers}</p>
-            </div>
+        </motion.div>
+        <motion.div className="bg-white rounded-2xl p-5 shadow-sm flex items-center gap-3" variants={itemVariants}>
+          <div className="p-3 bg-indigo-50 rounded-xl">
+            <CubeIcon className="h-6 w-6 text-indigo-600" />
           </div>
-        </div>
-        <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-2xl p-5 shadow-sm border border-red-200">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-red-500 rounded-xl">
-              <ArrowTrendingDownIcon className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <p className="text-sm text-red-700 font-medium">Costo de Ventas</p>
-              <p className="text-2xl font-bold text-red-900">€{costOfSales.toFixed(0)}</p>
-            </div>
+          <div>
+            <p className="text-sm text-slate-500">Total Productos</p>
+            <p className="text-2xl font-bold text-slate-900">{totalProducts}</p>
           </div>
-        </div>
-      </div>
+        </motion.div>
+        <motion.div className="bg-white rounded-2xl p-5 shadow-sm flex items-center gap-3" variants={itemVariants}>
+          <div className="p-3 bg-amber-50 rounded-xl">
+            <TruckIcon className="h-6 w-6 text-amber-600" />
+          </div>
+          <div>
+            <p className="text-sm text-slate-500">Transf. Pendientes</p>
+            <p className="text-2xl font-bold text-slate-900">{pendingTransfers}</p>
+          </div>
+        </motion.div>
+        <motion.div className="bg-white rounded-2xl p-5 shadow-sm flex items-center gap-3" variants={itemVariants}>
+          <div className="p-3 bg-red-50 rounded-xl">
+            <ArrowTrendingDownIcon className="h-6 w-6 text-red-600" />
+          </div>
+          <div>
+            <p className="text-sm text-slate-500">Costo de Ventas</p>
+            <p className="text-2xl font-bold text-slate-900">€{costOfSales.toFixed(0)}</p>
+          </div>
+        </motion.div>
+      </motion.div>
 
       {/* Resumen por restaurante */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -273,19 +287,19 @@ const Reports = () => {
           const value = inventoryValueByRestaurant()[rest] || 0;
           const prods = allProducts.filter(p => p.restaurant === rest).length;
           return (
-            <div key={rest} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+            <div key={rest} className="bg-white rounded-2xl p-5 shadow-sm">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold text-gray-800">{restaurantNames[rest]}</h3>
+                <h3 className="font-bold text-slate-900">{restaurantNames[rest]}</h3>
                 <div className="w-3 h-3 rounded-full" style={{ backgroundColor: restaurantColors[rest] }}></div>
               </div>
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Valor inventario</span>
-                  <span className="font-bold">€{value.toFixed(0)}</span>
+                  <span className="text-slate-500">Valor inventario</span>
+                  <span className="font-bold text-slate-900">€{value.toFixed(0)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Productos</span>
-                  <span className="font-bold">{prods}</span>
+                  <span className="text-slate-500">Productos</span>
+                  <span className="font-bold text-slate-900">{prods}</span>
                 </div>
               </div>
             </div>
@@ -306,8 +320,8 @@ const Reports = () => {
             onClick={() => setActiveTab(tab.key)}
             className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
               activeTab === tab.key
-                ? 'bg-blue-600 text-white shadow-md'
-                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                ? 'bg-orange-500 text-white shadow-sm shadow-orange-200'
+                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
             }`}
           >
             {tab.label}
@@ -320,15 +334,15 @@ const Reports = () => {
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Barras: Top 5 consumo */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-              <h3 className="font-semibold text-gray-800 mb-4">📊 Top 5 productos más consumidos</h3>
+            <div className="bg-white rounded-2xl p-6 shadow-sm">
+              <h3 className="font-bold text-slate-900 mb-4">📊 Top 5 productos más consumidos</h3>
               {topConsumed.length > 0 ? (
                 <ResponsiveContainer width="100%" height={280}>
                   <BarChart data={topConsumed} layout="vertical" margin={{ left: 60 }}>
-                    <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                    <XAxis type="number" />
-                    <YAxis type="category" dataKey="name" tick={{ fontSize: 12 }} />
-                    <Tooltip />
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                    <XAxis type="number" tick={{ fill: '#94a3b8' }} />
+                    <YAxis type="category" dataKey="name" tick={{ fontSize: 12, fill: '#64748b' }} />
+                    <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }} />
                     <Bar dataKey="consumo" fill={restaurantColors[currentRestaurant]} radius={[0, 4, 4, 0]}>
                       {topConsumed.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={restaurantColors[currentRestaurant]} />
@@ -337,13 +351,13 @@ const Reports = () => {
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <p className="text-gray-400 text-center py-12">Sin datos de consumo en este período</p>
+                <p className="text-slate-400 text-center py-12">Sin datos de consumo en este período</p>
               )}
             </div>
 
             {/* Pastel: Distribución por categoría */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-              <h3 className="font-semibold text-gray-800 mb-4">🥧 Distribución por categoría</h3>
+            <div className="bg-white rounded-2xl p-6 shadow-sm">
+              <h3 className="font-bold text-slate-900 mb-4">🥧 Distribución por categoría</h3>
               {categoryData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={280}>
                   <PieChart>
@@ -352,24 +366,24 @@ const Reports = () => {
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip />
+                    <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }} />
                     <Legend />
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <p className="text-gray-400 text-center py-12">Sin datos de categorías</p>
+                <p className="text-slate-400 text-center py-12">Sin datos de categorías</p>
               )}
             </div>
           </div>
 
           {/* Totales de movimientos */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-              <p className="text-sm text-gray-500">Total entradas</p>
-              <p className="text-2xl font-bold text-green-600">+€{totalEntries.toFixed(0)}</p>
+            <div className="bg-white rounded-2xl p-5 shadow-sm">
+              <p className="text-sm text-slate-500">Total entradas</p>
+              <p className="text-2xl font-bold text-emerald-600">+€{totalEntries.toFixed(0)}</p>
             </div>
-            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-              <p className="text-sm text-gray-500">Total salidas</p>
+            <div className="bg-white rounded-2xl p-5 shadow-sm">
+              <p className="text-sm text-slate-500">Total salidas</p>
               <p className="text-2xl font-bold text-red-600">-€{totalExits.toFixed(0)}</p>
             </div>
           </div>
@@ -377,11 +391,11 @@ const Reports = () => {
       )}
 
       {activeTab === 'inventory' && (
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-            <h3 className="font-semibold text-gray-800">Inventario actual de {restaurantNames[currentRestaurant]}</h3>
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+            <h3 className="font-bold text-slate-900">Inventario actual de {restaurantNames[currentRestaurant]}</h3>
             <div className="flex gap-2">
-              <button onClick={exportToExcel} className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition" title="Excel">
+              <button onClick={exportToExcel} className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition" title="Excel">
                 <TableCellsIcon className="h-5 w-5" />
               </button>
               <button onClick={exportToPDF} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition" title="PDF">
@@ -391,31 +405,31 @@ const Reports = () => {
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50">
+              <thead className="bg-slate-50">
                 <tr>
-                  <th className="text-left px-4 py-3 cursor-pointer hover:text-blue-600" onClick={() => requestSort('name')}>
+                  <th className="text-left px-4 py-3 cursor-pointer hover:text-orange-500" onClick={() => requestSort('name')}>
                     Producto {getSortIcon('name')}
                   </th>
-                  <th className="text-left px-4 py-3 cursor-pointer hover:text-blue-600" onClick={() => requestSort('category')}>
+                  <th className="text-left px-4 py-3 cursor-pointer hover:text-orange-500" onClick={() => requestSort('category')}>
                     Categoría {getSortIcon('category')}
                   </th>
-                  <th className="text-right px-4 py-3 cursor-pointer hover:text-blue-600" onClick={() => requestSort('stock')}>
+                  <th className="text-right px-4 py-3 cursor-pointer hover:text-orange-500" onClick={() => requestSort('stock')}>
                     Stock {getSortIcon('stock')}
                   </th>
-                  <th className="text-right px-4 py-3 cursor-pointer hover:text-blue-600" onClick={() => requestSort('price')}>
+                  <th className="text-right px-4 py-3 cursor-pointer hover:text-orange-500" onClick={() => requestSort('price')}>
                     Precio {getSortIcon('price')}
                   </th>
                   <th className="text-right px-4 py-3">Valor total</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-slate-100">
                 {sortedProducts.map(p => (
-                  <tr key={p.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 font-medium">{p.name}</td>
-                    <td className="px-4 py-3 text-gray-600">{p.categories?.name || '-'}</td>
+                  <tr key={p.id} className="hover:bg-slate-50">
+                    <td className="px-4 py-3 font-bold text-slate-900">{p.name}</td>
+                    <td className="px-4 py-3 text-slate-500">{p.categories?.name || '-'}</td>
                     <td className="px-4 py-3 text-right">{p.stock || 0} {p.unit}</td>
                     <td className="px-4 py-3 text-right">€{(p.price || 0).toFixed(2)}</td>
-                    <td className="px-4 py-3 text-right font-semibold">€{((p.stock || 0) * (p.price || 0)).toFixed(2)}</td>
+                    <td className="px-4 py-3 text-right font-bold">€{((p.stock || 0) * (p.price || 0)).toFixed(2)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -425,13 +439,13 @@ const Reports = () => {
       )}
 
       {activeTab === 'movements' && (
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-100">
-            <h3 className="font-semibold text-gray-800">Últimos movimientos en {restaurantNames[currentRestaurant]}</h3>
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-100">
+            <h3 className="font-bold text-slate-900">Últimos movimientos en {restaurantNames[currentRestaurant]}</h3>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50">
+              <thead className="bg-slate-50">
                 <tr>
                   <th className="text-left px-4 py-3">Fecha</th>
                   <th className="text-left px-4 py-3">Producto</th>
@@ -442,15 +456,15 @@ const Reports = () => {
                   <th className="text-left px-4 py-3">Usuario</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-slate-100">
                 {filteredMovements.slice(0, 30).map(m => (
-                  <tr key={m.id} className="hover:bg-gray-50">
+                  <tr key={m.id} className="hover:bg-slate-50">
                     <td className="px-4 py-3">{new Date(m.created_at).toLocaleDateString('es')}</td>
-                    <td className="px-4 py-3 font-medium">{m.products?.name || '-'}</td>
-                    <td className={`px-4 py-3 font-medium ${m.type === 'entrada' ? 'text-green-600' : 'text-red-600'}`}>{m.type}</td>
+                    <td className="px-4 py-3 font-bold text-slate-900">{m.products?.name || '-'}</td>
+                    <td className={`px-4 py-3 font-medium ${m.type === 'entrada' ? 'text-emerald-600' : 'text-red-600'}`}>{m.type}</td>
                     <td className="px-4 py-3 text-right">{m.quantity}</td>
                     <td className="px-4 py-3 text-right">€{(m.products?.price || 0).toFixed(2)}</td>
-                    <td className="px-4 py-3 text-right font-semibold">€{((m.quantity || 0) * (m.products?.price || 0)).toFixed(2)}</td>
+                    <td className="px-4 py-3 text-right font-bold">€{((m.quantity || 0) * (m.products?.price || 0)).toFixed(2)}</td>
                     <td className="px-4 py-3">{m.users?.name || '-'}</td>
                   </tr>
                 ))}
@@ -462,10 +476,10 @@ const Reports = () => {
 
       {activeTab === 'alerts' && (
         <div className="space-y-6">
-          <div className="bg-gradient-to-r from-amber-50 to-amber-100 rounded-2xl p-5 shadow-sm border border-amber-200">
+          <div className="bg-amber-50 rounded-2xl p-5 shadow-sm">
             <div className="flex items-center gap-2 mb-2">
               <ExclamationTriangleIcon className="h-5 w-5 text-amber-600" />
-              <h3 className="font-semibold text-gray-800">Productos con stock bajo en {restaurantNames[currentRestaurant]}</h3>
+              <h3 className="font-bold text-slate-900">Productos con stock bajo en {restaurantNames[currentRestaurant]}</h3>
             </div>
             <p className="text-sm text-amber-700">
               Valor total en riesgo: <span className="font-bold">
@@ -475,19 +489,19 @@ const Reports = () => {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {allProducts.filter(p => p.restaurant === currentRestaurant && p.stock <= p.min_stock).map(p => (
-              <div key={p.id} className="bg-white rounded-2xl p-4 shadow-sm border border-amber-200 flex flex-col">
+              <div key={p.id} className="bg-white rounded-2xl p-4 shadow-sm flex flex-col">
                 <div className="flex justify-between items-start mb-2">
-                  <h4 className="font-medium text-gray-800">{p.name}</h4>
+                  <h4 className="font-bold text-slate-900">{p.name}</h4>
                   <span className="px-2 py-0.5 text-xs font-semibold bg-amber-100 text-amber-700 rounded-full">Bajo</span>
                 </div>
-                <div className="text-sm text-gray-500 mb-2">{p.stock || 0} {p.unit} (mín {p.min_stock || 10})</div>
-                <div className="mt-auto text-right font-semibold text-gray-800">
+                <div className="text-sm text-slate-500 mb-2">{p.stock || 0} {p.unit} (mín {p.min_stock || 10})</div>
+                <div className="mt-auto text-right font-bold text-slate-900">
                   €{((p.stock || 0) * (p.price || 0)).toFixed(2)}
                 </div>
               </div>
             ))}
             {allProducts.filter(p => p.restaurant === currentRestaurant && p.stock <= p.min_stock).length === 0 && (
-              <div className="col-span-full text-center py-8 text-gray-500">🎉 No hay productos con stock bajo</div>
+              <div className="col-span-full text-center py-8 text-slate-500">🎉 No hay productos con stock bajo</div>
             )}
           </div>
         </div>
