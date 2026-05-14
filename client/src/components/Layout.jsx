@@ -1,4 +1,3 @@
-import { Toaster } from 'react-hot-toast';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -19,6 +18,7 @@ import {
 import { useState, useEffect } from 'react';
 import MobileBottomBar from './MobileBottomBar';
 import useLockBodyScroll from '../hooks/useLockBodyScroll';
+import { Toaster } from 'react-hot-toast';
 
 const Layout = () => {
   const { user, logout, currentRestaurant, switchRestaurant, isAdmin, notificationsEnabled, enableNotifications } = useAuth();
@@ -62,41 +62,41 @@ const Layout = () => {
   const toggleSidebar = () => setSidebarOpen(prev => !prev);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50">
       <Toaster
-  position="top-center"
-  toastOptions={{
-    duration: 3000,
-    style: {
-      background: '#1e293b',
-      color: '#f8fafc',
-      borderRadius: '12px',
-      fontSize: '14px',
-      padding: '12px 16px',
-      boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-    },
-    success: {
-      style: {
-        background: '#065f46',
-        color: '#ecfdf5',
-      },
-      iconTheme: {
-        primary: '#34d399',
-        secondary: '#ecfdf5',
-      },
-    },
-    error: {
-      style: {
-        background: '#991b1b',
-        color: '#fef2f2',
-      },
-      iconTheme: {
-        primary: '#f87171',
-        secondary: '#fef2f2',
-      },
-    },
-  }}
-/>
+        position="top-center"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: '#1e293b',
+            color: '#f8fafc',
+            borderRadius: '12px',
+            fontSize: '14px',
+            padding: '12px 16px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+          },
+          success: {
+            style: {
+              background: '#065f46',
+              color: '#ecfdf5',
+            },
+            iconTheme: {
+              primary: '#34d399',
+              secondary: '#ecfdf5',
+            },
+          },
+          error: {
+            style: {
+              background: '#991b1b',
+              color: '#fef2f2',
+            },
+            iconTheme: {
+              primary: '#f87171',
+              secondary: '#fef2f2',
+            },
+          },
+        }}
+      />
       {!isMobile && (
         <div className="lg:hidden bg-white shadow-sm p-4 flex items-center justify-between">
           <button onClick={toggleSidebar} className="p-2">
@@ -130,7 +130,7 @@ const Layout = () => {
             </div>
 
             <div className="p-4 bg-gray-50 flex-shrink-0">
-              <p className="text-sm text-gray-600">{user?.name}</p>
+              <p className="text-sm text-slate-600">{user?.name}</p>
               <p className="text-xs text-purple-600 font-semibold">{user?.role}</p>
             </div>
 
@@ -172,14 +172,13 @@ const Layout = () => {
                     key={item.name}
                     to={item.href}
                     onClick={() => setSidebarOpen(false)}
-                    className="flex items-center px-3 py-3 text-gray-700 hover:bg-gray-100 rounded-lg"
+                    className="flex items-center px-3 py-3 text-slate-700 hover:bg-slate-100 rounded-lg"
                   >
                     <item.icon className="h-5 w-5 mr-3" />
                     {item.name}
                   </Link>
                 );
               })}
-              {/* Espacio adicional para asegurar que el botón de cerrar sesión sea accesible */}
               <div className="h-4" />
             </nav>
 
@@ -201,7 +200,7 @@ const Layout = () => {
           <div className="w-64 bg-white shadow-lg flex flex-col h-full">
             <div className="p-6 border-b flex-shrink-0">
               <h1 className="text-2xl font-bold">🍴 Godeo</h1>
-              <p className="text-sm text-gray-600 mt-1">{user?.name}</p>
+              <p className="text-sm text-slate-600 mt-1">{user?.name}</p>
               <span className="inline-block mt-1 px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded">
                 {user?.role}
               </span>
@@ -240,7 +239,7 @@ const Layout = () => {
                   <Link
                     key={item.name}
                     to={item.href}
-                    className="flex items-center px-3 py-3 text-gray-700 hover:bg-gray-100 rounded-lg"
+                    className="flex items-center px-3 py-3 text-slate-700 hover:bg-slate-100 rounded-lg"
                   >
                     <item.icon className="h-5 w-5 mr-3" />
                     {item.name}
