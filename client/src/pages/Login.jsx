@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { motion } from 'framer-motion';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -25,63 +26,87 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+      <motion.div
+        className="max-w-md w-full bg-white rounded-3xl shadow-xl p-8"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+      >
+        {/* Logo y título */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-800">🍴 Godeo</h1>
-          <p className="text-gray-600 mt-2">Gestión de Inventario</p>
+          <div className="w-16 h-16 bg-orange-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <span className="text-3xl">🍴</span>
+          </div>
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Godeo</h1>
+          <p className="text-slate-500 mt-2 text-sm">Gestión de Inventario</p>
         </div>
-        
-        <form onSubmit={handleSubmit}>
+
+        {/* Formulario */}
+        <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm">
+            <motion.div
+              className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+            >
               {error}
-            </div>
+            </motion.div>
           )}
-          
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-medium mb-2">
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">
               Email
             </label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 focus:bg-white outline-none transition-all"
               placeholder="admin@godeo.com"
               required
             />
           </div>
-          
-          <div className="mb-6">
-            <label className="block text-gray-700 text-sm font-medium mb-2">
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">
               Contraseña
             </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 focus:bg-white outline-none transition-all"
               placeholder="••••••••"
               required
             />
           </div>
-          
+
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition"
+            className="w-full bg-orange-500 text-white font-semibold py-3 px-4 rounded-xl hover:bg-orange-600 disabled:opacity-50 transition shadow-sm shadow-orange-200"
           >
             {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
           </button>
         </form>
-        
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-          <p className="text-sm font-medium text-gray-700 mb-2">Credenciales de prueba:</p>
-          <p className="text-xs text-gray-600">📧 admin@godeo.com</p>
-          <p className="text-xs text-gray-600">🔑 Godeo2024</p>
+
+        {/* Credenciales de prueba */}
+        <div className="mt-6 p-4 bg-slate-50 rounded-xl">
+          <p className="text-sm font-medium text-slate-700 mb-2">Credenciales de prueba:</p>
+          <div className="space-y-1">
+            <p className="text-xs text-slate-500 flex items-center gap-1.5">
+              <span className="w-5 h-5 bg-slate-200 rounded-full flex items-center justify-center text-[10px]">📧</span>
+              admin@godeo.com
+            </p>
+            <p className="text-xs text-slate-500 flex items-center gap-1.5">
+              <span className="w-5 h-5 bg-slate-200 rounded-full flex items-center justify-center text-[10px]">🔑</span>
+              Godeo2024
+            </p>
+          </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };
