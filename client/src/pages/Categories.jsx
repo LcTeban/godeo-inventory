@@ -5,6 +5,7 @@ import {
   ClipboardDocumentIcon, XMarkIcon
 } from '@heroicons/react/24/outline';
 import useLockBodyScroll from '../hooks/useLockBodyScroll';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const TreeNode = ({ category, allCategories, onEdit, onDelete, onAddChild, onCopy }) => {
   const [expanded, setExpanded] = useState(false);
@@ -134,6 +135,31 @@ const Categories = () => {
 
   const roots = categories.filter(c => c.parent_id === null);
 
+  // Variantes para modal
+  const modalVariants = {
+    hidden: { y: '100%', opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { type: 'spring', stiffness: 300, damping: 30 },
+    },
+    exit: {
+      y: '100%',
+      opacity: 0,
+      transition: { type: 'spring', stiffness: 300, damping: 30 },
+    },
+  };
+
+  const desktopModalVariants = {
+    hidden: { scale: 0.95, opacity: 0 },
+    visible: {
+      scale: 1,
+      opacity: 1,
+      transition: { type: 'spring', stiffness: 400, damping: 25 },
+    },
+    exit: { scale: 0.95, opacity: 0, transition: { duration: 0.2 } },
+  };
+
   return (
     <div className="space-y-5">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
@@ -147,7 +173,7 @@ const Categories = () => {
       </div>
 
       {(showAddRoot || parentForNew !== null || editId !== null) && (
-        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3 animate-fade-in-up">
+        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
           <p className="text-sm font-medium text-slate-700">
             {editId ? '✏️ Editar categoría' : parentForNew ? '📂 Nueva subcategoría' : '📁 Nueva carpeta raíz'}
           </p>
@@ -195,78 +221,91 @@ const Categories = () => {
             <p className="text-slate-400 text-xs mt-1">Crea la primera carpeta para organizar tu inventario</p>
           </div>
         )}
-        {roots.map((root, index) => (
-          <div key={root.id} className="animate-fade-in-up" style={{ animationDelay: `${index * 0.05}s` }}>
-            <TreeNode
-              category={root}
-              allCategories={categories}
-              onEdit={(cat) => { setEditId(cat.id); setEditName(cat.name); setEditIsGlobal(!cat.restaurant); setShowAddRoot(false); setParentForNew(null); }}
-              onDelete={handleDelete}
-              onAddChild={(parentId) => {
-                setParentForNew(parentId);
-                setNewName('');
-                setIsGlobal(false);
-                setShowAddRoot(false);
-                setEditId(null);
-              }}
-              onCopy={handleCopy}
-            />
-          </div>
+        {roots.map(root => (
+          <TreeNode
+            key={root.id}
+            category={root}
+            allCategories={categories}
+            onEdit={(cat) => { setEditId(cat.id); setEditName(cat.name); setEditIsGlobal(!cat.restaurant); setShowAddRoot(false); setParentForNew(null); }}
+            onDelete={handleDelete}
+            onAddChild={(parentId) => {
+              setParentForNew(parentId);
+              setNewName('');
+              setIsGlobal(false);
+              setShowAddRoot(false);
+              setEditId(null);
+            }}
+            onCopy={handleCopy}
+          />
         ))}
       </div>
 
-      {showCopyModal && copyCategory && (
-        <div className={`fixed inset-0 z-50 flex ${isMobile ? 'items-end' : 'items-center justify-center'} bg-black/30 backdrop-blur-sm`} onClick={() => setShowCopyModal(false)}>
-          <div className={`bg-white w-full max-w-md flex flex-col shadow-2xl ${
-            isMobile ? 'rounded-t-[32px] animate-slide-up mb-12' : 'rounded-2xl'
-          }`} onClick={e => e.stopPropagation()}>
-            {isMobile && <div className="bottom-sheet-handle" />}
-            <div className="p-6 space-y-4" style={{ paddingBottom: isMobile ? 'calc(80px + env(safe-area-inset-bottom))' : '16px' }}>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-slate-900">📋 Copiar categoría</h2>
-                <button onClick={() => setShowCopyModal(false)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition">
-                  <XMarkIcon className="h-5 w-5" />
-                </button>
+      <AnimatePresence>
+        {showCopyModal && copyCategory && (
+          <motion.div
+            className={`fixed inset-0 z-50 flex ${isMobile ? 'items-end' : 'items-center justify-center'} bg-black/30 backdrop-blur-sm`}
+            onClick={() => setShowCopyModal(false)}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <motion.div
+              className={`bg-white w-full max-w-md flex flex-col shadow-2xl ${isMobile ? 'rounded-t-[32px] mb-12' : 'rounded-2xl'}`}
+              onClick={e => e.stopPropagation()}
+              variants={isMobile ? modalVariants : desktopModalVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+            >
+              {isMobile && <div className="bottom-sheet-handle" />}
+              <div className="p-6 space-y-4" style={{ paddingBottom: isMobile ? 'calc(80px + env(safe-area-inset-bottom))' : '16px' }}>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-bold text-slate-900">📋 Copiar categoría</h2>
+                  <button onClick={() => setShowCopyModal(false)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition">
+                    <XMarkIcon className="h-5 w-5" />
+                  </button>
+                </div>
+                <p className="text-sm text-slate-600">
+                  Vas a copiar la categoría <strong className="text-slate-900">{copyCategory.name}</strong> y todas sus subcategorías y productos al restaurante seleccionado.
+                </p>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">🏢 Restaurante destino</label>
+                  <select
+                    value={copyTarget}
+                    onChange={(e) => setCopyTarget(e.target.value)}
+                    className="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-500/20 outline-none transition"
+                  >
+                    <option value="">Seleccionar destino</option>
+                    {['POZOBLANCO', 'FUERTEVENTURA', 'GRAN_CAPITAN']
+                      .filter(r => r !== currentRestaurant)
+                      .map(r => (
+                        <option key={r} value={r}>
+                          {r === 'POZOBLANCO' ? '🍽️ Pozoblanco' : r === 'FUERTEVENTURA' ? '🏖️ Fuerteventura' : '🏛️ Gran Capitán'}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <button
+                    onClick={() => setShowCopyModal(false)}
+                    className="flex-1 py-2.5 border border-slate-200 text-slate-600 rounded-xl text-sm font-medium hover:bg-slate-50 transition"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={executeCopy}
+                    disabled={isCopying || !copyTarget}
+                    className="flex-1 py-2.5 bg-orange-500 text-white rounded-xl text-sm font-medium hover:bg-orange-600 transition disabled:opacity-50 shadow-sm shadow-orange-200"
+                  >
+                    {isCopying ? 'Copiando...' : 'Copiar todo'}
+                  </button>
+                </div>
               </div>
-              <p className="text-sm text-slate-600">
-                Vas a copiar la categoría <strong className="text-slate-900">{copyCategory.name}</strong> y todas sus subcategorías y productos al restaurante seleccionado.
-              </p>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">🏢 Restaurante destino</label>
-                <select
-                  value={copyTarget}
-                  onChange={(e) => setCopyTarget(e.target.value)}
-                  className="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-500/20 outline-none transition"
-                >
-                  <option value="">Seleccionar destino</option>
-                  {['POZOBLANCO', 'FUERTEVENTURA', 'GRAN_CAPITAN']
-                    .filter(r => r !== currentRestaurant)
-                    .map(r => (
-                      <option key={r} value={r}>
-                        {r === 'POZOBLANCO' ? '🍽️ Pozoblanco' : r === 'FUERTEVENTURA' ? '🏖️ Fuerteventura' : '🏛️ Gran Capitán'}
-                      </option>
-                    ))}
-                </select>
-              </div>
-              <div className="flex gap-3 pt-2">
-                <button
-                  onClick={() => setShowCopyModal(false)}
-                  className="flex-1 py-2.5 border border-slate-200 text-slate-600 rounded-xl text-sm font-medium hover:bg-slate-50 transition"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={executeCopy}
-                  disabled={isCopying || !copyTarget}
-                  className="flex-1 py-2.5 bg-orange-500 text-white rounded-xl text-sm font-medium hover:bg-orange-600 transition disabled:opacity-50 shadow-sm shadow-orange-200"
-                >
-                  {isCopying ? 'Copiando...' : 'Copiar todo'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
