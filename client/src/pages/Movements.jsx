@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { MagnifyingGlassIcon, FunnelIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Movements = () => {
   const { currentRestaurant, getMovements } = useAuth();
@@ -59,6 +60,24 @@ const Movements = () => {
 
   const hasActiveFilters = searchTerm || filterType !== 'all' || filterDate !== 'all';
 
+  // Variantes para animación stagger
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.05 },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 15 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { type: 'spring', stiffness: 120, damping: 18 },
+    },
+  };
+
   if (loading) {
     return (
       <div className="space-y-4 animate-pulse">
@@ -101,18 +120,18 @@ const Movements = () => {
               placeholder="Buscar por producto, usuario o motivo..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition"
+              className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition"
             />
           </div>
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={`px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition ${
-              showFilters || hasActiveFilters ? 'bg-blue-600 text-white shadow-sm shadow-blue-200' : 'border border-slate-200 text-slate-700 hover:bg-slate-50'
+              showFilters || hasActiveFilters ? 'bg-orange-500 text-white shadow-sm shadow-orange-200' : 'border border-slate-200 text-slate-700 hover:bg-slate-50'
             }`}
           >
             <FunnelIcon className="h-4 w-4" />
             Filtros
-            {hasActiveFilters && <span className="w-5 h-5 bg-white text-blue-600 rounded-full text-xs flex items-center justify-center font-bold">!</span>}
+            {hasActiveFilters && <span className="w-5 h-5 bg-white text-orange-500 rounded-full text-xs flex items-center justify-center font-bold">!</span>}
           </button>
           {hasActiveFilters && (
             <button onClick={clearFilters} className="px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-lg transition flex items-center gap-1">
@@ -124,7 +143,7 @@ const Movements = () => {
           <div className="flex flex-wrap gap-3 pt-2 border-t border-slate-100">
             <div>
               <label className="block text-xs text-slate-500 mb-1">Tipo de movimiento</label>
-              <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 outline-none">
+              <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/20 outline-none">
                 <option value="all">Todos los tipos</option>
                 <option value="entrada">📥 Entradas</option>
                 <option value="salida">📤 Salidas</option>
@@ -132,7 +151,7 @@ const Movements = () => {
             </div>
             <div>
               <label className="block text-xs text-slate-500 mb-1">Período</label>
-              <select value={filterDate} onChange={(e) => setFilterDate(e.target.value)} className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 outline-none">
+              <select value={filterDate} onChange={(e) => setFilterDate(e.target.value)} className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/20 outline-none">
                 <option value="all">Todo el historial</option>
                 <option value="today">Hoy</option>
                 <option value="week">Última semana</option>
@@ -151,12 +170,12 @@ const Movements = () => {
             <p className="text-slate-400 text-sm mt-1">{hasActiveFilters ? 'Prueba con otros filtros' : 'Aún no hay movimientos registrados'}</p>
           </div>
         ) : isMobile ? (
-          <div className="divide-y divide-slate-100">
+          <motion.div className="divide-y divide-slate-100" variants={containerVariants} initial="hidden" animate="visible">
             {filteredMovements.map(mov => (
-              <div key={mov.id} className="p-4 hover:bg-slate-50 transition">
+              <motion.div key={mov.id} className="p-4 hover:bg-slate-50 transition" variants={itemVariants}>
                 <div className="flex justify-between items-start mb-2">
                   <div>
-                    <h3 className="font-medium text-slate-900">{mov.products?.name || '-'}</h3>
+                    <h3 className="font-bold text-slate-900">{mov.products?.name || '-'}</h3>
                     <p className="text-xs text-slate-500">
                       {new Date(mov.created_at).toLocaleString('es', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                     </p>
@@ -169,11 +188,11 @@ const Movements = () => {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-slate-500">{mov.users?.name || '-'}{mov.reason && <span className="text-slate-400 ml-2">· {mov.reason}</span>}</span>
-                  <span className={`font-semibold ${mov.type === 'entrada' ? 'text-emerald-600' : 'text-red-600'}`}>{mov.type === 'entrada' ? '+' : '-'}{mov.quantity}</span>
+                  <span className={`font-bold ${mov.type === 'entrada' ? 'text-emerald-600' : 'text-red-600'}`}>{mov.type === 'entrada' ? '+' : '-'}{mov.quantity}</span>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -191,9 +210,9 @@ const Movements = () => {
                 {filteredMovements.map(mov => (
                   <tr key={mov.id} className="hover:bg-slate-50 transition">
                     <td className="px-4 py-3 text-sm text-slate-500 whitespace-nowrap">{new Date(mov.created_at).toLocaleString('es', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
-                    <td className="px-4 py-3"><span className="font-medium text-slate-900">{mov.products?.name || '-'}</span></td>
+                    <td className="px-4 py-3"><span className="font-bold text-slate-900">{mov.products?.name || '-'}</span></td>
                     <td className="px-4 py-3"><span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${mov.type === 'entrada' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>{mov.type === 'entrada' ? '📥 Entrada' : '📤 Salida'}</span></td>
-                    <td className="px-4 py-3 text-right"><span className={`font-semibold ${mov.type === 'entrada' ? 'text-emerald-600' : 'text-red-600'}`}>{mov.type === 'entrada' ? '+' : '-'}{mov.quantity}</span></td>
+                    <td className="px-4 py-3 text-right"><span className={`font-bold ${mov.type === 'entrada' ? 'text-emerald-600' : 'text-red-600'}`}>{mov.type === 'entrada' ? '+' : '-'}{mov.quantity}</span></td>
                     <td className="px-4 py-3 text-sm text-slate-500">{mov.users?.name || '-'}</td>
                     <td className="px-4 py-3 text-sm text-slate-400 hidden md:table-cell">{mov.reason || '-'}</td>
                   </tr>
