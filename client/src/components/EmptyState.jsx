@@ -26,5 +26,4 @@ const EmptyState = ({ icon: Icon, title, message, actionLabel, onAction }) => {
     </motion.div>
   );
 };
-
 export default EmptyState;
