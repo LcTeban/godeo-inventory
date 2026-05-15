@@ -207,7 +207,7 @@ const Reports = () => {
   if (loading) return (
     <div className="text-center py-20">
       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
-      <p className="text-slate-500">Cargando reportes...</p>
+      <p className="text-slate-500 dark:text-gray-400">Cargando reportes...</p>
     </div>
   );
 
@@ -216,14 +216,14 @@ const Reports = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">📊 Reportes Financieros</h1>
-          <p className="text-sm text-slate-500">Panel de control y análisis de inventario</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">📊 Reportes Financieros</h1>
+          <p className="text-sm text-slate-500 dark:text-gray-400">Panel de control y análisis de inventario</p>
         </div>
         <div className="flex items-center gap-3">
           <select
             value={currentRestaurant}
             onChange={(e) => switchRestaurant(e.target.value)}
-            className="border border-slate-200 rounded-xl px-4 py-2.5 text-sm bg-white shadow-sm focus:ring-2 focus:ring-orange-500/20 outline-none"
+            className="border border-slate-200 dark:border-gray-600 rounded-xl px-4 py-2.5 text-sm bg-white dark:bg-gray-800 text-slate-900 dark:text-white shadow-sm focus:ring-2 focus:ring-orange-500/20 outline-none"
           >
             {restaurants.map(rest => (
               <option key={rest} value={rest}>{restaurantNames[rest]}</option>
@@ -232,7 +232,7 @@ const Reports = () => {
           <select
             value={period}
             onChange={(e) => setPeriod(e.target.value)}
-            className="border border-slate-200 rounded-xl px-4 py-2.5 text-sm bg-white shadow-sm focus:ring-2 focus:ring-orange-500/20 outline-none"
+            className="border border-slate-200 dark:border-gray-600 rounded-xl px-4 py-2.5 text-sm bg-white dark:bg-gray-800 text-slate-900 dark:text-white shadow-sm focus:ring-2 focus:ring-orange-500/20 outline-none"
           >
             <option value="week">Última semana</option>
             <option value="month">Último mes</option>
@@ -243,40 +243,40 @@ const Reports = () => {
 
       {/* KPIs */}
       <motion.div className="grid grid-cols-2 lg:grid-cols-4 gap-4" variants={containerVariants} initial="hidden" animate="visible">
-        <motion.div className="bg-white rounded-2xl p-5 shadow-sm flex items-center gap-3" variants={itemVariants}>
-          <div className="p-3 bg-blue-50 rounded-xl">
-            <CurrencyDollarIcon className="h-6 w-6 text-blue-600" />
+        <motion.div className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm flex items-center gap-3" variants={itemVariants}>
+          <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-xl">
+            <CurrencyDollarIcon className="h-6 w-6 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
-            <p className="text-sm text-slate-500">Valor Inventario</p>
-            <p className="text-2xl font-bold text-slate-900">€{totalInventoryValue.toFixed(0)}</p>
+            <p className="text-sm text-slate-500 dark:text-gray-400">Valor Inventario</p>
+            <p className="text-2xl font-bold text-slate-900 dark:text-white">€{totalInventoryValue.toFixed(0)}</p>
           </div>
         </motion.div>
-        <motion.div className="bg-white rounded-2xl p-5 shadow-sm flex items-center gap-3" variants={itemVariants}>
-          <div className="p-3 bg-indigo-50 rounded-xl">
-            <CubeIcon className="h-6 w-6 text-indigo-600" />
+        <motion.div className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm flex items-center gap-3" variants={itemVariants}>
+          <div className="p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl">
+            <CubeIcon className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
           </div>
           <div>
-            <p className="text-sm text-slate-500">Total Productos</p>
-            <p className="text-2xl font-bold text-slate-900">{totalProducts}</p>
+            <p className="text-sm text-slate-500 dark:text-gray-400">Total Productos</p>
+            <p className="text-2xl font-bold text-slate-900 dark:text-white">{totalProducts}</p>
           </div>
         </motion.div>
-        <motion.div className="bg-white rounded-2xl p-5 shadow-sm flex items-center gap-3" variants={itemVariants}>
-          <div className="p-3 bg-amber-50 rounded-xl">
-            <TruckIcon className="h-6 w-6 text-amber-600" />
+        <motion.div className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm flex items-center gap-3" variants={itemVariants}>
+          <div className="p-3 bg-amber-50 dark:bg-amber-900/30 rounded-xl">
+            <TruckIcon className="h-6 w-6 text-amber-600 dark:text-amber-400" />
           </div>
           <div>
-            <p className="text-sm text-slate-500">Transf. Pendientes</p>
-            <p className="text-2xl font-bold text-slate-900">{pendingTransfers}</p>
+            <p className="text-sm text-slate-500 dark:text-gray-400">Transf. Pendientes</p>
+            <p className="text-2xl font-bold text-slate-900 dark:text-white">{pendingTransfers}</p>
           </div>
         </motion.div>
-        <motion.div className="bg-white rounded-2xl p-5 shadow-sm flex items-center gap-3" variants={itemVariants}>
-          <div className="p-3 bg-red-50 rounded-xl">
-            <ArrowTrendingDownIcon className="h-6 w-6 text-red-600" />
+        <motion.div className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm flex items-center gap-3" variants={itemVariants}>
+          <div className="p-3 bg-red-50 dark:bg-red-900/30 rounded-xl">
+            <ArrowTrendingDownIcon className="h-6 w-6 text-red-600 dark:text-red-400" />
           </div>
           <div>
-            <p className="text-sm text-slate-500">Costo de Ventas</p>
-            <p className="text-2xl font-bold text-slate-900">€{costOfSales.toFixed(0)}</p>
+            <p className="text-sm text-slate-500 dark:text-gray-400">Costo de Ventas</p>
+            <p className="text-2xl font-bold text-slate-900 dark:text-white">€{costOfSales.toFixed(0)}</p>
           </div>
         </motion.div>
       </motion.div>
@@ -287,19 +287,19 @@ const Reports = () => {
           const value = inventoryValueByRestaurant()[rest] || 0;
           const prods = allProducts.filter(p => p.restaurant === rest).length;
           return (
-            <div key={rest} className="bg-white rounded-2xl p-5 shadow-sm">
+            <div key={rest} className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="font-bold text-slate-900">{restaurantNames[rest]}</h3>
+                <h3 className="font-bold text-slate-900 dark:text-white">{restaurantNames[rest]}</h3>
                 <div className="w-3 h-3 rounded-full" style={{ backgroundColor: restaurantColors[rest] }}></div>
               </div>
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-500">Valor inventario</span>
-                  <span className="font-bold text-slate-900">€{value.toFixed(0)}</span>
+                  <span className="text-slate-500 dark:text-gray-400">Valor inventario</span>
+                  <span className="font-bold text-slate-900 dark:text-white">€{value.toFixed(0)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-500">Productos</span>
-                  <span className="font-bold text-slate-900">{prods}</span>
+                  <span className="text-slate-500 dark:text-gray-400">Productos</span>
+                  <span className="font-bold text-slate-900 dark:text-white">{prods}</span>
                 </div>
               </div>
             </div>
@@ -321,7 +321,7 @@ const Reports = () => {
             className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
               activeTab === tab.key
                 ? 'bg-orange-500 text-white shadow-sm shadow-orange-200'
-                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                : 'bg-white dark:bg-gray-800 text-slate-600 dark:text-gray-300 border border-slate-200 dark:border-gray-600 hover:bg-slate-50 dark:hover:bg-gray-700'
             }`}
           >
             {tab.label}
@@ -334,15 +334,15 @@ const Reports = () => {
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Barras: Top 5 consumo */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm">
-              <h3 className="font-bold text-slate-900 mb-4">📊 Top 5 productos más consumidos</h3>
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm">
+              <h3 className="font-bold text-slate-900 dark:text-white mb-4">📊 Top 5 productos más consumidos</h3>
               {topConsumed.length > 0 ? (
                 <ResponsiveContainer width="100%" height={280}>
                   <BarChart data={topConsumed} layout="vertical" margin={{ left: 60 }}>
-                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#334155" />
                     <XAxis type="number" tick={{ fill: '#94a3b8' }} />
-                    <YAxis type="category" dataKey="name" tick={{ fontSize: 12, fill: '#64748b' }} />
-                    <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }} />
+                    <YAxis type="category" dataKey="name" tick={{ fontSize: 12, fill: '#94a3b8' }} />
+                    <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', backgroundColor: '#1e293b', color: '#f8fafc' }} />
                     <Bar dataKey="consumo" fill={restaurantColors[currentRestaurant]} radius={[0, 4, 4, 0]}>
                       {topConsumed.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={restaurantColors[currentRestaurant]} />
@@ -351,85 +351,85 @@ const Reports = () => {
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <p className="text-slate-400 text-center py-12">Sin datos de consumo en este período</p>
+                <p className="text-slate-400 dark:text-gray-500 text-center py-12">Sin datos de consumo en este período</p>
               )}
             </div>
 
             {/* Pastel: Distribución por categoría */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm">
-              <h3 className="font-bold text-slate-900 mb-4">🥧 Distribución por categoría</h3>
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm">
+              <h3 className="font-bold text-slate-900 dark:text-white mb-4">🥧 Distribución por categoría</h3>
               {categoryData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={280}>
                   <PieChart>
-                    <Pie data={categoryData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label>
+                    <Pie data={categoryData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label={{ fill: '#94a3b8' }}>
                       {categoryData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }} />
-                    <Legend />
+                    <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', backgroundColor: '#1e293b', color: '#f8fafc' }} />
+                    <Legend wrapperStyle={{ color: '#94a3b8' }} />
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <p className="text-slate-400 text-center py-12">Sin datos de categorías</p>
+                <p className="text-slate-400 dark:text-gray-500 text-center py-12">Sin datos de categorías</p>
               )}
             </div>
           </div>
 
           {/* Totales de movimientos */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-white rounded-2xl p-5 shadow-sm">
-              <p className="text-sm text-slate-500">Total entradas</p>
-              <p className="text-2xl font-bold text-emerald-600">+€{totalEntries.toFixed(0)}</p>
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm">
+              <p className="text-sm text-slate-500 dark:text-gray-400">Total entradas</p>
+              <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">+€{totalEntries.toFixed(0)}</p>
             </div>
-            <div className="bg-white rounded-2xl p-5 shadow-sm">
-              <p className="text-sm text-slate-500">Total salidas</p>
-              <p className="text-2xl font-bold text-red-600">-€{totalExits.toFixed(0)}</p>
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm">
+              <p className="text-sm text-slate-500 dark:text-gray-400">Total salidas</p>
+              <p className="text-2xl font-bold text-red-600 dark:text-red-400">-€{totalExits.toFixed(0)}</p>
             </div>
           </div>
         </div>
       )}
 
       {activeTab === 'inventory' && (
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
-            <h3 className="font-bold text-slate-900">Inventario actual de {restaurantNames[currentRestaurant]}</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-100 dark:border-gray-700 flex justify-between items-center">
+            <h3 className="font-bold text-slate-900 dark:text-white">Inventario actual de {restaurantNames[currentRestaurant]}</h3>
             <div className="flex gap-2">
-              <button onClick={exportToExcel} className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition" title="Excel">
+              <button onClick={exportToExcel} className="p-2 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-lg transition" title="Excel">
                 <TableCellsIcon className="h-5 w-5" />
               </button>
-              <button onClick={exportToPDF} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition" title="PDF">
+              <button onClick={exportToPDF} className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition" title="PDF">
                 <DocumentArrowDownIcon className="h-5 w-5" />
               </button>
             </div>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-slate-50">
+              <thead className="bg-slate-50 dark:bg-gray-700/50">
                 <tr>
-                  <th className="text-left px-4 py-3 cursor-pointer hover:text-orange-500" onClick={() => requestSort('name')}>
+                  <th className="text-left px-4 py-3 cursor-pointer hover:text-orange-500 text-slate-500 dark:text-gray-400" onClick={() => requestSort('name')}>
                     Producto {getSortIcon('name')}
                   </th>
-                  <th className="text-left px-4 py-3 cursor-pointer hover:text-orange-500" onClick={() => requestSort('category')}>
+                  <th className="text-left px-4 py-3 cursor-pointer hover:text-orange-500 text-slate-500 dark:text-gray-400" onClick={() => requestSort('category')}>
                     Categoría {getSortIcon('category')}
                   </th>
-                  <th className="text-right px-4 py-3 cursor-pointer hover:text-orange-500" onClick={() => requestSort('stock')}>
+                  <th className="text-right px-4 py-3 cursor-pointer hover:text-orange-500 text-slate-500 dark:text-gray-400" onClick={() => requestSort('stock')}>
                     Stock {getSortIcon('stock')}
                   </th>
-                  <th className="text-right px-4 py-3 cursor-pointer hover:text-orange-500" onClick={() => requestSort('price')}>
+                  <th className="text-right px-4 py-3 cursor-pointer hover:text-orange-500 text-slate-500 dark:text-gray-400" onClick={() => requestSort('price')}>
                     Precio {getSortIcon('price')}
                   </th>
-                  <th className="text-right px-4 py-3">Valor total</th>
+                  <th className="text-right px-4 py-3 text-slate-500 dark:text-gray-400">Valor total</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-gray-700">
                 {sortedProducts.map(p => (
-                  <tr key={p.id} className="hover:bg-slate-50">
-                    <td className="px-4 py-3 font-bold text-slate-900">{p.name}</td>
-                    <td className="px-4 py-3 text-slate-500">{p.categories?.name || '-'}</td>
-                    <td className="px-4 py-3 text-right">{p.stock || 0} {p.unit}</td>
-                    <td className="px-4 py-3 text-right">€{(p.price || 0).toFixed(2)}</td>
-                    <td className="px-4 py-3 text-right font-bold">€{((p.stock || 0) * (p.price || 0)).toFixed(2)}</td>
+                  <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-gray-700/50">
+                    <td className="px-4 py-3 font-bold text-slate-900 dark:text-white">{p.name}</td>
+                    <td className="px-4 py-3 text-slate-500 dark:text-gray-400">{p.categories?.name || '-'}</td>
+                    <td className="px-4 py-3 text-right text-slate-900 dark:text-white">{p.stock || 0} {p.unit}</td>
+                    <td className="px-4 py-3 text-right text-slate-900 dark:text-white">€{(p.price || 0).toFixed(2)}</td>
+                    <td className="px-4 py-3 text-right font-bold text-slate-900 dark:text-white">€{((p.stock || 0) * (p.price || 0)).toFixed(2)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -439,33 +439,33 @@ const Reports = () => {
       )}
 
       {activeTab === 'movements' && (
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-100">
-            <h3 className="font-bold text-slate-900">Últimos movimientos en {restaurantNames[currentRestaurant]}</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-100 dark:border-gray-700">
+            <h3 className="font-bold text-slate-900 dark:text-white">Últimos movimientos en {restaurantNames[currentRestaurant]}</h3>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-slate-50">
+              <thead className="bg-slate-50 dark:bg-gray-700/50">
                 <tr>
-                  <th className="text-left px-4 py-3">Fecha</th>
-                  <th className="text-left px-4 py-3">Producto</th>
-                  <th className="text-left px-4 py-3">Tipo</th>
-                  <th className="text-right px-4 py-3">Cantidad</th>
-                  <th className="text-right px-4 py-3">Precio ud.</th>
-                  <th className="text-right px-4 py-3">Valor</th>
-                  <th className="text-left px-4 py-3">Usuario</th>
+                  <th className="text-left px-4 py-3 text-slate-500 dark:text-gray-400">Fecha</th>
+                  <th className="text-left px-4 py-3 text-slate-500 dark:text-gray-400">Producto</th>
+                  <th className="text-left px-4 py-3 text-slate-500 dark:text-gray-400">Tipo</th>
+                  <th className="text-right px-4 py-3 text-slate-500 dark:text-gray-400">Cantidad</th>
+                  <th className="text-right px-4 py-3 text-slate-500 dark:text-gray-400">Precio ud.</th>
+                  <th className="text-right px-4 py-3 text-slate-500 dark:text-gray-400">Valor</th>
+                  <th className="text-left px-4 py-3 text-slate-500 dark:text-gray-400">Usuario</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-gray-700">
                 {filteredMovements.slice(0, 30).map(m => (
-                  <tr key={m.id} className="hover:bg-slate-50">
-                    <td className="px-4 py-3">{new Date(m.created_at).toLocaleDateString('es')}</td>
-                    <td className="px-4 py-3 font-bold text-slate-900">{m.products?.name || '-'}</td>
-                    <td className={`px-4 py-3 font-medium ${m.type === 'entrada' ? 'text-emerald-600' : 'text-red-600'}`}>{m.type}</td>
-                    <td className="px-4 py-3 text-right">{m.quantity}</td>
-                    <td className="px-4 py-3 text-right">€{(m.products?.price || 0).toFixed(2)}</td>
-                    <td className="px-4 py-3 text-right font-bold">€{((m.quantity || 0) * (m.products?.price || 0)).toFixed(2)}</td>
-                    <td className="px-4 py-3">{m.users?.name || '-'}</td>
+                  <tr key={m.id} className="hover:bg-slate-50 dark:hover:bg-gray-700/50">
+                    <td className="px-4 py-3 text-slate-500 dark:text-gray-400">{new Date(m.created_at).toLocaleDateString('es')}</td>
+                    <td className="px-4 py-3 font-bold text-slate-900 dark:text-white">{m.products?.name || '-'}</td>
+                    <td className={`px-4 py-3 font-medium ${m.type === 'entrada' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>{m.type}</td>
+                    <td className="px-4 py-3 text-right text-slate-900 dark:text-white">{m.quantity}</td>
+                    <td className="px-4 py-3 text-right text-slate-900 dark:text-white">€{(m.products?.price || 0).toFixed(2)}</td>
+                    <td className="px-4 py-3 text-right font-bold text-slate-900 dark:text-white">€{((m.quantity || 0) * (m.products?.price || 0)).toFixed(2)}</td>
+                    <td className="px-4 py-3 text-slate-500 dark:text-gray-400">{m.users?.name || '-'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -476,12 +476,12 @@ const Reports = () => {
 
       {activeTab === 'alerts' && (
         <div className="space-y-6">
-          <div className="bg-amber-50 rounded-2xl p-5 shadow-sm">
+          <div className="bg-amber-50 dark:bg-amber-900/20 rounded-2xl p-5 shadow-sm">
             <div className="flex items-center gap-2 mb-2">
-              <ExclamationTriangleIcon className="h-5 w-5 text-amber-600" />
-              <h3 className="font-bold text-slate-900">Productos con stock bajo en {restaurantNames[currentRestaurant]}</h3>
+              <ExclamationTriangleIcon className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+              <h3 className="font-bold text-slate-900 dark:text-white">Productos con stock bajo en {restaurantNames[currentRestaurant]}</h3>
             </div>
-            <p className="text-sm text-amber-700">
+            <p className="text-sm text-amber-700 dark:text-amber-400">
               Valor total en riesgo: <span className="font-bold">
                 €{allProducts.filter(p => p.restaurant === currentRestaurant && p.stock <= p.min_stock).reduce((sum, p) => sum + (p.stock * p.price || 0), 0).toFixed(2)}
               </span>
@@ -489,19 +489,19 @@ const Reports = () => {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {allProducts.filter(p => p.restaurant === currentRestaurant && p.stock <= p.min_stock).map(p => (
-              <div key={p.id} className="bg-white rounded-2xl p-4 shadow-sm flex flex-col">
+              <div key={p.id} className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm flex flex-col">
                 <div className="flex justify-between items-start mb-2">
-                  <h4 className="font-bold text-slate-900">{p.name}</h4>
-                  <span className="px-2 py-0.5 text-xs font-semibold bg-amber-100 text-amber-700 rounded-full">Bajo</span>
+                  <h4 className="font-bold text-slate-900 dark:text-white">{p.name}</h4>
+                  <span className="px-2 py-0.5 text-xs font-semibold bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full">Bajo</span>
                 </div>
-                <div className="text-sm text-slate-500 mb-2">{p.stock || 0} {p.unit} (mín {p.min_stock || 10})</div>
-                <div className="mt-auto text-right font-bold text-slate-900">
+                <div className="text-sm text-slate-500 dark:text-gray-400 mb-2">{p.stock || 0} {p.unit} (mín {p.min_stock || 10})</div>
+                <div className="mt-auto text-right font-bold text-slate-900 dark:text-white">
                   €{((p.stock || 0) * (p.price || 0)).toFixed(2)}
                 </div>
               </div>
             ))}
             {allProducts.filter(p => p.restaurant === currentRestaurant && p.stock <= p.min_stock).length === 0 && (
-              <div className="col-span-full text-center py-8 text-slate-500">🎉 No hay productos con stock bajo</div>
+              <div className="col-span-full text-center py-8 text-slate-500 dark:text-gray-400">🎉 No hay productos con stock bajo</div>
             )}
           </div>
         </div>
