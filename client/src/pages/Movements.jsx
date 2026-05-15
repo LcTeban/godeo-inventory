@@ -1,10 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { MagnifyingGlassIcon, FunnelIcon, XMarkIcon, ClockIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, FunnelIcon, XMarkIcon, ClockIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import EmptyState from '../components/EmptyState';
-import usePullToRefresh from '../hooks/usePullToRefresh';
 
 const Movements = () => {
   const { currentRestaurant, getMovements } = useAuth();
@@ -15,8 +14,10 @@ const Movements = () => {
   const [filterDate, setFilterDate] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
     try {
       const data = await getMovements({ limit: 100 });
       setMovements(Array.isArray(data) ? data : []);
@@ -24,10 +25,10 @@ const Movements = () => {
     } catch (error) {
       console.error('Error loading movements:', error);
       toast.error('Error al actualizar los movimientos');
+    } finally {
+      setIsRefreshing(false);
     }
   }, [getMovements]);
-
-  const { pullState, pullDistance, isRefreshing } = usePullToRefresh(handleRefresh, 80);
 
   useEffect(() => {
     const loadMovements = async () => {
@@ -170,25 +171,6 @@ const Movements = () => {
         )}
       </div>
 
-      {/* Indicador de pull-to-refresh */}
-      <AnimatePresence>
-        {(pullState === 'pulling' || pullState === 'refreshing') && (
-          <motion.div
-            className="flex justify-center py-2"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: Math.max(40, pullDistance), opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-          >
-            <motion.div
-              className="w-8 h-8 rounded-full border-2 border-orange-500 border-t-transparent"
-              animate={isRefreshing ? { rotate: 360 } : { rotate: 0 }}
-              transition={isRefreshing ? { repeat: Infinity, duration: 0.8, ease: 'linear' } : {}}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Lista de movimientos */}
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
         {filteredMovements.length === 0 ? (
@@ -269,6 +251,31 @@ const Movements = () => {
         )}
       </div>
       <div className="text-center text-sm text-slate-500">Mostrando {filteredMovements.length} de {movements.length} movimientos{hasActiveFilters && ' (filtros activos)'}</div>
+
+      {/* Botón flotante de actualización */}
+      <AnimatePresence>
+        {movements.length > 0 && (
+          <motion.button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className={`fixed z-40 p-3 rounded-full shadow-lg shadow-orange-200 bg-orange-500 text-white ${
+              isMobile ? 'bottom-20 right-4' : 'bottom-6 right-6'
+            }`}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            whileTap={{ scale: 0.9 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+          >
+            <motion.div
+              animate={isRefreshing ? { rotate: 360 } : { rotate: 0 }}
+              transition={isRefreshing ? { repeat: Infinity, duration: 0.8, ease: 'linear' } : {}}
+            >
+              <ArrowPathIcon className="h-5 w-5" />
+            </motion.div>
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
