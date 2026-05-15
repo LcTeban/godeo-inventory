@@ -1,4 +1,4 @@
-import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
+import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import {
@@ -22,13 +22,11 @@ import { useState, useEffect } from 'react';
 import MobileBottomBar from './MobileBottomBar';
 import useLockBodyScroll from '../hooks/useLockBodyScroll';
 import { Toaster } from 'react-hot-toast';
-import { motion, AnimatePresence } from 'framer-motion';
 
 const Layout = () => {
   const { user, logout, currentRestaurant, switchRestaurant, isAdmin, notificationsEnabled, enableNotifications } = useAuth();
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
-  const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
 
@@ -82,13 +80,6 @@ const Layout = () => {
   const currentRest = restaurants.find(r => r.id === currentRestaurant);
 
   const toggleSidebar = () => setSidebarOpen(prev => !prev);
-
-  // Variantes para la transición de páginas
-  const pageVariants = {
-    initial: { opacity: 0, y: 12 },
-    animate: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: -12 },
-  };
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-gray-900 transition-colors duration-300">
@@ -296,21 +287,9 @@ const Layout = () => {
         </div>
       )}
 
-      {/* Contenido principal con transiciones */}
       <div className={`${!isMobile ? 'lg:pl-64' : 'pb-20'}`}>
         <div className="p-4 lg:p-6">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={location.pathname}
-              variants={pageVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-            >
-              <Outlet />
-            </motion.div>
-          </AnimatePresence>
+          <Outlet />
         </div>
       </div>
 
