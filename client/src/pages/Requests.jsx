@@ -6,6 +6,8 @@ import {
 } from '@heroicons/react/24/outline';
 import useLockBodyScroll from '../hooks/useLockBodyScroll';
 import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
+import EmptyState from '../components/EmptyState';
 
 const Requests = () => {
   const { isAdmin, user, getRequests, addRequest, updateRequest, getProducts } = useAuth();
@@ -45,6 +47,7 @@ const Requests = () => {
       setProducts(Array.isArray(prodData) ? prodData : []);
     } catch (error) {
       console.error('Error:', error);
+      toast.error('Error al cargar los pedidos');
     }
   };
 
@@ -106,7 +109,7 @@ const Requests = () => {
     
     const validItems = formData.items.filter(item => item.productName && item.quantity);
     if (validItems.length === 0) {
-      alert('Agrega al menos un producto con nombre y cantidad');
+      toast.error('Agrega al menos un producto con nombre y cantidad');
       return;
     }
 
@@ -125,6 +128,7 @@ const Requests = () => {
       setActiveSuggestionIndex(null);
       setProductExists({});
       loadData();
+      toast.success('Pedido enviado correctamente');
       
       if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
         new Notification('✅ Pedido enviado', {
@@ -133,7 +137,7 @@ const Requests = () => {
         });
       }
     } catch (error) {
-      alert('Error al enviar: ' + error.message);
+      toast.error('Error al enviar: ' + error.message);
     }
   };
 
@@ -141,6 +145,7 @@ const Requests = () => {
     try {
       await updateRequest(id, status);
       loadData();
+      toast.success(status === 'aprobado' ? 'Pedido aprobado' : 'Pedido rechazado');
       
       if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
         const request = requests.find(r => r.id === id);
@@ -151,7 +156,7 @@ const Requests = () => {
         }
       }
     } catch (error) {
-      alert('Error al actualizar');
+      toast.error('Error al actualizar');
     }
   };
 
@@ -304,41 +309,55 @@ const Requests = () => {
         <div className="px-5 py-4 border-b border-slate-100">
           <h2 className="font-bold text-slate-900">📝 Mis Solicitudes ({filteredMyRequests.length})</h2>
         </div>
-        <div className="divide-y divide-slate-100">
-          {filteredMyRequests.length === 0 ? (
-            <div className="px-5 py-10 text-center">
-              <p className="text-slate-400 text-sm">No se encontraron solicitudes</p>
-            </div>
-          ) : (
-            <motion.div variants={containerVariants} initial="hidden" animate="visible">
-              {filteredMyRequests.map((req) => (
-                <motion.div key={req.id} className="px-5 py-4 hover:bg-slate-50 transition" variants={itemVariants}>
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-bold text-slate-900 truncate">{req.product_name}</p>
-                      <p className="text-sm text-slate-500 mt-0.5">
-                        {req.quantity} {req.unit}
-                        {req.notes && <span className="text-slate-400 ml-2">· {req.notes}</span>}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-3 ml-4">
-                      <span className="text-xs text-slate-400">
-                        {new Date(req.created_at).toLocaleDateString('es', { day: '2-digit', month: 'short' })}
-                      </span>
-                      <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${
-                        req.status === 'pendiente' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
-                        req.status === 'aprobado' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-                        'bg-red-50 text-red-700 border border-red-200'
-                      }`}>
-                        {req.status === 'pendiente' ? '⏳' : req.status === 'aprobado' ? '✅' : '❌'} {req.status}
-                      </span>
-                    </div>
+        {myRequests.length === 0 ? (
+          <div className="py-10">
+            <EmptyState
+              icon={ClipboardDocumentListIcon}
+              title="Sin solicitudes"
+              message="Crea una nueva lista de pedidos para solicitar productos"
+              actionLabel="Nueva Lista"
+              onAction={() => setShowModal(true)}
+            />
+          </div>
+        ) : filteredMyRequests.length === 0 ? (
+          <div className="py-10">
+            <EmptyState
+              icon={MagnifyingGlassIcon}
+              title="Sin resultados"
+              message="Prueba con otro término de búsqueda o cambia el filtro"
+              actionLabel="Ver todas"
+              onAction={() => { setSearchTerm(''); setFilterStatus('all'); }}
+            />
+          </div>
+        ) : (
+          <motion.div className="divide-y divide-slate-100" variants={containerVariants} initial="hidden" animate="visible">
+            {filteredMyRequests.map((req) => (
+              <motion.div key={req.id} className="px-5 py-4 hover:bg-slate-50 transition" variants={itemVariants}>
+                <div className="flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-slate-900 truncate">{req.product_name}</p>
+                    <p className="text-sm text-slate-500 mt-0.5">
+                      {req.quantity} {req.unit}
+                      {req.notes && <span className="text-slate-400 ml-2">· {req.notes}</span>}
+                    </p>
                   </div>
-                </motion.div>
-              ))}
-            </motion.div>
-          )}
-        </div>
+                  <div className="flex items-center gap-3 ml-4">
+                    <span className="text-xs text-slate-400">
+                      {new Date(req.created_at).toLocaleDateString('es', { day: '2-digit', month: 'short' })}
+                    </span>
+                    <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${
+                      req.status === 'pendiente' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                      req.status === 'aprobado' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                      'bg-red-50 text-red-700 border border-red-200'
+                    }`}>
+                      {req.status === 'pendiente' ? '⏳' : req.status === 'aprobado' ? '✅' : '❌'} {req.status}
+                    </span>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
       </div>
 
       {/* Panel Admin - Pendientes de aprobar */}
@@ -352,8 +371,18 @@ const Requests = () => {
               </span>
             </h2>
           </div>
-          <div className="divide-y divide-slate-100">
-            <motion.div variants={containerVariants} initial="hidden" animate="visible">
+          {filteredPending.length === 0 ? (
+            <div className="py-10">
+              <EmptyState
+                icon={MagnifyingGlassIcon}
+                title="Sin resultados"
+                message="No hay pendientes que coincidan con la búsqueda"
+                actionLabel="Limpiar búsqueda"
+                onAction={() => setSearchTerm('')}
+              />
+            </div>
+          ) : (
+            <motion.div className="divide-y divide-slate-100" variants={containerVariants} initial="hidden" animate="visible">
               {filteredPending.map((req) => (
                 <motion.div key={req.id} className="px-5 py-4 hover:bg-slate-50 transition" variants={itemVariants}>
                   <div className="flex items-start justify-between gap-4">
@@ -390,7 +419,7 @@ const Requests = () => {
                 </motion.div>
               ))}
             </motion.div>
-          </div>
+          )}
         </div>
       )}
 
