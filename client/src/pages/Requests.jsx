@@ -232,8 +232,8 @@ const Requests = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 tracking-tight">📋 Pedidos</h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">📋 Pedidos</h1>
+          <p className="text-sm text-slate-500 dark:text-gray-400 mt-1">
             {isAdmin ? 'Gestiona las solicitudes de los empleados' : 'Solicita los productos que necesites'}
           </p>
         </div>
@@ -249,18 +249,18 @@ const Requests = () => {
       {/* KPIs (solo admin) */}
       {isAdmin && (
         <div className="grid grid-cols-3 gap-3">
-          <div className="bg-white rounded-2xl p-4 shadow-sm flex flex-col items-start">
-            <div className="p-2 bg-amber-50 rounded-xl mb-3">
-              <ClockIcon className="h-5 w-5 text-amber-600" />
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm flex flex-col items-start">
+            <div className="p-2 bg-amber-50 dark:bg-amber-900/30 rounded-xl mb-3">
+              <ClockIcon className="h-5 w-5 text-amber-600 dark:text-amber-400" />
             </div>
-            <p className="text-2xl font-bold text-slate-900 mt-1">{pendingCount}</p>
-            <p className="text-xs text-slate-500 mt-1 tracking-wide">Pendientes</p>
+            <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{pendingCount}</p>
+            <p className="text-xs text-slate-500 dark:text-gray-400 mt-1 tracking-wide">Pendientes</p>
           </div>
-          <div className="bg-white rounded-2xl p-4 shadow-sm flex flex-col items-start">
-            <div className="p-2 bg-emerald-50 rounded-xl mb-3">
-              <CheckCircleIcon className="h-5 w-5 text-emerald-600" />
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm flex flex-col items-start">
+            <div className="p-2 bg-emerald-50 dark:bg-emerald-900/30 rounded-xl mb-3">
+              <CheckCircleIcon className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
             </div>
-            <p className="text-2xl font-bold text-slate-900 mt-1">
+            <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
               {requests.filter(r => {
                 if (r.status !== 'aprobado') return false;
                 const today = new Date();
@@ -268,14 +268,14 @@ const Requests = () => {
                 return date.toDateString() === today.toDateString();
               }).length}
             </p>
-            <p className="text-xs text-slate-500 mt-1 tracking-wide">Aprobados hoy</p>
+            <p className="text-xs text-slate-500 dark:text-gray-400 mt-1 tracking-wide">Aprobados hoy</p>
           </div>
-          <div className="bg-white rounded-2xl p-4 shadow-sm flex flex-col items-start">
-            <div className="p-2 bg-blue-50 rounded-xl mb-3">
-              <ClipboardDocumentListIcon className="h-5 w-5 text-blue-600" />
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm flex flex-col items-start">
+            <div className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-xl mb-3">
+              <ClipboardDocumentListIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             </div>
-            <p className="text-2xl font-bold text-slate-900 mt-1">{requests.length}</p>
-            <p className="text-xs text-slate-500 mt-1 tracking-wide">Total solicitudes</p>
+            <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{requests.length}</p>
+            <p className="text-xs text-slate-500 dark:text-gray-400 mt-1 tracking-wide">Total solicitudes</p>
           </div>
         </div>
       )}
@@ -283,19 +283,19 @@ const Requests = () => {
       {/* Barra de búsqueda */}
       <div className="flex gap-2">
         <div className="flex-1 relative">
-          <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-2.5 text-slate-400" />
+          <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-2.5 text-slate-400 dark:text-gray-500" />
           <input
             type="text"
             placeholder="Buscar por nombre de producto..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition"
+            className="w-full pl-10 pr-4 py-2.5 border border-slate-200 dark:border-gray-600 rounded-xl text-sm bg-white dark:bg-gray-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition"
           />
         </div>
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
-          className="px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-500/20 outline-none bg-white"
+          className="px-3 py-2.5 border border-slate-200 dark:border-gray-600 rounded-xl text-sm bg-white dark:bg-gray-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 outline-none"
         >
           <option value="all">Todos</option>
           <option value="pendiente">Pendientes</option>
@@ -305,9 +305,9 @@ const Requests = () => {
       </div>
 
       {/* Mis Solicitudes */}
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-        <div className="px-5 py-4 border-b border-slate-100">
-          <h2 className="font-bold text-slate-900">📝 Mis Solicitudes ({filteredMyRequests.length})</h2>
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden">
+        <div className="px-5 py-4 border-b border-slate-100 dark:border-gray-700">
+          <h2 className="font-bold text-slate-900 dark:text-white">📝 Mis Solicitudes ({filteredMyRequests.length})</h2>
         </div>
         {myRequests.length === 0 ? (
           <div className="py-10">
@@ -330,25 +330,25 @@ const Requests = () => {
             />
           </div>
         ) : (
-          <motion.div className="divide-y divide-slate-100" variants={containerVariants} initial="hidden" animate="visible">
+          <motion.div className="divide-y divide-slate-100 dark:divide-gray-700" variants={containerVariants} initial="hidden" animate="visible">
             {filteredMyRequests.map((req) => (
-              <motion.div key={req.id} className="px-5 py-4 hover:bg-slate-50 transition" variants={itemVariants}>
+              <motion.div key={req.id} className="px-5 py-4 hover:bg-slate-50 dark:hover:bg-gray-700/50 transition" variants={itemVariants}>
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-slate-900 truncate">{req.product_name}</p>
-                    <p className="text-sm text-slate-500 mt-0.5">
+                    <p className="font-bold text-slate-900 dark:text-white truncate">{req.product_name}</p>
+                    <p className="text-sm text-slate-500 dark:text-gray-400 mt-0.5">
                       {req.quantity} {req.unit}
-                      {req.notes && <span className="text-slate-400 ml-2">· {req.notes}</span>}
+                      {req.notes && <span className="text-slate-400 dark:text-gray-500 ml-2">· {req.notes}</span>}
                     </p>
                   </div>
                   <div className="flex items-center gap-3 ml-4">
-                    <span className="text-xs text-slate-400">
+                    <span className="text-xs text-slate-400 dark:text-gray-500">
                       {new Date(req.created_at).toLocaleDateString('es', { day: '2-digit', month: 'short' })}
                     </span>
                     <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${
-                      req.status === 'pendiente' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
-                      req.status === 'aprobado' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-                      'bg-red-50 text-red-700 border border-red-200'
+                      req.status === 'pendiente' ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-700' :
+                      req.status === 'aprobado' ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-700' :
+                      'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-700'
                     }`}>
                       {req.status === 'pendiente' ? '⏳' : req.status === 'aprobado' ? '✅' : '❌'} {req.status}
                     </span>
@@ -362,11 +362,11 @@ const Requests = () => {
 
       {/* Panel Admin - Pendientes de aprobar */}
       {isAdmin && pendingRequests.length > 0 && (
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-          <div className="px-5 py-4 border-b border-slate-100">
-            <h2 className="font-bold text-slate-900">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-slate-100 dark:border-gray-700">
+            <h2 className="font-bold text-slate-900 dark:text-white">
               ⏳ Pendientes de aprobar
-              <span className="ml-2 px-2 py-0.5 bg-amber-100 text-amber-700 text-xs rounded-full font-medium">
+              <span className="ml-2 px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs rounded-full font-medium">
                 {filteredPending.length}
               </span>
             </h2>
@@ -382,23 +382,23 @@ const Requests = () => {
               />
             </div>
           ) : (
-            <motion.div className="divide-y divide-slate-100" variants={containerVariants} initial="hidden" animate="visible">
+            <motion.div className="divide-y divide-slate-100 dark:divide-gray-700" variants={containerVariants} initial="hidden" animate="visible">
               {filteredPending.map((req) => (
-                <motion.div key={req.id} className="px-5 py-4 hover:bg-slate-50 transition" variants={itemVariants}>
+                <motion.div key={req.id} className="px-5 py-4 hover:bg-slate-50 dark:hover:bg-gray-700/50 transition" variants={itemVariants}>
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <p className="font-bold text-slate-900">{req.product_name}</p>
-                        <span className="px-1.5 py-0.5 bg-blue-50 text-blue-600 text-xs rounded font-medium">
+                        <p className="font-bold text-slate-900 dark:text-white">{req.product_name}</p>
+                        <span className="px-1.5 py-0.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs rounded font-medium">
                           {req.restaurant}
                         </span>
                       </div>
-                      <p className="text-sm text-slate-600">
+                      <p className="text-sm text-slate-600 dark:text-gray-300">
                         {req.quantity} {req.unit}
-                        <span className="text-slate-400 ml-2">· Solicitado por {req.users?.name || 'Empleado'}</span>
+                        <span className="text-slate-400 dark:text-gray-500 ml-2">· Solicitado por {req.users?.name || 'Empleado'}</span>
                       </p>
                       {req.notes && (
-                        <p className="text-xs text-slate-500 mt-1 italic">"{req.notes}"</p>
+                        <p className="text-xs text-slate-500 dark:text-gray-400 mt-1 italic">"{req.notes}"</p>
                       )}
                     </div>
                     <div className="flex gap-2 flex-shrink-0">
@@ -410,7 +410,7 @@ const Requests = () => {
                       </button>
                       <button
                         onClick={() => handleStatus(req.id, 'rechazado')}
-                        className="px-4 py-2 bg-white border border-slate-200 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-50 transition"
+                        className="px-4 py-2 bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-600 text-slate-600 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-slate-50 dark:hover:bg-gray-600 transition"
                       >
                         ✗ Rechazar
                       </button>
@@ -435,7 +435,7 @@ const Requests = () => {
             transition={{ duration: 0.2 }}
           >
             <motion.div
-              className={`bg-white w-full max-w-lg flex flex-col shadow-2xl ${
+              className={`bg-white dark:bg-gray-800 w-full max-w-lg flex flex-col shadow-2xl ${
                 isMobile ? 'rounded-t-[32px] mb-12' : 'rounded-2xl'
               }`}
               style={isMobile ? { maxHeight: '85dvh' } : { maxHeight: '85vh' }}
@@ -446,8 +446,8 @@ const Requests = () => {
               exit="exit"
             >
               {isMobile && <div className="bottom-sheet-handle" />}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 flex-shrink-0">
-                <h2 className="text-lg font-bold text-slate-900">📋 Nueva Lista de Pedidos</h2>
+              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-gray-700 flex-shrink-0">
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white">📋 Nueva Lista de Pedidos</h2>
                 <button
                   onClick={() => {
                     setShowModal(false);
@@ -455,7 +455,7 @@ const Requests = () => {
                     setActiveSuggestionIndex(null);
                     setProductExists({});
                   }}
-                  className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition"
+                  className="p-2 text-slate-400 dark:text-gray-500 hover:text-slate-600 dark:hover:text-gray-300 hover:bg-slate-100 dark:hover:bg-gray-700 rounded-lg transition"
                 >
                   <XMarkIcon className="h-5 w-5" />
                 </button>
@@ -463,13 +463,13 @@ const Requests = () => {
               
               <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 modal-scroll" style={{ paddingBottom: isMobile ? 'calc(80px + env(safe-area-inset-bottom))' : '16px' }}>
                 {formData.items.map((item, index) => (
-                  <div key={index} className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                  <div key={index} className="bg-slate-50 dark:bg-gray-700 rounded-xl p-4 border border-slate-100 dark:border-gray-600">
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                      <span className="text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">
                         Producto {index + 1}
                       </span>
                       {formData.items.length > 1 && (
-                        <button type="button" onClick={() => handleRemoveItem(index)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition">
+                        <button type="button" onClick={() => handleRemoveItem(index)} className="p-1.5 text-slate-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition">
                           <TrashIcon className="h-4 w-4" />
                         </button>
                       )}
@@ -482,34 +482,34 @@ const Requests = () => {
                         value={item.productName}
                         onChange={(e) => handleItemChange(index, 'productName', e.target.value)}
                         onFocus={() => setActiveSuggestionIndex(index)}
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition"
+                        className="w-full px-4 py-2.5 border border-slate-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-600 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition"
                         autoComplete="off"
                       />
                       
                       {item.productName && (
                         <div className="mt-1">
                           {productExists[index] ? (
-                            <span className="text-xs text-emerald-600 flex items-center gap-1">✓ Producto del inventario</span>
+                            <span className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1">✓ Producto del inventario</span>
                           ) : (
-                            <span className="text-xs text-amber-600 flex items-center gap-1">⚠️ Producto nuevo</span>
+                            <span className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">⚠️ Producto nuevo</span>
                           )}
                         </div>
                       )}
                       
                       {activeSuggestionIndex === index && getSuggestions(item.productName).length > 0 && (
-                        <div className="absolute z-10 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden">
+                        <div className="absolute z-10 left-0 right-0 mt-1 bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-600 rounded-lg shadow-lg overflow-hidden">
                           {getSuggestions(item.productName).map(product => (
                             <button
                               key={product.id}
                               type="button"
                               onClick={() => handleSelectSuggestion(index, product)}
-                              className="w-full px-4 py-3 text-left hover:bg-orange-50 transition flex items-center justify-between"
+                              className="w-full px-4 py-3 text-left hover:bg-orange-50 dark:hover:bg-orange-900/20 transition flex items-center justify-between"
                             >
                               <div>
-                                <span className="text-sm font-medium text-slate-900">{product.name}</span>
-                                <span className="text-xs text-slate-400 ml-2">{product.category}</span>
+                                <span className="text-sm font-medium text-slate-900 dark:text-white">{product.name}</span>
+                                <span className="text-xs text-slate-400 dark:text-gray-500 ml-2">{product.category}</span>
                               </div>
-                              <span className="text-xs text-slate-500">{product.stock} {product.unit}</span>
+                              <span className="text-xs text-slate-500 dark:text-gray-400">{product.stock} {product.unit}</span>
                             </button>
                           ))}
                         </div>
@@ -518,23 +518,23 @@ const Requests = () => {
 
                     <div className="flex gap-2">
                       <div className="flex-1">
-                        <label className="block text-xs text-slate-500 mb-1">Cantidad</label>
+                        <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Cantidad</label>
                         <input
                           type="number"
                           step="0.01"
                           placeholder="0"
                           value={item.quantity}
                           onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
-                          className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/20 outline-none transition"
+                          className="w-full px-4 py-2.5 border border-slate-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-600 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 outline-none transition"
                           required
                         />
                       </div>
                       <div className="w-24">
-                        <label className="block text-xs text-slate-500 mb-1">Unidad</label>
+                        <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Unidad</label>
                         <select
                           value={item.unit}
                           onChange={(e) => handleItemChange(index, 'unit', e.target.value)}
-                          className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/20 outline-none bg-white"
+                          className="w-full px-3 py-2.5 border border-slate-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-600 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 outline-none"
                         >
                           <option value="unidad">ud</option>
                           <option value="kg">kg</option>
@@ -551,24 +551,24 @@ const Requests = () => {
                 <button
                   type="button"
                   onClick={handleAddItem}
-                  className="w-full py-3 border-2 border-dashed border-slate-200 text-slate-500 rounded-xl text-sm font-medium hover:border-orange-300 hover:text-orange-600 hover:bg-orange-50/50 transition"
+                  className="w-full py-3 border-2 border-dashed border-slate-200 dark:border-gray-600 text-slate-500 dark:text-gray-400 rounded-xl text-sm font-medium hover:border-orange-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50/50 dark:hover:bg-orange-900/20 transition"
                 >
                   + Agregar otro producto
                 </button>
 
                 <div>
-                  <label className="block text-xs text-slate-500 mb-1">📝 Notas generales</label>
+                  <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">📝 Notas generales</label>
                   <textarea
                     value={formData.notes}
                     onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
                     placeholder="Instrucciones adicionales..."
-                    className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/20 outline-none transition resize-none"
+                    className="w-full px-4 py-2.5 border border-slate-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-600 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition resize-none"
                     rows="2"
                   />
                 </div>
               </div>
 
-              <div className="px-6 py-4 border-t border-slate-100 flex gap-3 flex-shrink-0">
+              <div className="px-6 py-4 border-t border-slate-100 dark:border-gray-700 flex gap-3 flex-shrink-0">
                 <button
                   type="button"
                   onClick={() => {
@@ -577,7 +577,7 @@ const Requests = () => {
                     setActiveSuggestionIndex(null);
                     setProductExists({});
                   }}
-                  className="flex-1 py-2.5 border border-slate-200 text-slate-600 rounded-xl text-sm font-medium hover:bg-slate-50 transition"
+                  className="flex-1 py-2.5 border border-slate-200 dark:border-gray-600 text-slate-600 dark:text-gray-300 rounded-xl text-sm font-medium hover:bg-slate-50 dark:hover:bg-gray-700 transition"
                 >
                   Cancelar
                 </button>
