@@ -8,6 +8,7 @@ import useLockBodyScroll from '../hooks/useLockBodyScroll';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import EmptyState from '../components/EmptyState';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 const TreeNode = ({ category, allCategories, onEdit, onDelete, onAddChild, onCopy }) => {
   const [expanded, setExpanded] = useState(false);
@@ -65,7 +66,14 @@ const Categories = () => {
   const [copyTarget, setCopyTarget] = useState('');
   const [isCopying, setIsCopying] = useState(false);
 
-  useLockBodyScroll(showCopyModal);
+  // Estados para ConfirmDialog
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmConfig, setConfirmConfig] = useState({
+    title: '', message: '', confirmText: 'Eliminar', confirmColor: 'red',
+    onConfirm: () => {},
+  });
+
+  useLockBodyScroll(showCopyModal || confirmOpen);
 
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   useEffect(() => {
@@ -103,12 +111,21 @@ const Categories = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (confirm('¿Eliminar categoría? Las subcategorías quedarán huérfanas.')) {
-      await deleteCategory(id);
-      loadCategories();
-      toast.success('Categoría eliminada');
-    }
+  // Función que abre el ConfirmDialog en lugar de confirm()
+  const requestDelete = (id) => {
+    setConfirmConfig({
+      title: 'Eliminar categoría',
+      message: '¿Estás seguro de que deseas eliminar esta categoría? Las subcategorías quedarán huérfanas.',
+      confirmText: 'Eliminar',
+      confirmColor: 'red',
+      onConfirm: async () => {
+        setConfirmOpen(false);
+        await deleteCategory(id);
+        loadCategories();
+        toast.success('Categoría eliminada');
+      },
+    });
+    setConfirmOpen(true);
   };
 
   const handleCopy = (category) => {
@@ -234,7 +251,7 @@ const Categories = () => {
             category={root}
             allCategories={categories}
             onEdit={(cat) => { setEditId(cat.id); setEditName(cat.name); setEditIsGlobal(!cat.restaurant); setShowAddRoot(false); setParentForNew(null); }}
-            onDelete={handleDelete}
+            onDelete={requestDelete}
             onAddChild={(parentId) => {
               setParentForNew(parentId);
               setNewName('');
@@ -246,6 +263,17 @@ const Categories = () => {
           />
         ))}
       </div>
+
+      {/* ConfirmDialog */}
+      <ConfirmDialog
+        isOpen={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={confirmConfig.onConfirm}
+        title={confirmConfig.title}
+        message={confirmConfig.message}
+        confirmText={confirmConfig.confirmText}
+        confirmColor={confirmConfig.confirmColor}
+      />
 
       <AnimatePresence>
         {showCopyModal && copyCategory && (
