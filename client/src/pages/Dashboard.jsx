@@ -30,7 +30,6 @@ const Dashboard = () => {
   const [pendingRequests, setPendingRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  // Datos para gráficos
   const [areaData, setAreaData] = useState([]);
   const [pieData, setPieData] = useState([]);
 
@@ -43,9 +42,9 @@ const Dashboard = () => {
     try {
       const [dashboardData, movements, requests, products] = await Promise.all([
         getDashboard(),
-        getMovements({ limit: 200 }), // Más datos para el gráfico
+        getMovements({ limit: 200 }),
         isAdmin ? getRequests() : Promise.resolve([]),
-        getProducts({ forceRefresh: true }) // Para el gráfico de donut
+        getProducts({ forceRefresh: true })
       ]);
 
       setStats(dashboardData);
@@ -54,7 +53,6 @@ const Dashboard = () => {
         setPendingRequests((requests || []).filter(r => r.status === 'pendiente'));
       }
 
-      // Procesar datos para Área Chart (últimos 7 días)
       const today = new Date();
       const days = [];
       for (let i = 6; i >= 0; i--) {
@@ -72,11 +70,8 @@ const Dashboard = () => {
         const movDate = new Date(mov.created_at);
         const dayIndex = days.findIndex(d => d.dateObj.toDateString() === movDate.toDateString());
         if (dayIndex !== -1) {
-          if (mov.type === 'entrada') {
-            days[dayIndex].entradas += mov.quantity || 0;
-          } else if (mov.type === 'salida') {
-            days[dayIndex].salidas += mov.quantity || 0;
-          }
+          if (mov.type === 'entrada') days[dayIndex].entradas += mov.quantity || 0;
+          else if (mov.type === 'salida') days[dayIndex].salidas += mov.quantity || 0;
         }
       });
 
@@ -86,7 +81,6 @@ const Dashboard = () => {
         Salidas: d.salidas,
       })));
 
-      // Procesar datos para Pie Chart (estado del inventario actual)
       const currentProducts = (products || []).filter(p => p.restaurant === currentRestaurant);
       const healthy = currentProducts.filter(p => p.stock > p.min_stock).length;
       const lowStock = currentProducts.filter(p => p.stock <= p.min_stock && p.stock > 0).length;
@@ -106,9 +100,9 @@ const Dashboard = () => {
   };
 
   const restaurants = [
-    { id: 'POZOBLANCO', name: 'Pozoblanco', icon: '🍽️', color: 'from-orange-400 to-orange-600', bg: 'bg-orange-50' },
-    { id: 'FUERTEVENTURA', name: 'Fuerteventura', icon: '🏖️', color: 'from-blue-400 to-blue-600', bg: 'bg-blue-50' },
-    { id: 'GRAN_CAPITAN', name: 'Gran Capitán', icon: '🏛️', color: 'from-purple-400 to-purple-600', bg: 'bg-purple-50' }
+    { id: 'POZOBLANCO', name: 'Pozoblanco', icon: '🍽️', color: 'from-orange-400 to-orange-600', bg: 'bg-orange-50 dark:bg-orange-900/20' },
+    { id: 'FUERTEVENTURA', name: 'Fuerteventura', icon: '🏖️', color: 'from-blue-400 to-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/20' },
+    { id: 'GRAN_CAPITAN', name: 'Gran Capitán', icon: '🏛️', color: 'from-purple-400 to-purple-600', bg: 'bg-purple-50 dark:bg-purple-900/20' }
   ];
 
   const currentRest = restaurants.find(r => r.id === currentRestaurant);
@@ -116,14 +110,14 @@ const Dashboard = () => {
   if (loading) {
     return (
       <div className="space-y-6 animate-pulse">
-        <div className="h-24 bg-white rounded-2xl shadow-sm"></div>
+        <div className="h-24 bg-white dark:bg-gray-800 rounded-2xl shadow-sm"></div>
         <div className="grid grid-cols-3 gap-3">
-          <div className="h-20 bg-white rounded-2xl shadow-sm"></div>
-          <div className="h-20 bg-white rounded-2xl shadow-sm"></div>
-          <div className="h-20 bg-white rounded-2xl shadow-sm"></div>
+          <div className="h-20 bg-white dark:bg-gray-800 rounded-2xl shadow-sm"></div>
+          <div className="h-20 bg-white dark:bg-gray-800 rounded-2xl shadow-sm"></div>
+          <div className="h-20 bg-white dark:bg-gray-800 rounded-2xl shadow-sm"></div>
         </div>
-        <div className="h-64 bg-white rounded-2xl shadow-sm"></div>
-        <div className="h-64 bg-white rounded-2xl shadow-sm"></div>
+        <div className="h-64 bg-white dark:bg-gray-800 rounded-2xl shadow-sm"></div>
+        <div className="h-64 bg-white dark:bg-gray-800 rounded-2xl shadow-sm"></div>
       </div>
     );
   }
@@ -143,54 +137,53 @@ const Dashboard = () => {
 
       {/* Métricas principales */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-white rounded-2xl p-4 shadow-sm animate-fade-in-up flex flex-col items-start">
-          <div className="p-2 bg-blue-50 rounded-xl mb-3">
-            <CubeIcon className="h-5 w-5 text-blue-600" />
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm animate-fade-in-up flex flex-col items-start">
+          <div className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-xl mb-3">
+            <CubeIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
           </div>
-          <div className="text-2xl font-bold text-slate-900">
+          <div className="text-2xl font-bold text-slate-900 dark:text-white">
             {stats.restaurants[currentRestaurant]?.totalProducts || 0}
           </div>
-          <div className="text-xs text-slate-500 mt-1 tracking-wide">Productos</div>
+          <div className="text-xs text-slate-500 dark:text-gray-400 mt-1 tracking-wide">Productos</div>
         </div>
-        <div className="bg-white rounded-2xl p-4 shadow-sm animate-fade-in-up flex flex-col items-start" style={{ animationDelay: '0.1s' }}>
-          <div className="p-2 bg-amber-50 rounded-xl mb-3">
-            <ExclamationTriangleIcon className="h-5 w-5 text-amber-600" />
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm animate-fade-in-up flex flex-col items-start" style={{ animationDelay: '0.1s' }}>
+          <div className="p-2 bg-amber-50 dark:bg-amber-900/30 rounded-xl mb-3">
+            <ExclamationTriangleIcon className="h-5 w-5 text-amber-600 dark:text-amber-400" />
           </div>
-          <div className={`text-2xl font-bold ${(stats.restaurants[currentRestaurant]?.lowStock || 0) > 0 ? 'text-amber-600' : 'text-slate-900'}`}>
+          <div className={`text-2xl font-bold ${(stats.restaurants[currentRestaurant]?.lowStock || 0) > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-900 dark:text-white'}`}>
             {stats.restaurants[currentRestaurant]?.lowStock || 0}
           </div>
-          <div className="text-xs text-slate-500 mt-1 tracking-wide">Stock Bajo</div>
+          <div className="text-xs text-slate-500 dark:text-gray-400 mt-1 tracking-wide">Stock Bajo</div>
         </div>
-        <div className="bg-white rounded-2xl p-4 shadow-sm animate-fade-in-up flex flex-col items-start" style={{ animationDelay: '0.2s' }}>
-          <div className="p-2 bg-emerald-50 rounded-xl mb-3">
-            <TruckIcon className="h-5 w-5 text-emerald-600" />
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm animate-fade-in-up flex flex-col items-start" style={{ animationDelay: '0.2s' }}>
+          <div className="p-2 bg-emerald-50 dark:bg-emerald-900/30 rounded-xl mb-3">
+            <TruckIcon className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
           </div>
-          <div className={`text-2xl font-bold ${stats.pendingTransfers > 0 ? 'text-blue-600' : 'text-slate-900'}`}>
+          <div className={`text-2xl font-bold ${stats.pendingTransfers > 0 ? 'text-blue-600 dark:text-blue-400' : 'text-slate-900 dark:text-white'}`}>
             {stats.pendingTransfers}
           </div>
-          <div className="text-xs text-slate-500 mt-1 tracking-wide">Pendientes</div>
+          <div className="text-xs text-slate-500 dark:text-gray-400 mt-1 tracking-wide">Pendientes</div>
         </div>
       </div>
 
       {/* Panel de Administrador */}
       {isAdmin && (
         <>
-          {/* Tarjetas de las 3 sucursales */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {restaurants.map((rest, i) => (
               <div key={rest.id} className={`rounded-2xl p-5 shadow-sm ${rest.bg} animate-fade-in-up`} style={{ animationDelay: `${0.1 * i}s` }}>
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-2xl">{rest.icon}</span>
-                  <h3 className="font-semibold text-slate-900 tracking-tight">{rest.name}</h3>
+                  <h3 className="font-semibold text-slate-900 dark:text-white tracking-tight">{rest.name}</h3>
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-500">Productos</span>
-                    <span className="font-bold text-slate-900">{stats.restaurants[rest.id]?.totalProducts || 0}</span>
+                    <span className="text-slate-500 dark:text-gray-400">Productos</span>
+                    <span className="font-bold text-slate-900 dark:text-white">{stats.restaurants[rest.id]?.totalProducts || 0}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-500">Stock Bajo</span>
-                    <span className={`font-bold ${(stats.restaurants[rest.id]?.lowStock || 0) > 0 ? 'text-amber-600' : 'text-slate-900'}`}>
+                    <span className="text-slate-500 dark:text-gray-400">Stock Bajo</span>
+                    <span className={`font-bold ${(stats.restaurants[rest.id]?.lowStock || 0) > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-900 dark:text-white'}`}>
                       {stats.restaurants[rest.id]?.lowStock || 0}
                     </span>
                   </div>
@@ -199,26 +192,25 @@ const Dashboard = () => {
             ))}
           </div>
 
-          {/* Alertas urgentes */}
           {(stats.pendingTransfers > 0 || pendingRequests.length > 0 || (stats.restaurants[currentRestaurant]?.lowStock || 0) > 0) && (
-            <div className="bg-amber-50 rounded-2xl p-4 shadow-sm animate-fade-in-up">
-              <h3 className="font-semibold text-amber-800 mb-3 flex items-center gap-2 tracking-tight">
+            <div className="bg-amber-50 dark:bg-amber-900/20 rounded-2xl p-4 shadow-sm animate-fade-in-up">
+              <h3 className="font-semibold text-amber-800 dark:text-amber-400 mb-3 flex items-center gap-2 tracking-tight">
                 <ExclamationTriangleIcon className="h-5 w-5" />
                 Alertas Pendientes
               </h3>
               <div className="space-y-2">
                 {stats.pendingTransfers > 0 && (
-                  <Link to="/transfers" className="block text-sm text-amber-700 hover:text-amber-900">
+                  <Link to="/transfers" className="block text-sm text-amber-700 dark:text-amber-300 hover:text-amber-900 dark:hover:text-amber-100">
                     🚚 {stats.pendingTransfers} transferencia(s) pendiente(s) de confirmar
                   </Link>
                 )}
                 {(stats.restaurants[currentRestaurant]?.lowStock || 0) > 0 && (
-                  <Link to="/inventory" className="block text-sm text-amber-700 hover:text-amber-900">
+                  <Link to="/inventory" className="block text-sm text-amber-700 dark:text-amber-300 hover:text-amber-900 dark:hover:text-amber-100">
                     ⚠️ {stats.restaurants[currentRestaurant]?.lowStock} producto(s) con stock bajo
                   </Link>
                 )}
                 {pendingRequests.length > 0 && (
-                  <Link to="/requests" className="block text-sm text-amber-700 hover:text-amber-900">
+                  <Link to="/requests" className="block text-sm text-amber-700 dark:text-amber-300 hover:text-amber-900 dark:hover:text-amber-100">
                     📋 {pendingRequests.length} pedido(s) de empleados sin revisar
                   </Link>
                 )}
@@ -230,10 +222,9 @@ const Dashboard = () => {
 
       {/* Gráficos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Área Chart - Movimientos últimos 7 días */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm animate-fade-in-up">
-          <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2 tracking-tight">
-            <ClockIcon className="h-5 w-5 text-slate-500" />
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm animate-fade-in-up">
+          <h3 className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2 tracking-tight">
+            <ClockIcon className="h-5 w-5 text-slate-500 dark:text-gray-400" />
             Movimientos (7 días)
           </h3>
           {areaData.length > 0 && areaData.some(d => d.Entradas > 0 || d.Salidas > 0) ? (
@@ -252,55 +243,45 @@ const Dashboard = () => {
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                 <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#94a3b8' }} />
                 <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} />
-                <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }} />
+                <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', backgroundColor: '#1e293b', color: '#f8fafc' }} />
                 <Area type="monotone" dataKey="Entradas" stroke="#10b981" strokeWidth={2} fill="url(#colorEntradas)" />
                 <Area type="monotone" dataKey="Salidas" stroke="#f59e0b" strokeWidth={2} fill="url(#colorSalidas)" />
               </AreaChart>
             </ResponsiveContainer>
           ) : (
-            <div className="flex items-center justify-center h-48 text-slate-400 text-sm">
+            <div className="flex items-center justify-center h-48 text-slate-400 dark:text-gray-500 text-sm">
               Sin datos de movimientos en los últimos 7 días
             </div>
           )}
         </div>
 
-        {/* Pie Chart (Donut) - Estado del inventario */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm animate-fade-in-up">
-          <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2 tracking-tight">
-            <ChartBarIcon className="h-5 w-5 text-slate-500" />
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm animate-fade-in-up">
+          <h3 className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2 tracking-tight">
+            <ChartBarIcon className="h-5 w-5 text-slate-500 dark:text-gray-400" />
             Estado del Inventario
           </h3>
           {pieData.length > 0 ? (
             <ResponsiveContainer width="100%" height={250}>
               <PieChart>
-                <Pie
-                  data={pieData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={90}
-                  paddingAngle={2}
-                  dataKey="value"
-                >
+                <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={2} dataKey="value">
                   {pieData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }} />
+                <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', backgroundColor: '#1e293b', color: '#f8fafc' }} />
               </PieChart>
             </ResponsiveContainer>
           ) : (
-            <div className="flex items-center justify-center h-48 text-slate-400 text-sm">
+            <div className="flex items-center justify-center h-48 text-slate-400 dark:text-gray-500 text-sm">
               No hay productos en este restaurante
             </div>
           )}
-          {/* Leyenda */}
           {pieData.length > 0 && (
             <div className="flex justify-center gap-4 mt-2">
               {pieData.map((entry) => (
                 <div key={entry.name} className="flex items-center gap-1.5">
                   <div className="w-3 h-3 rounded-full" style={{ backgroundColor: entry.color }}></div>
-                  <span className="text-xs text-slate-500">{entry.name} ({entry.value})</span>
+                  <span className="text-xs text-slate-500 dark:text-gray-400">{entry.name} ({entry.value})</span>
                 </div>
               ))}
             </div>
@@ -309,69 +290,69 @@ const Dashboard = () => {
       </div>
 
       {/* Actividad reciente */}
-      <div className="bg-white rounded-2xl p-5 shadow-sm animate-fade-in-up">
-        <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2 tracking-tight">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm animate-fade-in-up">
+        <h3 className="font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2 tracking-tight">
           <ClockIcon className="h-5 w-5" />
           Actividad Reciente
         </h3>
         <div className="space-y-3">
           {recentMovements.slice(0, 5).map(mov => (
-            <div key={mov.id} className="flex items-center justify-between text-sm border-b border-slate-100 pb-2">
+            <div key={mov.id} className="flex items-center justify-between text-sm border-b border-slate-100 dark:border-gray-700 pb-2">
               <div>
-                <span className="font-medium text-slate-700">{mov.products?.name || mov.product_name}</span>
+                <span className="font-medium text-slate-700 dark:text-gray-300">{mov.products?.name || mov.product_name}</span>
                 <span className={`ml-2 px-1.5 py-0.5 rounded-full text-xs ${
-                  mov.type === 'entrada' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'
+                  mov.type === 'entrada' ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' : 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400'
                 }`}>
                   {mov.type === 'entrada' ? '+' : '-'}{mov.quantity}
                 </span>
               </div>
-              <span className="text-slate-400 text-xs">
+              <span className="text-slate-400 dark:text-gray-500 text-xs">
                 {new Date(mov.created_at).toLocaleString('es', { hour: '2-digit', minute: '2-digit' })}
               </span>
             </div>
           ))}
           {recentMovements.length === 0 && (
-            <p className="text-slate-400 text-sm text-center py-2">Sin movimientos recientes</p>
+            <p className="text-slate-400 dark:text-gray-500 text-sm text-center py-2">Sin movimientos recientes</p>
           )}
         </div>
-        <Link to="/movements" className="block mt-3 text-blue-600 text-sm font-medium hover:underline">
+        <Link to="/movements" className="block mt-3 text-blue-600 dark:text-blue-400 text-sm font-medium hover:underline">
           Ver todos los movimientos →
         </Link>
       </div>
 
       {/* Accesos rápidos */}
       <div className="grid grid-cols-2 gap-3">
-        <Link to="/inventory" className="bg-white rounded-2xl p-5 shadow-sm text-center hover:bg-slate-50 transition-colors animate-fade-in-up">
-          <div className="p-2 bg-blue-50 rounded-xl inline-block mb-2">
-            <CubeIcon className="h-5 w-5 text-blue-600" />
+        <Link to="/inventory" className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm text-center hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors animate-fade-in-up">
+          <div className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-xl inline-block mb-2">
+            <CubeIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
           </div>
-          <p className="font-medium text-sm tracking-wide text-slate-700">Inventario</p>
+          <p className="font-medium text-sm tracking-wide text-slate-700 dark:text-gray-300">Inventario</p>
         </Link>
-        <Link to="/movements" className="bg-white rounded-2xl p-5 shadow-sm text-center hover:bg-slate-50 transition-colors animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-          <div className="p-2 bg-emerald-50 rounded-xl inline-block mb-2">
-            <ShoppingCartIcon className="h-5 w-5 text-emerald-600" />
+        <Link to="/movements" className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm text-center hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+          <div className="p-2 bg-emerald-50 dark:bg-emerald-900/30 rounded-xl inline-block mb-2">
+            <ShoppingCartIcon className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
           </div>
-          <p className="font-medium text-sm tracking-wide text-slate-700">Movimientos</p>
+          <p className="font-medium text-sm tracking-wide text-slate-700 dark:text-gray-300">Movimientos</p>
         </Link>
-        <Link to="/requests" className="bg-white rounded-2xl p-5 shadow-sm text-center hover:bg-slate-50 transition-colors animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-          <div className="p-2 bg-amber-50 rounded-xl inline-block mb-2">
-            <ClockIcon className="h-5 w-5 text-amber-600" />
+        <Link to="/requests" className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm text-center hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+          <div className="p-2 bg-amber-50 dark:bg-amber-900/30 rounded-xl inline-block mb-2">
+            <ClockIcon className="h-5 w-5 text-amber-600 dark:text-amber-400" />
           </div>
-          <p className="font-medium text-sm tracking-wide text-slate-700">Pedidos</p>
+          <p className="font-medium text-sm tracking-wide text-slate-700 dark:text-gray-300">Pedidos</p>
         </Link>
         {isAdmin ? (
-          <Link to="/reports" className="bg-white rounded-2xl p-5 shadow-sm text-center hover:bg-slate-50 transition-colors animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-            <div className="p-2 bg-purple-50 rounded-xl inline-block mb-2">
-              <ChartBarIcon className="h-5 w-5 text-purple-600" />
+          <Link to="/reports" className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm text-center hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+            <div className="p-2 bg-purple-50 dark:bg-purple-900/30 rounded-xl inline-block mb-2">
+              <ChartBarIcon className="h-5 w-5 text-purple-600 dark:text-purple-400" />
             </div>
-            <p className="font-medium text-sm tracking-wide text-slate-700">Reportes</p>
+            <p className="font-medium text-sm tracking-wide text-slate-700 dark:text-gray-300">Reportes</p>
           </Link>
         ) : (
-          <Link to="/recipes" className="bg-white rounded-2xl p-5 shadow-sm text-center hover:bg-slate-50 transition-colors animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-            <div className="p-2 bg-pink-50 rounded-xl inline-block mb-2">
-              <BookOpenIcon className="h-5 w-5 text-pink-600" />
+          <Link to="/recipes" className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm text-center hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+            <div className="p-2 bg-pink-50 dark:bg-pink-900/30 rounded-xl inline-block mb-2">
+              <BookOpenIcon className="h-5 w-5 text-pink-600 dark:text-pink-400" />
             </div>
-            <p className="font-medium text-sm tracking-wide text-slate-700">Recetas</p>
+            <p className="font-medium text-sm tracking-wide text-slate-700 dark:text-gray-300">Recetas</p>
           </Link>
         )}
       </div>
