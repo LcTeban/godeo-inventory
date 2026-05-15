@@ -8,6 +8,8 @@ import {
 } from '@heroicons/react/24/outline';
 import useLockBodyScroll from '../hooks/useLockBodyScroll';
 import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
+import EmptyState from '../components/EmptyState';
 
 const Suppliers = () => {
   const { isAdmin, getSuppliers, addSupplier, updateSupplier, deleteSupplier, getProducts } = useAuth();
@@ -46,6 +48,7 @@ const Suppliers = () => {
       setProducts(Array.isArray(prodData) ? prodData : []);
     } catch (error) {
       console.error('Error:', error);
+      toast.error('Error al cargar los proveedores');
     } finally {
       setLoading(false);
     }
@@ -81,15 +84,17 @@ const Suppliers = () => {
     try {
       if (editingSupplier) {
         await updateSupplier(editingSupplier.id, formData);
+        toast.success('Proveedor actualizado correctamente');
       } else {
         await addSupplier(formData);
+        toast.success('Proveedor creado correctamente');
       }
       setShowModal(false);
       setFormData({ name: '', contact: '', phone: '', email: '', address: '' });
       setEditingSupplier(null);
       loadData();
     } catch (error) {
-      alert('Error: ' + error.message);
+      toast.error('Error: ' + error.message);
     } finally {
       setIsSaving(false);
     }
@@ -100,12 +105,14 @@ const Suppliers = () => {
       try {
         await deleteSupplier(id);
         loadData();
+        toast.success('Proveedor eliminado');
       } catch (error) {
-        alert('Error al eliminar');
+        toast.error('Error al eliminar');
       }
     }
   };
 
+  // Filtrado y ordenación
   const filteredSuppliers = useMemo(() => {
     let result = [...suppliers];
     
@@ -148,7 +155,7 @@ const Suppliers = () => {
 
   const effectiveViewMode = isMobile ? 'grid' : viewMode;
 
-  // Variantes de animación para stagger
+  // Variantes de animación stagger
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -260,75 +267,101 @@ const Suppliers = () => {
       </div>
 
       {effectiveViewMode === 'grid' && (
-        <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" variants={containerVariants} initial="hidden" animate="visible">
-          {filteredSuppliers.map(supplier => (
-            <motion.div key={supplier.id} className="bg-white rounded-2xl shadow-sm p-5 group" variants={itemVariants} layout>
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center"><BuildingOffice2Icon className="h-5 w-5 text-blue-600" /></div>
-                  <div>
-                    <h3 className="font-bold text-slate-900">{supplier.name}</h3>
-                    <p className="text-xs text-slate-500">{getSupplierStats(supplier.id)} productos</p>
+        filteredSuppliers.length > 0 ? (
+          <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" variants={containerVariants} initial="hidden" animate="visible">
+            {filteredSuppliers.map(supplier => (
+              <motion.div key={supplier.id} className="bg-white rounded-2xl shadow-sm p-5 group" variants={itemVariants} layout>
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center"><BuildingOffice2Icon className="h-5 w-5 text-blue-600" /></div>
+                    <div>
+                      <h3 className="font-bold text-slate-900">{supplier.name}</h3>
+                      <p className="text-xs text-slate-500">{getSupplierStats(supplier.id)} productos</p>
+                    </div>
                   </div>
+                  {isAdmin && (
+                    <div className="flex gap-1">
+                      <button onClick={() => openEdit(supplier)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg"><PencilIcon className="h-4 w-4" /></button>
+                      <button onClick={() => handleDelete(supplier.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg"><TrashIcon className="h-4 w-4" /></button>
+                    </div>
+                  )}
                 </div>
-                {isAdmin && (
-                  <div className="flex gap-1">
-                    <button onClick={() => openEdit(supplier)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg"><PencilIcon className="h-4 w-4" /></button>
-                    <button onClick={() => handleDelete(supplier.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg"><TrashIcon className="h-4 w-4" /></button>
-                  </div>
-                )}
-              </div>
-              <div className="space-y-2 text-sm">
-                {supplier.contact && <div className="flex items-center gap-2 text-slate-600"><UserIcon className="h-4 w-4 text-slate-400 flex-shrink-0" /><span className="truncate">{supplier.contact}</span></div>}
-                {supplier.phone && <div className="flex items-center gap-2 text-slate-600"><PhoneIcon className="h-4 w-4 text-slate-400 flex-shrink-0" /><a href={`tel:${supplier.phone}`} className="text-blue-600 hover:underline truncate">{supplier.phone}</a></div>}
-                {supplier.email && <div className="flex items-center gap-2 text-slate-600"><EnvelopeIcon className="h-4 w-4 text-slate-400 flex-shrink-0" /><a href={`mailto:${supplier.email}`} className="text-blue-600 hover:underline truncate">{supplier.email}</a></div>}
-                {supplier.address && <div className="flex items-center gap-2 text-slate-600"><MapPinIcon className="h-4 w-4 text-slate-400 flex-shrink-0" /><span className="truncate">{supplier.address}</span></div>}
-              </div>
-              {!supplier.contact && !supplier.phone && !supplier.email && !supplier.address && <p className="text-sm text-slate-400 italic mt-2">Sin información de contacto</p>}
-            </motion.div>
-          ))}
-        </motion.div>
+                <div className="space-y-2 text-sm">
+                  {supplier.contact && <div className="flex items-center gap-2 text-slate-600"><UserIcon className="h-4 w-4 text-slate-400 flex-shrink-0" /><span className="truncate">{supplier.contact}</span></div>}
+                  {supplier.phone && <div className="flex items-center gap-2 text-slate-600"><PhoneIcon className="h-4 w-4 text-slate-400 flex-shrink-0" /><a href={`tel:${supplier.phone}`} className="text-blue-600 hover:underline truncate">{supplier.phone}</a></div>}
+                  {supplier.email && <div className="flex items-center gap-2 text-slate-600"><EnvelopeIcon className="h-4 w-4 text-slate-400 flex-shrink-0" /><a href={`mailto:${supplier.email}`} className="text-blue-600 hover:underline truncate">{supplier.email}</a></div>}
+                  {supplier.address && <div className="flex items-center gap-2 text-slate-600"><MapPinIcon className="h-4 w-4 text-slate-400 flex-shrink-0" /><span className="truncate">{supplier.address}</span></div>}
+                </div>
+                {!supplier.contact && !supplier.phone && !supplier.email && !supplier.address && <p className="text-sm text-slate-400 italic mt-2">Sin información de contacto</p>}
+              </motion.div>
+            ))}
+          </motion.div>
+        ) : searchTerm ? (
+          <EmptyState
+            icon={BuildingOffice2Icon}
+            title="Sin resultados"
+            message="Prueba con otro término de búsqueda"
+            actionLabel="Ver todos los proveedores"
+            onAction={() => setSearchTerm('')}
+          />
+        ) : (
+          <EmptyState
+            icon={BuildingOffice2Icon}
+            title="Sin proveedores"
+            message="Agrega el primer proveedor para empezar"
+            actionLabel="Nuevo proveedor"
+            onAction={openAdd}
+          />
+        )
       )}
 
       {!isMobile && effectiveViewMode === 'list' && (
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-slate-50 border-b border-slate-200">
-                <tr>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider cursor-pointer" onClick={() => toggleSort('name')}><div className="flex items-center gap-1">Proveedor {sortBy === 'name' && (sortOrder === 'asc' ? <ArrowUpIcon className="h-3 w-3" /> : <ArrowDownIcon className="h-3 w-3" />)}</div></th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Contacto</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Teléfono</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden md:table-cell">Email</th>
-                  <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Productos</th>
-                  {isAdmin && <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Acciones</th>}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filteredSuppliers.map(supplier => (
-                  <tr key={supplier.id} className="hover:bg-slate-50 transition">
-                    <td className="px-4 py-3"><span className="font-bold text-slate-900">{supplier.name}</span></td>
-                    <td className="px-4 py-3 text-sm text-slate-600">{supplier.contact || '-'}</td>
-                    <td className="px-4 py-3 text-sm">{supplier.phone ? <a href={`tel:${supplier.phone}`} className="text-blue-600 hover:underline">{supplier.phone}</a> : '-'}</td>
-                    <td className="px-4 py-3 text-sm text-slate-600 hidden md:table-cell">{supplier.email ? <a href={`mailto:${supplier.email}`} className="text-blue-600 hover:underline">{supplier.email}</a> : '-'}</td>
-                    <td className="px-4 py-3 text-sm text-center"><span className="px-2 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium">{getSupplierStats(supplier.id)}</span></td>
-                    {isAdmin && <td className="px-4 py-3"><div className="flex justify-end gap-1"><button onClick={() => openEdit(supplier)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg"><PencilIcon className="h-4 w-4" /></button><button onClick={() => handleDelete(supplier.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg"><TrashIcon className="h-4 w-4" /></button></div></td>}
+        filteredSuppliers.length > 0 ? (
+          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-slate-50 border-b border-slate-200">
+                  <tr>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider cursor-pointer" onClick={() => toggleSort('name')}><div className="flex items-center gap-1">Proveedor {sortBy === 'name' && (sortOrder === 'asc' ? <ArrowUpIcon className="h-3 w-3" /> : <ArrowDownIcon className="h-3 w-3" />)}</div></th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Contacto</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Teléfono</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden md:table-cell">Email</th>
+                    <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Productos</th>
+                    {isAdmin && <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Acciones</th>}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filteredSuppliers.map(supplier => (
+                    <tr key={supplier.id} className="hover:bg-slate-50 transition">
+                      <td className="px-4 py-3"><span className="font-bold text-slate-900">{supplier.name}</span></td>
+                      <td className="px-4 py-3 text-sm text-slate-600">{supplier.contact || '-'}</td>
+                      <td className="px-4 py-3 text-sm">{supplier.phone ? <a href={`tel:${supplier.phone}`} className="text-blue-600 hover:underline">{supplier.phone}</a> : '-'}</td>
+                      <td className="px-4 py-3 text-sm text-slate-600 hidden md:table-cell">{supplier.email ? <a href={`mailto:${supplier.email}`} className="text-blue-600 hover:underline">{supplier.email}</a> : '-'}</td>
+                      <td className="px-4 py-3 text-sm text-center"><span className="px-2 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium">{getSupplierStats(supplier.id)}</span></td>
+                      {isAdmin && <td className="px-4 py-3"><div className="flex justify-end gap-1"><button onClick={() => openEdit(supplier)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg"><PencilIcon className="h-4 w-4" /></button><button onClick={() => handleDelete(supplier.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg"><TrashIcon className="h-4 w-4" /></button></div></td>}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
-      )}
-
-      {filteredSuppliers.length === 0 && (
-        <div className="text-center py-16 bg-white rounded-2xl shadow-sm">
-          <BuildingOffice2Icon className="h-12 w-12 mx-auto mb-3 text-slate-300" />
-          <p className="text-slate-500 font-medium">No se encontraron proveedores</p>
-          <p className="text-slate-400 text-sm mt-1">
-            {suppliers.length === 0 ? 'Agrega el primer proveedor' : 'Ajusta los filtros de búsqueda'}
-          </p>
-        </div>
+        ) : searchTerm ? (
+          <EmptyState
+            icon={BuildingOffice2Icon}
+            title="Sin resultados"
+            message="Prueba con otro término de búsqueda"
+            actionLabel="Ver todos los proveedores"
+            onAction={() => setSearchTerm('')}
+          />
+        ) : (
+          <EmptyState
+            icon={BuildingOffice2Icon}
+            title="Sin proveedores"
+            message="Agrega el primer proveedor para empezar"
+            actionLabel="Nuevo proveedor"
+            onAction={openAdd}
+          />
+        )
       )}
 
       <AnimatePresence>
