@@ -4,32 +4,32 @@ const usePullToRefresh = (onRefresh, threshold = 80) => {
   const [pullState, setPullState] = useState('idle'); // idle | pulling | refreshing
   const [pullDistance, setPullDistance] = useState(0);
   const startY = useRef(0);
-  const currentY = useRef(0);
-  const containerRef = useRef(null);
+  const pullingRef = useRef(false);
   const refreshTimeout = useRef(null);
 
   const handleTouchStart = useCallback((e) => {
-    if (pullState === 'refreshing') return;
-    const scrollTop = containerRef.current?.scrollTop || window.scrollY;
-    if (scrollTop <= 0) {
+    // Solo activar si estamos al inicio de la página
+    if (window.scrollY <= 0) {
       startY.current = e.touches[0].clientY;
+      pullingRef.current = true;
       setPullState('idle');
       setPullDistance(0);
+    } else {
+      pullingRef.current = false;
     }
-  }, [pullState]);
+  }, []);
 
   const handleTouchMove = useCallback((e) => {
-    if (pullState === 'refreshing') return;
-    const scrollTop = containerRef.current?.scrollTop || window.scrollY;
-    if (scrollTop <= 0) {
-      currentY.current = e.touches[0].clientY;
-      const distance = Math.max(0, currentY.current - startY.current);
-      // Resistencia: reduce la distancia a medida que tiras más
-      const dampedDistance = distance * 0.4;
-      setPullDistance(dampedDistance);
-      if (dampedDistance > 10) {
-        setPullState('pulling');
-      }
+    if (!pullingRef.current || pullState === 'refreshing') return;
+    const currentY = e.touches[0].clientY;
+    const distance = Math.max(0, currentY - startY.current);
+    // Aplicar resistencia para que no sea brusco
+    const dampedDistance = distance * 0.4;
+    setPullDistance(dampedDistance);
+    if (dampedDistance > 10) {
+      setPullState('pulling');
+      // Prevenir el comportamiento nativo de recarga del navegador
+      e.preventDefault();
     }
   }, [pullState]);
 
@@ -37,38 +37,36 @@ const usePullToRefresh = (onRefresh, threshold = 80) => {
     if (pullState === 'refreshing') return;
     if (pullDistance >= threshold) {
       setPullState('refreshing');
-      setPullDistance(threshold * 0.6); // para mantener el indicador visible
+      setPullDistance(threshold * 0.5); // mantener indicador visible
       onRefresh().finally(() => {
         if (refreshTimeout.current) clearTimeout(refreshTimeout.current);
         refreshTimeout.current = setTimeout(() => {
           setPullState('idle');
           setPullDistance(0);
-        }, 600); // pequeña espera para animación de salida
+          pullingRef.current = false;
+        }, 600);
       });
     } else {
       setPullState('idle');
       setPullDistance(0);
+      pullingRef.current = false;
     }
   }, [pullState, pullDistance, threshold, onRefresh]);
 
   useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    container.addEventListener('touchstart', handleTouchStart, { passive: false });
-    container.addEventListener('touchmove', handleTouchMove, { passive: false });
-    container.addEventListener('touchend', handleTouchEnd);
+    document.addEventListener('touchstart', handleTouchStart, { passive: false });
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd);
 
     return () => {
-      container.removeEventListener('touchstart', handleTouchStart);
-      container.removeEventListener('touchmove', handleTouchMove);
-      container.removeEventListener('touchend', handleTouchEnd);
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
       if (refreshTimeout.current) clearTimeout(refreshTimeout.current);
     };
   }, [handleTouchStart, handleTouchMove, handleTouchEnd]);
 
   return {
-    containerRef,
     pullState,
     pullDistance,
     isRefreshing: pullState === 'refreshing',
