@@ -10,6 +10,7 @@ import useLockBodyScroll from '../hooks/useLockBodyScroll';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import EmptyState from '../components/EmptyState';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 const Suppliers = () => {
   const { isAdmin, getSuppliers, addSupplier, updateSupplier, deleteSupplier, getProducts } = useAuth();
@@ -28,7 +29,14 @@ const Suppliers = () => {
   const [sortOrder, setSortOrder] = useState('asc');
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
-  useLockBodyScroll(showModal);
+  // Estados para ConfirmDialog
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmConfig, setConfirmConfig] = useState({
+    title: '', message: '', confirmText: 'Eliminar', confirmColor: 'red',
+    onConfirm: () => {},
+  });
+
+  useLockBodyScroll(showModal || confirmOpen);
 
   useEffect(() => {
     loadData();
@@ -100,16 +108,25 @@ const Suppliers = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('¿Eliminar este proveedor? Se eliminará también la asociación con los productos.')) {
-      try {
-        await deleteSupplier(id);
-        loadData();
-        toast.success('Proveedor eliminado');
-      } catch (error) {
-        toast.error('Error al eliminar');
-      }
-    }
+  // Función que abre el ConfirmDialog en lugar de window.confirm
+  const requestDelete = (id) => {
+    setConfirmConfig({
+      title: 'Eliminar proveedor',
+      message: '¿Estás seguro de que deseas eliminar este proveedor? Se eliminará también la asociación con los productos.',
+      confirmText: 'Eliminar',
+      confirmColor: 'red',
+      onConfirm: async () => {
+        setConfirmOpen(false);
+        try {
+          await deleteSupplier(id);
+          loadData();
+          toast.success('Proveedor eliminado');
+        } catch (error) {
+          toast.error('Error al eliminar');
+        }
+      },
+    });
+    setConfirmOpen(true);
   };
 
   // Filtrado y ordenación
@@ -282,7 +299,7 @@ const Suppliers = () => {
                   {isAdmin && (
                     <div className="flex gap-1">
                       <button onClick={() => openEdit(supplier)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg"><PencilIcon className="h-4 w-4" /></button>
-                      <button onClick={() => handleDelete(supplier.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg"><TrashIcon className="h-4 w-4" /></button>
+                      <button onClick={() => requestDelete(supplier.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg"><TrashIcon className="h-4 w-4" /></button>
                     </div>
                   )}
                 </div>
@@ -338,7 +355,7 @@ const Suppliers = () => {
                       <td className="px-4 py-3 text-sm">{supplier.phone ? <a href={`tel:${supplier.phone}`} className="text-blue-600 hover:underline">{supplier.phone}</a> : '-'}</td>
                       <td className="px-4 py-3 text-sm text-slate-600 hidden md:table-cell">{supplier.email ? <a href={`mailto:${supplier.email}`} className="text-blue-600 hover:underline">{supplier.email}</a> : '-'}</td>
                       <td className="px-4 py-3 text-sm text-center"><span className="px-2 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium">{getSupplierStats(supplier.id)}</span></td>
-                      {isAdmin && <td className="px-4 py-3"><div className="flex justify-end gap-1"><button onClick={() => openEdit(supplier)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg"><PencilIcon className="h-4 w-4" /></button><button onClick={() => handleDelete(supplier.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg"><TrashIcon className="h-4 w-4" /></button></div></td>}
+                      {isAdmin && <td className="px-4 py-3"><div className="flex justify-end gap-1"><button onClick={() => openEdit(supplier)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg"><PencilIcon className="h-4 w-4" /></button><button onClick={() => requestDelete(supplier.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg"><TrashIcon className="h-4 w-4" /></button></div></td>}
                     </tr>
                   ))}
                 </tbody>
@@ -364,6 +381,18 @@ const Suppliers = () => {
         )
       )}
 
+      {/* ConfirmDialog */}
+      <ConfirmDialog
+        isOpen={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={confirmConfig.onConfirm}
+        title={confirmConfig.title}
+        message={confirmConfig.message}
+        confirmText={confirmConfig.confirmText}
+        confirmColor={confirmConfig.confirmColor}
+      />
+
+      {/* Modal Agregar/Editar */}
       <AnimatePresence>
         {showModal && isAdmin && (
           <motion.div
