@@ -6,6 +6,8 @@ import {
 } from '@heroicons/react/24/outline';
 import useLockBodyScroll from '../hooks/useLockBodyScroll';
 import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
+import EmptyState from '../components/EmptyState';
 
 const Recipes = () => {
   const [recipes, setRecipes] = useState([]);
@@ -43,6 +45,7 @@ const Recipes = () => {
       setProducts(Array.isArray(prodData) ? prodData : []);
     } catch (error) {
       console.error('Error loading recipes:', error);
+      toast.error('Error al cargar las recetas');
     }
   };
 
@@ -124,23 +127,22 @@ const Recipes = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!name.trim()) return alert('Falta el nombre de la receta');
+    if (!name.trim()) return toast.error('Falta el nombre de la receta');
 
     try {
       if (editingRecipe) {
         const validIngredients = ingredients.filter(ing => ing.product_id && parseFloat(ing.quantity) > 0);
         await updateRecipe(editingRecipe.id, name, image, validIngredients);
+        toast.success('Receta actualizada correctamente');
       } else {
         await addRecipe(name, image, []);
+        toast.success('Receta creada correctamente. Ahora puedes editarla para añadir ingredientes.');
       }
       setShowModal(false);
       resetForm();
       loadData();
-      if (!editingRecipe) {
-        alert('Receta creada. Ahora edítala para añadir los ingredientes.');
-      }
     } catch (error) {
-      alert('Error: ' + error.message);
+      toast.error('Error: ' + error.message);
     }
   };
 
@@ -149,8 +151,9 @@ const Recipes = () => {
       try {
         await deleteRecipe(id);
         loadData();
+        toast.success('Receta eliminada');
       } catch (error) {
-        alert('Error al eliminar');
+        toast.error('Error al eliminar');
       }
     }
   };
@@ -211,7 +214,7 @@ const Recipes = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header con gradiente suave */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">📖 Recetas</h1>
@@ -242,17 +245,23 @@ const Recipes = () => {
 
       {/* Lista de recetas */}
       {filteredRecipes.length === 0 ? (
-        <div className="text-center py-20 bg-white rounded-2xl shadow-sm">
-          <div className="w-20 h-20 mx-auto mb-5 bg-blue-50 rounded-full flex items-center justify-center">
-            <BookOpenIcon className="h-10 w-10 text-blue-400" />
-          </div>
-          <p className="text-slate-500 font-medium text-lg">
-            {recipes.length === 0 ? 'No hay recetas creadas' : 'No se encontraron recetas'}
-          </p>
-          <p className="text-slate-400 text-sm mt-1">
-            {recipes.length === 0 ? 'Crea la primera receta para empezar' : 'Prueba con otro término de búsqueda'}
-          </p>
-        </div>
+        searchTerm ? (
+          <EmptyState
+            icon={BookOpenIcon}
+            title="Sin resultados"
+            message="Prueba con otro término de búsqueda"
+            actionLabel="Ver todas las recetas"
+            onAction={() => setSearchTerm('')}
+          />
+        ) : (
+          <EmptyState
+            icon={BookOpenIcon}
+            title="No hay recetas"
+            message="Crea la primera receta para empezar"
+            actionLabel="Nueva receta"
+            onAction={openAdd}
+          />
+        )
       ) : (
         <motion.div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" variants={containerVariants} initial="hidden" animate="visible">
           {filteredRecipes.map((recipe) => (
