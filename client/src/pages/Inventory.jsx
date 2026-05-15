@@ -9,6 +9,7 @@ import {
 import BarcodeScanner from '../components/BarcodeScanner';
 import LazyImage from '../components/LazyImage';
 import EmptyState from '../components/EmptyState';
+import ConfirmDialog from '../components/ConfirmDialog';
 import useLockBodyScroll from '../hooks/useLockBodyScroll';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
@@ -44,13 +45,20 @@ const Inventory = () => {
   const [folderPath, setFolderPath] = useState([]);
   const [allCategories, setAllCategories] = useState([]);
 
+  // Estados para el ConfirmDialog
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmConfig, setConfirmConfig] = useState({
+    title: '', message: '', confirmText: 'Eliminar', confirmColor: 'red',
+    onConfirm: () => {},
+  });
+
   const {
     currentRestaurant, isAdmin, getProducts, addProduct, updateProduct, deleteProduct,
     addMovement, getSuppliers, getProductById, getProductImage, getAllCategoriesFlat,
     duplicateProduct, deleteUncategorizedProducts
   } = useAuth();
 
-  const isAnyModalOpen = showAddModal || showMovementModal || showCopyModal || showDeleteAllModal || showScanner;
+  const isAnyModalOpen = showAddModal || showMovementModal || showCopyModal || showDeleteAllModal || showScanner || confirmOpen;
   useLockBodyScroll(isAnyModalOpen);
 
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -190,16 +198,25 @@ const Inventory = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('¿Eliminar este producto?')) {
-      try {
-        await deleteProduct(id);
-        fetchProducts();
-        toast.success('Producto eliminado');
-      } catch (error) {
-        toast.error('Error al eliminar');
-      }
-    }
+  // Función que abre el ConfirmDialog
+  const requestDelete = (id) => {
+    setConfirmConfig({
+      title: 'Eliminar producto',
+      message: '¿Estás seguro de que deseas eliminar este producto? Esta acción no se puede deshacer.',
+      confirmText: 'Eliminar',
+      confirmColor: 'red',
+      onConfirm: async () => {
+        setConfirmOpen(false);
+        try {
+          await deleteProduct(id);
+          fetchProducts();
+          toast.success('Producto eliminado');
+        } catch (error) {
+          toast.error('Error al eliminar');
+        }
+      },
+    });
+    setConfirmOpen(true);
   };
 
   const handleCopyProduct = async () => {
@@ -472,7 +489,7 @@ const Inventory = () => {
                       <MinusIcon className="h-4 w-4" />
                     </button>
                     {isAdmin && (
-                      <button onClick={() => handleDelete(product.id)} className="p-1.5 text-slate-400 hover:bg-slate-100 rounded-lg" title="Eliminar">
+                      <button onClick={() => requestDelete(product.id)} className="p-1.5 text-slate-400 hover:bg-slate-100 rounded-lg" title="Eliminar">
                         <TrashIcon className="h-4 w-4" />
                       </button>
                     )}
@@ -643,7 +660,18 @@ const Inventory = () => {
         </>
       )}
 
-      {/* Modal Agregar/Editar Producto (Bottom Sheet en móvil) */}
+      {/* ConfirmDialog */}
+      <ConfirmDialog
+        isOpen={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={confirmConfig.onConfirm}
+        title={confirmConfig.title}
+        message={confirmConfig.message}
+        confirmText={confirmConfig.confirmText}
+        confirmColor={confirmConfig.confirmColor}
+      />
+
+      {/* Modal Agregar/Editar Producto */}
       <AnimatePresence>
         {showAddModal && (
           <motion.div
@@ -761,7 +789,7 @@ const Inventory = () => {
         )}
       </AnimatePresence>
 
-      {/* Modal Movimiento (Bottom Sheet) */}
+      {/* Modal Movimiento */}
       <AnimatePresence>
         {showMovementModal && (
           <motion.div
