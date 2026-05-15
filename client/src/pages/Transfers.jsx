@@ -6,6 +6,8 @@ import {
 } from '@heroicons/react/24/outline';
 import useLockBodyScroll from '../hooks/useLockBodyScroll';
 import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
+import EmptyState from '../components/EmptyState';
 
 const Transfers = () => {
   const { currentRestaurant, isAdmin, getTransfers, getProducts, addTransfer, completeTransfer } = useAuth();
@@ -49,6 +51,7 @@ const Transfers = () => {
       setProducts((Array.isArray(prodData) ? prodData : []).filter(p => p.stock > 0));
     } catch (error) {
       console.error('Error:', error);
+      toast.error('Error al cargar las transferencias');
     } finally {
       setLoading(false);
     }
@@ -57,7 +60,7 @@ const Transfers = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.productId || !formData.quantity || !formData.toRestaurant) {
-      alert('Completa todos los campos obligatorios');
+      toast.error('Completa todos los campos obligatorios');
       return;
     }
     setIsSaving(true);
@@ -66,8 +69,9 @@ const Transfers = () => {
       setShowModal(false);
       setFormData({ productId: '', quantity: '', toRestaurant: '', reason: '' });
       loadData();
+      toast.success('Transferencia enviada correctamente');
     } catch (error) {
-      alert('Error: ' + error.message);
+      toast.error('Error: ' + error.message);
     } finally {
       setIsSaving(false);
     }
@@ -78,8 +82,9 @@ const Transfers = () => {
     try {
       await completeTransfer(id);
       loadData();
+      toast.success('Transferencia confirmada correctamente');
     } catch (error) {
-      alert('Error al completar: ' + error.message);
+      toast.error('Error al completar: ' + error.message);
     } finally {
       setIsCompleting(null);
     }
@@ -290,13 +295,23 @@ const Transfers = () => {
 
       {/* Lista de transferencias */}
       {filteredTransfers.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-2xl shadow-sm">
-          <TruckIcon className="h-12 w-12 mx-auto mb-3 text-slate-300" />
-          <p className="text-slate-500 font-medium">No hay transferencias</p>
-          <p className="text-slate-400 text-sm mt-1">
-            {transfers.length === 0 ? 'Crea la primera transferencia' : 'Ajusta los filtros para ver más resultados'}
-          </p>
-        </div>
+        transfers.length === 0 ? (
+          <EmptyState
+            icon={TruckIcon}
+            title="Sin transferencias"
+            message="Crea la primera transferencia entre sucursales"
+            actionLabel="Nueva transferencia"
+            onAction={() => setShowModal(true)}
+          />
+        ) : (
+          <EmptyState
+            icon={FunnelIcon}
+            title="Sin resultados"
+            message="Ajusta los filtros para ver más resultados"
+            actionLabel="Limpiar filtros"
+            onAction={() => { setFilterStatus('all'); setFilterDirection('all'); setSearchTerm(''); }}
+          />
+        )
       ) : (
         <motion.div className="space-y-2" variants={containerVariants} initial="hidden" animate="visible">
           {filteredTransfers.map((transfer) => (
