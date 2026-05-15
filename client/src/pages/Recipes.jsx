@@ -8,6 +8,7 @@ import useLockBodyScroll from '../hooks/useLockBodyScroll';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import EmptyState from '../components/EmptyState';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 const Recipes = () => {
   const [recipes, setRecipes] = useState([]);
@@ -22,7 +23,14 @@ const Recipes = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const { isAdmin, getRecipes, addRecipe, updateRecipe, deleteRecipe, getProducts } = useAuth();
 
-  useLockBodyScroll(showModal || showDetail);
+  // Estados para ConfirmDialog
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmConfig, setConfirmConfig] = useState({
+    title: '', message: '', confirmText: 'Eliminar', confirmColor: 'red',
+    onConfirm: () => {},
+  });
+
+  useLockBodyScroll(showModal || showDetail || confirmOpen);
 
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   useEffect(() => {
@@ -146,16 +154,25 @@ const Recipes = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('¿Eliminar receta?')) {
-      try {
-        await deleteRecipe(id);
-        loadData();
-        toast.success('Receta eliminada');
-      } catch (error) {
-        toast.error('Error al eliminar');
-      }
-    }
+  // Función que abre el ConfirmDialog en lugar de window.confirm
+  const requestDelete = (id) => {
+    setConfirmConfig({
+      title: 'Eliminar receta',
+      message: '¿Estás seguro de que deseas eliminar esta receta? Esta acción no se puede deshacer.',
+      confirmText: 'Eliminar',
+      confirmColor: 'red',
+      onConfirm: async () => {
+        setConfirmOpen(false);
+        try {
+          await deleteRecipe(id);
+          loadData();
+          toast.success('Receta eliminada');
+        } catch (error) {
+          toast.error('Error al eliminar');
+        }
+      },
+    });
+    setConfirmOpen(true);
   };
 
   const openDetail = (recipe) => {
@@ -307,7 +324,7 @@ const Recipes = () => {
                         <PencilIcon className="h-4 w-4" />
                       </button>
                       <button
-                        onClick={(e) => { e.stopPropagation(); handleDelete(recipe.id); }}
+                        onClick={(e) => { e.stopPropagation(); requestDelete(recipe.id); }}
                         className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                         title="Eliminar receta"
                       >
@@ -342,6 +359,17 @@ const Recipes = () => {
           ))}
         </motion.div>
       )}
+
+      {/* ConfirmDialog */}
+      <ConfirmDialog
+        isOpen={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={confirmConfig.onConfirm}
+        title={confirmConfig.title}
+        message={confirmConfig.message}
+        confirmText={confirmConfig.confirmText}
+        confirmColor={confirmConfig.confirmColor}
+      />
 
       {/* Modal Detalle (vista previa) */}
       <AnimatePresence>
