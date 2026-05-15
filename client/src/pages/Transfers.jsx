@@ -172,15 +172,15 @@ const Transfers = () => {
   if (loading) {
     return (
       <div className="space-y-4 animate-pulse">
-        <div className="h-8 bg-white rounded-2xl w-1/3 shadow-sm"></div>
+        <div className="h-8 bg-white dark:bg-gray-800 rounded-2xl w-1/3 shadow-sm"></div>
         <div className="grid grid-cols-3 gap-3">
-          <div className="h-16 bg-white rounded-2xl shadow-sm"></div>
-          <div className="h-16 bg-white rounded-2xl shadow-sm"></div>
-          <div className="h-16 bg-white rounded-2xl shadow-sm"></div>
+          <div className="h-16 bg-white dark:bg-gray-800 rounded-2xl shadow-sm"></div>
+          <div className="h-16 bg-white dark:bg-gray-800 rounded-2xl shadow-sm"></div>
+          <div className="h-16 bg-white dark:bg-gray-800 rounded-2xl shadow-sm"></div>
         </div>
         <div className="space-y-2">
           {[1,2,3,4,5].map(i => (
-            <div key={i} className="h-20 bg-white rounded-2xl shadow-sm"></div>
+            <div key={i} className="h-20 bg-white dark:bg-gray-800 rounded-2xl shadow-sm"></div>
           ))}
         </div>
       </div>
@@ -192,8 +192,8 @@ const Transfers = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 tracking-tight">🚚 Transferencias</h1>
-          <p className="text-sm text-slate-500 mt-1">Envía y recibe productos entre sucursales</p>
+          <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">🚚 Transferencias</h1>
+          <p className="text-sm text-slate-500 dark:text-gray-400 mt-1">Envía y recibe productos entre sucursales</p>
         </div>
         <button
           onClick={() => setShowModal(true)}
@@ -205,40 +205,40 @@ const Transfers = () => {
 
       {/* KPIs rápidos */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-white rounded-2xl p-4 shadow-sm flex flex-col items-start">
-          <div className="p-2 bg-amber-50 rounded-xl mb-3">
-            <ClockIcon className="h-5 w-5 text-amber-600" />
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm flex flex-col items-start">
+          <div className="p-2 bg-amber-50 dark:bg-amber-900/30 rounded-xl mb-3">
+            <ClockIcon className="h-5 w-5 text-amber-600 dark:text-amber-400" />
           </div>
-          <p className="text-2xl font-bold text-slate-900 mt-1">{pendingCount}</p>
-          <p className="text-xs text-slate-500 mt-1 tracking-wide">Pendientes</p>
+          <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{pendingCount}</p>
+          <p className="text-xs text-slate-500 dark:text-gray-400 mt-1 tracking-wide">Pendientes</p>
         </div>
-        <div className="bg-white rounded-2xl p-4 shadow-sm flex flex-col items-start">
-          <div className="p-2 bg-emerald-50 rounded-xl mb-3">
-            <CheckCircleIcon className="h-5 w-5 text-emerald-600" />
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm flex flex-col items-start">
+          <div className="p-2 bg-emerald-50 dark:bg-emerald-900/30 rounded-xl mb-3">
+            <CheckCircleIcon className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
           </div>
-          <p className="text-2xl font-bold text-slate-900 mt-1">{completedToday}</p>
-          <p className="text-xs text-slate-500 mt-1 tracking-wide">Completadas hoy</p>
+          <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{completedToday}</p>
+          <p className="text-xs text-slate-500 dark:text-gray-400 mt-1 tracking-wide">Completadas hoy</p>
         </div>
-        <div className="bg-white rounded-2xl p-4 shadow-sm flex flex-col items-start">
-          <div className="p-2 bg-blue-50 rounded-xl mb-3">
-            <ArrowPathIcon className="h-5 w-5 text-blue-600" />
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm flex flex-col items-start">
+          <div className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-xl mb-3">
+            <ArrowPathIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
           </div>
-          <p className="text-2xl font-bold text-slate-900 mt-1">{transfers.length}</p>
-          <p className="text-xs text-slate-500 mt-1 tracking-wide">Total</p>
+          <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{transfers.length}</p>
+          <p className="text-xs text-slate-500 dark:text-gray-400 mt-1 tracking-wide">Total</p>
         </div>
       </div>
 
       {/* Barra de búsqueda y filtros */}
-      <div className="bg-white rounded-2xl shadow-sm p-3 space-y-3">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-3 space-y-3">
         <div className="flex gap-2">
           <div className="flex-1 relative">
-            <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-2.5 text-slate-400" />
+            <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-2.5 text-slate-400 dark:text-gray-500" />
             <input
               type="text"
               placeholder="Buscar por producto, restaurante o motivo..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition"
+              className="w-full pl-10 pr-4 py-2.5 border border-slate-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition"
             />
           </div>
           <button
@@ -246,7 +246,7 @@ const Transfers = () => {
             className={`px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition ${
               showFilters || filterStatus !== 'all' || filterDirection !== 'all' 
                 ? 'bg-orange-500 text-white shadow-sm shadow-orange-200' 
-                : 'border border-slate-200 text-slate-700 hover:bg-slate-50'
+                : 'border border-slate-200 dark:border-gray-600 text-slate-700 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-gray-700'
             }`}
           >
             <FunnelIcon className="h-4 w-4" />
@@ -255,7 +255,7 @@ const Transfers = () => {
           {(filterStatus !== 'all' || filterDirection !== 'all') && (
             <button
               onClick={() => { setFilterStatus('all'); setFilterDirection('all'); }}
-              className="px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-lg transition flex items-center gap-1"
+              className="px-3 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition flex items-center gap-1"
             >
               <XMarkIcon className="h-4 w-4" />
               Limpiar
@@ -264,13 +264,13 @@ const Transfers = () => {
         </div>
 
         {showFilters && (
-          <div className="flex flex-wrap gap-3 pt-2 border-t border-slate-100">
+          <div className="flex flex-wrap gap-3 pt-2 border-t border-slate-100 dark:border-gray-700">
             <div>
-              <label className="block text-xs text-slate-500 mb-1">Estado</label>
+              <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Estado</label>
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/20 outline-none"
+                className="px-3 py-2 border border-slate-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 outline-none"
               >
                 <option value="all">Todos</option>
                 <option value="pendiente">⏳ Pendientes</option>
@@ -278,11 +278,11 @@ const Transfers = () => {
               </select>
             </div>
             <div>
-              <label className="block text-xs text-slate-500 mb-1">Dirección</label>
+              <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Dirección</label>
               <select
                 value={filterDirection}
                 onChange={(e) => setFilterDirection(e.target.value)}
-                className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/20 outline-none"
+                className="px-3 py-2 border border-slate-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 outline-none"
               >
                 <option value="all">Todas</option>
                 <option value="outgoing">📤 Enviadas</option>
@@ -317,8 +317,8 @@ const Transfers = () => {
           {filteredTransfers.map((transfer) => (
             <motion.div 
               key={transfer.id} 
-              className={`bg-white rounded-2xl p-4 shadow-sm transition ${
-                transfer.status === 'pendiente' ? 'border border-amber-200' : ''
+              className={`bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm transition ${
+                transfer.status === 'pendiente' ? 'border border-amber-200 dark:border-amber-800' : ''
               }`}
               variants={itemVariants}
               layout
@@ -326,26 +326,26 @@ const Transfers = () => {
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-bold text-slate-900">{transfer.products?.name || 'Producto'}</h3>
+                    <h3 className="font-bold text-slate-900 dark:text-white">{transfer.products?.name || 'Producto'}</h3>
                     <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
                       transfer.status === 'pendiente' 
-                        ? 'bg-amber-50 text-amber-700 border border-amber-200' 
-                        : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-700' 
+                        : 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-700'
                     }`}>
                       {transfer.status === 'pendiente' ? '⏳ Pendiente' : '✅ Completada'}
                     </span>
                   </div>
-                  <div className="flex items-center gap-3 text-sm text-slate-600">
+                  <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-gray-300">
                     <span className="font-medium">{transfer.quantity} {transfer.products?.unit || ''}</span>
-                    <span className="text-slate-300">•</span>
+                    <span className="text-slate-300 dark:text-gray-600">•</span>
                     <span>{transfer.from_restaurant}</span>
-                    <span className="text-slate-400">→</span>
+                    <span className="text-slate-400 dark:text-gray-500">→</span>
                     <span className="font-medium">{transfer.to_restaurant}</span>
                   </div>
                   {transfer.reason && (
-                    <p className="text-xs text-slate-500 mt-1">{transfer.reason}</p>
+                    <p className="text-xs text-slate-500 dark:text-gray-400 mt-1">{transfer.reason}</p>
                   )}
-                  <div className="flex items-center gap-3 mt-2 text-xs text-slate-400">
+                  <div className="flex items-center gap-3 mt-2 text-xs text-slate-400 dark:text-gray-500">
                     <span>{new Date(transfer.created_at).toLocaleString('es', { 
                       day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' 
                     })}</span>
@@ -381,7 +381,7 @@ const Transfers = () => {
             transition={{ duration: 0.2 }}
           >
             <motion.div
-              className={`bg-white w-full max-w-md flex flex-col shadow-2xl ${isMobile ? 'rounded-t-[32px] mb-12' : 'rounded-2xl'}`}
+              className={`bg-white dark:bg-gray-800 w-full max-w-md flex flex-col shadow-2xl ${isMobile ? 'rounded-t-[32px] mb-12' : 'rounded-2xl'}`}
               style={isMobile ? { maxHeight: '85dvh' } : { maxHeight: '90vh' }}
               onClick={e => e.stopPropagation()}
               variants={isMobile ? modalVariants : desktopModalVariants}
@@ -390,19 +390,19 @@ const Transfers = () => {
               exit="exit"
             >
               {isMobile && <div className="bottom-sheet-handle" />}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-                <h2 className="text-lg font-bold text-slate-900">Nueva Transferencia</h2>
-                <button onClick={() => setShowModal(false)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-gray-700">
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white">Nueva Transferencia</h2>
+                <button onClick={() => setShowModal(false)} className="p-2 text-slate-400 dark:text-gray-500 hover:text-slate-600 dark:hover:text-gray-300 hover:bg-slate-100 dark:hover:bg-gray-700 rounded-lg transition">
                   <XMarkIcon className="h-5 w-5" />
                 </button>
               </div>
               <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-4 space-y-4 modal-scroll" style={{ paddingBottom: isMobile ? 'calc(80px + env(safe-area-inset-bottom))' : '16px' }}>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">📦 Producto *</label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">📦 Producto *</label>
                   <select
                     value={formData.productId}
                     onChange={(e) => setFormData(prev => ({ ...prev, productId: e.target.value }))}
-                    className="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-500/20 outline-none transition"
+                    className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl text-sm bg-white dark:bg-gray-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 outline-none transition"
                     required
                   >
                     <option value="">Seleccionar producto</option>
@@ -413,27 +413,27 @@ const Transfers = () => {
                     ))}
                   </select>
                   {formData.productId && (
-                    <p className="text-xs text-slate-500 mt-1">
+                    <p className="text-xs text-slate-500 dark:text-gray-400 mt-1">
                       Stock disponible: {products.find(p => p.id?.toString() === formData.productId)?.stock || 0} {products.find(p => p.id?.toString() === formData.productId)?.unit}
                     </p>
                   )}
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">🔢 Cantidad *</label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">🔢 Cantidad *</label>
                   <input
                     type="number"
                     step="0.01"
                     placeholder="0"
                     value={formData.quantity}
                     onChange={(e) => setFormData(prev => ({ ...prev, quantity: e.target.value }))}
-                    className="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-500/20 outline-none transition"
+                    className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl text-sm bg-white dark:bg-gray-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 outline-none transition"
                     required
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">🏢 Restaurante destino *</label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">🏢 Restaurante destino *</label>
                   <div className="grid grid-cols-2 gap-2">
                     {availableDestinations.map(r => (
                       <button
@@ -442,8 +442,8 @@ const Transfers = () => {
                         onClick={() => setFormData(prev => ({ ...prev, toRestaurant: r.id }))}
                         className={`p-3 rounded-xl border text-sm font-medium transition ${
                           formData.toRestaurant === r.id
-                            ? 'bg-orange-50 border-orange-300 text-orange-700'
-                            : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                            ? 'bg-orange-50 dark:bg-orange-900/30 border-orange-300 dark:border-orange-700 text-orange-700 dark:text-orange-400'
+                            : 'border-slate-200 dark:border-gray-600 text-slate-600 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-gray-700'
                         }`}
                       >
                         <span className="text-lg">{r.icon}</span> {r.name}
@@ -453,13 +453,13 @@ const Transfers = () => {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">📝 Motivo (opcional)</label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">📝 Motivo (opcional)</label>
                   <input
                     type="text"
                     placeholder="Ej: Urgencia fin de semana"
                     value={formData.reason}
                     onChange={(e) => setFormData(prev => ({ ...prev, reason: e.target.value }))}
-                    className="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-500/20 outline-none transition"
+                    className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl text-sm bg-white dark:bg-gray-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 outline-none transition"
                   />
                 </div>
 
@@ -467,7 +467,7 @@ const Transfers = () => {
                   <button
                     type="button"
                     onClick={() => setShowModal(false)}
-                    className="flex-1 py-2.5 border border-slate-200 text-slate-600 rounded-xl text-sm font-medium hover:bg-slate-50 transition"
+                    className="flex-1 py-2.5 border border-slate-200 dark:border-gray-600 text-slate-600 dark:text-gray-300 rounded-xl text-sm font-medium hover:bg-slate-50 dark:hover:bg-gray-700 transition"
                   >
                     Cancelar
                   </button>
