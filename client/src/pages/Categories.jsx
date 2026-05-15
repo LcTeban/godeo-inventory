@@ -6,6 +6,8 @@ import {
 } from '@heroicons/react/24/outline';
 import useLockBodyScroll from '../hooks/useLockBodyScroll';
 import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
+import EmptyState from '../components/EmptyState';
 
 const TreeNode = ({ category, allCategories, onEdit, onDelete, onAddChild, onCopy }) => {
   const [expanded, setExpanded] = useState(false);
@@ -86,6 +88,7 @@ const Categories = () => {
     setParentForNew(null);
     setIsGlobal(false);
     loadCategories();
+    toast.success('Categoría creada correctamente');
   };
 
   const handleEdit = async () => {
@@ -96,6 +99,7 @@ const Categories = () => {
       setEditName('');
       setEditIsGlobal(false);
       loadCategories();
+      toast.success('Categoría actualizada correctamente');
     }
   };
 
@@ -103,6 +107,7 @@ const Categories = () => {
     if (confirm('¿Eliminar categoría? Las subcategorías quedarán huérfanas.')) {
       await deleteCategory(id);
       loadCategories();
+      toast.success('Categoría eliminada');
     }
   };
 
@@ -114,18 +119,18 @@ const Categories = () => {
 
   const executeCopy = async () => {
     if (!copyTarget || copyTarget === currentRestaurant) {
-      alert('Selecciona un restaurante de destino diferente al actual.');
+      toast.error('Selecciona un restaurante de destino diferente al actual.');
       return;
     }
     setIsCopying(true);
     try {
       const result = await duplicateCategory(copyCategory.id, copyTarget);
-      alert(`✅ Categoría copiada con éxito.\nCategorías creadas: ${result.categoriesCreated}\nProductos copiados: ${result.productsCopied}`);
+      toast.success(`✅ Categoría copiada con éxito. Productos copiados: ${result.productsCopied}`);
       setShowCopyModal(false);
       setCopyCategory(null);
       loadCategories();
     } catch (error) {
-      alert('Error al copiar: ' + error.message);
+      toast.error('Error al copiar: ' + error.message);
     } finally {
       setIsCopying(false);
     }
@@ -215,11 +220,13 @@ const Categories = () => {
 
       <div className="bg-white rounded-2xl shadow-sm p-4">
         {roots.length === 0 && !showAddRoot && parentForNew === null && editId === null && (
-          <div className="text-center py-10">
-            <FolderIcon className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-            <p className="text-slate-500 text-sm">No hay categorías creadas</p>
-            <p className="text-slate-400 text-xs mt-1">Crea la primera carpeta para organizar tu inventario</p>
-          </div>
+          <EmptyState
+            icon={FolderIcon}
+            title="No hay categorías"
+            message="Crea la primera carpeta para organizar tu inventario"
+            actionLabel="Nueva carpeta raíz"
+            onAction={() => setShowAddRoot(true)}
+          />
         )}
         {roots.map(root => (
           <TreeNode
