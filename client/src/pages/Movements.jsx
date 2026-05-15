@@ -16,7 +16,6 @@ const Movements = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
-  // Función de recarga que se pasará al hook
   const handleRefresh = useCallback(async () => {
     try {
       const data = await getMovements({ limit: 100 });
@@ -28,7 +27,7 @@ const Movements = () => {
     }
   }, [getMovements]);
 
-  const { containerRef, pullState, pullDistance, isRefreshing } = usePullToRefresh(handleRefresh, 80);
+  const { pullState, pullDistance, isRefreshing } = usePullToRefresh(handleRefresh, 80);
 
   useEffect(() => {
     const loadMovements = async () => {
@@ -171,105 +170,103 @@ const Movements = () => {
         )}
       </div>
 
-      {/* Contenedor con pull-to-refresh */}
-      <div ref={containerRef} className="overflow-y-auto" style={{ maxHeight: isMobile ? 'calc(100dvh - 220px)' : 'none' }}>
-        {/* Indicador de pull-to-refresh */}
-        <AnimatePresence>
-          {(pullState === 'pulling' || pullState === 'refreshing') && (
+      {/* Indicador de pull-to-refresh */}
+      <AnimatePresence>
+        {(pullState === 'pulling' || pullState === 'refreshing') && (
+          <motion.div
+            className="flex justify-center py-2"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: Math.max(40, pullDistance), opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+          >
             <motion.div
-              className="flex justify-center py-2"
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: pullDistance, opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-            >
-              <motion.div
-                className="w-8 h-8 rounded-full border-2 border-orange-500 border-t-transparent"
-                animate={isRefreshing ? { rotate: 360 } : { rotate: 0 }}
-                transition={isRefreshing ? { repeat: Infinity, duration: 0.8, ease: 'linear' } : {}}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
+              className="w-8 h-8 rounded-full border-2 border-orange-500 border-t-transparent"
+              animate={isRefreshing ? { rotate: 360 } : { rotate: 0 }}
+              transition={isRefreshing ? { repeat: Infinity, duration: 0.8, ease: 'linear' } : {}}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-          {filteredMovements.length === 0 ? (
-            hasActiveFilters ? (
-              <EmptyState
-                icon={FunnelIcon}
-                title="Sin resultados"
-                message="Prueba con otros filtros o términos de búsqueda"
-                actionLabel="Limpiar filtros"
-                onAction={clearFilters}
-              />
-            ) : movements.length === 0 ? (
-              <EmptyState
-                icon={ClockIcon}
-                title="Sin movimientos"
-                message="Aún no hay movimientos registrados. Realiza entradas o salidas para ver el historial."
-                actionLabel="Ir al inventario"
-                onAction={() => window.location.href = '/inventory'}
-              />
-            ) : (
-              <EmptyState
-                icon={FunnelIcon}
-                title="Sin resultados"
-                message="Prueba con otros filtros"
-              />
-            )
-          ) : isMobile ? (
-            <motion.div className="divide-y divide-slate-100" variants={containerVariants} initial="hidden" animate="visible">
-              {filteredMovements.map(mov => (
-                <motion.div key={mov.id} className="p-4 hover:bg-slate-50 transition" variants={itemVariants}>
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <h3 className="font-bold text-slate-900">{mov.products?.name || '-'}</h3>
-                      <p className="text-xs text-slate-500">
-                        {new Date(mov.created_at).toLocaleString('es', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                      </p>
-                    </div>
-                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${
-                      mov.type === 'entrada' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'
-                    }`}>
-                      {mov.type === 'entrada' ? '📥 Entrada' : '📤 Salida'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-slate-500">{mov.users?.name || '-'}{mov.reason && <span className="text-slate-400 ml-2">· {mov.reason}</span>}</span>
-                    <span className={`font-bold ${mov.type === 'entrada' ? 'text-emerald-600' : 'text-red-600'}`}>{mov.type === 'entrada' ? '+' : '-'}{mov.quantity}</span>
-                  </div>
-                </motion.div>
-              ))}
-            </motion.div>
+      {/* Lista de movimientos */}
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+        {filteredMovements.length === 0 ? (
+          hasActiveFilters ? (
+            <EmptyState
+              icon={FunnelIcon}
+              title="Sin resultados"
+              message="Prueba con otros filtros o términos de búsqueda"
+              actionLabel="Limpiar filtros"
+              onAction={clearFilters}
+            />
+          ) : movements.length === 0 ? (
+            <EmptyState
+              icon={ClockIcon}
+              title="Sin movimientos"
+              message="Aún no hay movimientos registrados. Realiza entradas o salidas para ver el historial."
+              actionLabel="Ir al inventario"
+              onAction={() => window.location.href = '/inventory'}
+            />
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-slate-50 border-b border-slate-200">
-                  <tr>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Fecha</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Producto</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Tipo</th>
-                    <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Cantidad</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Usuario</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden md:table-cell">Motivo</th>
+            <EmptyState
+              icon={FunnelIcon}
+              title="Sin resultados"
+              message="Prueba con otros filtros"
+            />
+          )
+        ) : isMobile ? (
+          <motion.div className="divide-y divide-slate-100" variants={containerVariants} initial="hidden" animate="visible">
+            {filteredMovements.map(mov => (
+              <motion.div key={mov.id} className="p-4 hover:bg-slate-50 transition" variants={itemVariants}>
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <h3 className="font-bold text-slate-900">{mov.products?.name || '-'}</h3>
+                    <p className="text-xs text-slate-500">
+                      {new Date(mov.created_at).toLocaleString('es', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                  <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${
+                    mov.type === 'entrada' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'
+                  }`}>
+                    {mov.type === 'entrada' ? '📥 Entrada' : '📤 Salida'}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-slate-500">{mov.users?.name || '-'}{mov.reason && <span className="text-slate-400 ml-2">· {mov.reason}</span>}</span>
+                  <span className={`font-bold ${mov.type === 'entrada' ? 'text-emerald-600' : 'text-red-600'}`}>{mov.type === 'entrada' ? '+' : '-'}{mov.quantity}</span>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-slate-50 border-b border-slate-200">
+                <tr>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Fecha</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Producto</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Tipo</th>
+                  <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Cantidad</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Usuario</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden md:table-cell">Motivo</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filteredMovements.map(mov => (
+                  <tr key={mov.id} className="hover:bg-slate-50 transition">
+                    <td className="px-4 py-3 text-sm text-slate-500 whitespace-nowrap">{new Date(mov.created_at).toLocaleString('es', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
+                    <td className="px-4 py-3"><span className="font-bold text-slate-900">{mov.products?.name || '-'}</span></td>
+                    <td className="px-4 py-3"><span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${mov.type === 'entrada' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>{mov.type === 'entrada' ? '📥 Entrada' : '📤 Salida'}</span></td>
+                    <td className="px-4 py-3 text-right"><span className={`font-bold ${mov.type === 'entrada' ? 'text-emerald-600' : 'text-red-600'}`}>{mov.type === 'entrada' ? '+' : '-'}{mov.quantity}</span></td>
+                    <td className="px-4 py-3 text-sm text-slate-500">{mov.users?.name || '-'}</td>
+                    <td className="px-4 py-3 text-sm text-slate-400 hidden md:table-cell">{mov.reason || '-'}</td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {filteredMovements.map(mov => (
-                    <tr key={mov.id} className="hover:bg-slate-50 transition">
-                      <td className="px-4 py-3 text-sm text-slate-500 whitespace-nowrap">{new Date(mov.created_at).toLocaleString('es', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
-                      <td className="px-4 py-3"><span className="font-bold text-slate-900">{mov.products?.name || '-'}</span></td>
-                      <td className="px-4 py-3"><span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${mov.type === 'entrada' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>{mov.type === 'entrada' ? '📥 Entrada' : '📤 Salida'}</span></td>
-                      <td className="px-4 py-3 text-right"><span className={`font-bold ${mov.type === 'entrada' ? 'text-emerald-600' : 'text-red-600'}`}>{mov.type === 'entrada' ? '+' : '-'}{mov.quantity}</span></td>
-                      <td className="px-4 py-3 text-sm text-slate-500">{mov.users?.name || '-'}</td>
-                      <td className="px-4 py-3 text-sm text-slate-400 hidden md:table-cell">{mov.reason || '-'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
       <div className="text-center text-sm text-slate-500">Mostrando {filteredMovements.length} de {movements.length} movimientos{hasActiveFilters && ' (filtros activos)'}</div>
     </div>
