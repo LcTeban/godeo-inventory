@@ -16,31 +16,31 @@ const TreeNode = ({ category, allCategories, onEdit, onDelete, onAddChild, onCop
 
   return (
     <div className="ml-3 sm:ml-4">
-      <div className="flex items-center gap-2 py-1.5 px-2 hover:bg-slate-50 rounded-lg cursor-pointer flex-wrap" onClick={() => setExpanded(!expanded)}>
+      <div className="flex items-center gap-2 py-1.5 px-2 hover:bg-slate-50 dark:hover:bg-gray-700/50 rounded-lg cursor-pointer flex-wrap" onClick={() => setExpanded(!expanded)}>
         <button onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }} className="p-1 flex-shrink-0">
-          <FolderIcon className={`h-5 w-5 ${children.length > 0 ? 'text-amber-500' : 'text-slate-400'}`} />
+          <FolderIcon className={`h-5 w-5 ${children.length > 0 ? 'text-amber-500 dark:text-amber-400' : 'text-slate-400 dark:text-gray-500'}`} />
         </button>
-        <span className="flex-1 font-medium text-sm sm:text-base text-slate-700 break-words">
+        <span className="flex-1 font-medium text-sm sm:text-base text-slate-700 dark:text-gray-300 break-words">
           {category.name}
-          {!category.restaurant && <GlobeAltIcon className="h-4 w-4 inline ml-1 text-blue-500" title="Global" />}
+          {!category.restaurant && <GlobeAltIcon className="h-4 w-4 inline ml-1 text-blue-500 dark:text-blue-400" title="Global" />}
         </span>
         <div className="flex gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-          <button onClick={() => onAddChild(category.id)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg" title="Añadir subcategoría">
+          <button onClick={() => onAddChild(category.id)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg" title="Añadir subcategoría">
             <PlusIcon className="h-4 w-4" />
           </button>
-          <button onClick={() => onEdit(category)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg" title="Editar">
+          <button onClick={() => onEdit(category)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg" title="Editar">
             <PencilIcon className="h-4 w-4" />
           </button>
-          <button onClick={() => onCopy(category)} className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg" title="Copiar a otro restaurante">
+          <button onClick={() => onCopy(category)} className="p-1.5 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg" title="Copiar a otro restaurante">
             <ClipboardDocumentIcon className="h-4 w-4" />
           </button>
-          <button onClick={() => onDelete(category.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg" title="Eliminar">
+          <button onClick={() => onDelete(category.id)} className="p-1.5 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg" title="Eliminar">
             <TrashIcon className="h-4 w-4" />
           </button>
         </div>
       </div>
       {expanded && children.length > 0 && (
-        <div className="border-l-2 border-slate-200 ml-2 pl-2 sm:pl-3">
+        <div className="border-l-2 border-slate-200 dark:border-gray-600 ml-2 pl-2 sm:pl-3">
           {children.map(child => (
             <TreeNode key={child.id} category={child} allCategories={allCategories} onEdit={onEdit} onDelete={onDelete} onAddChild={onAddChild} onCopy={onCopy} />
           ))}
@@ -66,7 +66,6 @@ const Categories = () => {
   const [copyTarget, setCopyTarget] = useState('');
   const [isCopying, setIsCopying] = useState(false);
 
-  // Estados para ConfirmDialog
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmConfig, setConfirmConfig] = useState({
     title: '', message: '', confirmText: 'Eliminar', confirmColor: 'red',
@@ -111,7 +110,6 @@ const Categories = () => {
     }
   };
 
-  // Función que abre el ConfirmDialog en lugar de confirm()
   const requestDelete = (id) => {
     setConfirmConfig({
       title: 'Eliminar categoría',
@@ -153,39 +151,26 @@ const Categories = () => {
     }
   };
 
-  if (!isAdmin) return <div className="text-center py-8 text-slate-500">Acceso restringido</div>;
+  if (!isAdmin) return <div className="text-center py-8 text-slate-500 dark:text-gray-400">Acceso restringido</div>;
 
   const roots = categories.filter(c => c.parent_id === null);
 
-  // Variantes para modal
   const modalVariants = {
     hidden: { y: '100%', opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: { type: 'spring', stiffness: 300, damping: 30 },
-    },
-    exit: {
-      y: '100%',
-      opacity: 0,
-      transition: { type: 'spring', stiffness: 300, damping: 30 },
-    },
+    visible: { y: 0, opacity: 1, transition: { type: 'spring', stiffness: 300, damping: 30 } },
+    exit: { y: '100%', opacity: 0, transition: { type: 'spring', stiffness: 300, damping: 30 } },
   };
 
   const desktopModalVariants = {
     hidden: { scale: 0.95, opacity: 0 },
-    visible: {
-      scale: 1,
-      opacity: 1,
-      transition: { type: 'spring', stiffness: 400, damping: 25 },
-    },
+    visible: { scale: 1, opacity: 1, transition: { type: 'spring', stiffness: 400, damping: 25 } },
     exit: { scale: 0.95, opacity: 0, transition: { duration: 0.2 } },
   };
 
   return (
     <div className="space-y-5">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <h1 className="text-xl font-bold text-slate-900 tracking-tight">📁 Gestión de Categorías</h1>
+        <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">📁 Gestión de Categorías</h1>
         <button
           onClick={() => { setShowAddRoot(true); setParentForNew(null); setEditId(null); setIsGlobal(false); }}
           className="w-full sm:w-auto bg-orange-500 text-white px-4 py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-1.5 hover:bg-orange-600 transition shadow-sm shadow-orange-200"
@@ -195,8 +180,8 @@ const Categories = () => {
       </div>
 
       {(showAddRoot || parentForNew !== null || editId !== null) && (
-        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
-          <p className="text-sm font-medium text-slate-700">
+        <div className="bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl p-4 space-y-3">
+          <p className="text-sm font-medium text-slate-700 dark:text-gray-300">
             {editId ? '✏️ Editar categoría' : parentForNew ? '📂 Nueva subcategoría' : '📁 Nueva carpeta raíz'}
           </p>
           <div className="flex flex-col sm:flex-row gap-2">
@@ -205,16 +190,16 @@ const Categories = () => {
               placeholder={editId ? 'Nuevo nombre' : 'Nombre de la categoría'}
               value={editId ? editName : newName}
               onChange={(e) => editId ? setEditName(e.target.value) : setNewName(e.target.value)}
-              className="flex-1 p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition"
+              className="flex-1 p-2.5 border border-slate-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition"
               autoFocus
             />
             <div className="flex items-center gap-2">
-              <label className="flex items-center gap-1 text-sm text-slate-700 cursor-pointer">
+              <label className="flex items-center gap-1 text-sm text-slate-700 dark:text-gray-300 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={editId ? editIsGlobal : isGlobal}
                   onChange={(e) => editId ? setEditIsGlobal(e.target.checked) : setIsGlobal(e.target.checked)}
-                  className="rounded border-slate-300 text-orange-500 shadow-sm focus:ring-orange-500"
+                  className="rounded border-slate-300 dark:border-gray-600 text-orange-500 shadow-sm focus:ring-orange-500"
                 />
                 🌍 Global
               </label>
@@ -226,7 +211,7 @@ const Categories = () => {
               </button>
               <button
                 onClick={() => { setShowAddRoot(false); setParentForNew(null); setEditId(null); setEditName(''); setNewName(''); setIsGlobal(false); }}
-                className="px-4 py-2.5 border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-100 transition"
+                className="px-4 py-2.5 border border-slate-300 dark:border-gray-600 text-slate-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-slate-100 dark:hover:bg-gray-700 transition"
               >
                 Cancelar
               </button>
@@ -235,7 +220,7 @@ const Categories = () => {
         </div>
       )}
 
-      <div className="bg-white rounded-2xl shadow-sm p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4">
         {roots.length === 0 && !showAddRoot && parentForNew === null && editId === null && (
           <EmptyState
             icon={FolderIcon}
@@ -264,7 +249,6 @@ const Categories = () => {
         ))}
       </div>
 
-      {/* ConfirmDialog */}
       <ConfirmDialog
         isOpen={confirmOpen}
         onClose={() => setConfirmOpen(false)}
@@ -286,7 +270,7 @@ const Categories = () => {
             transition={{ duration: 0.2 }}
           >
             <motion.div
-              className={`bg-white w-full max-w-md flex flex-col shadow-2xl ${isMobile ? 'rounded-t-[32px] mb-12' : 'rounded-2xl'}`}
+              className={`bg-white dark:bg-gray-800 w-full max-w-md flex flex-col shadow-2xl ${isMobile ? 'rounded-t-[32px] mb-12' : 'rounded-2xl'}`}
               onClick={e => e.stopPropagation()}
               variants={isMobile ? modalVariants : desktopModalVariants}
               initial="hidden"
@@ -296,20 +280,20 @@ const Categories = () => {
               {isMobile && <div className="bottom-sheet-handle" />}
               <div className="p-6 space-y-4" style={{ paddingBottom: isMobile ? 'calc(80px + env(safe-area-inset-bottom))' : '16px' }}>
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-bold text-slate-900">📋 Copiar categoría</h2>
-                  <button onClick={() => setShowCopyModal(false)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition">
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-white">📋 Copiar categoría</h2>
+                  <button onClick={() => setShowCopyModal(false)} className="p-2 text-slate-400 dark:text-gray-500 hover:text-slate-600 dark:hover:text-gray-300 hover:bg-slate-100 dark:hover:bg-gray-700 rounded-lg transition">
                     <XMarkIcon className="h-5 w-5" />
                   </button>
                 </div>
-                <p className="text-sm text-slate-600">
-                  Vas a copiar la categoría <strong className="text-slate-900">{copyCategory.name}</strong> y todas sus subcategorías y productos al restaurante seleccionado.
+                <p className="text-sm text-slate-600 dark:text-gray-300">
+                  Vas a copiar la categoría <strong className="text-slate-900 dark:text-white">{copyCategory.name}</strong> y todas sus subcategorías y productos al restaurante seleccionado.
                 </p>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">🏢 Restaurante destino</label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">🏢 Restaurante destino</label>
                   <select
                     value={copyTarget}
                     onChange={(e) => setCopyTarget(e.target.value)}
-                    className="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-500/20 outline-none transition"
+                    className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl text-sm bg-white dark:bg-gray-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 outline-none transition"
                   >
                     <option value="">Seleccionar destino</option>
                     {['POZOBLANCO', 'FUERTEVENTURA', 'GRAN_CAPITAN']
@@ -324,7 +308,7 @@ const Categories = () => {
                 <div className="flex gap-3 pt-2">
                   <button
                     onClick={() => setShowCopyModal(false)}
-                    className="flex-1 py-2.5 border border-slate-200 text-slate-600 rounded-xl text-sm font-medium hover:bg-slate-50 transition"
+                    className="flex-1 py-2.5 border border-slate-200 dark:border-gray-600 text-slate-600 dark:text-gray-300 rounded-xl text-sm font-medium hover:bg-slate-50 dark:hover:bg-gray-700 transition"
                   >
                     Cancelar
                   </button>
