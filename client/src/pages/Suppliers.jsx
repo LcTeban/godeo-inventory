@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import EmptyState from '../components/EmptyState';
 import ConfirmDialog from '../components/ConfirmDialog';
+import Skeleton from '../components/Skeleton';
 
 const Suppliers = () => {
   const { isAdmin, getSuppliers, addSupplier, updateSupplier, deleteSupplier, getProducts } = useAuth();
@@ -212,16 +213,16 @@ const Suppliers = () => {
 
   if (loading) {
     return (
-      <div className="space-y-4 animate-pulse">
-        <div className="h-8 bg-white dark:bg-gray-900 rounded-2xl w-1/3 shadow-sm dark:shadow-md dark:shadow-black/30"></div>
+      <div className="space-y-4">
+        <Skeleton className="h-8 rounded-2xl w-1/3" />
         <div className="grid grid-cols-3 gap-3">
-          <div className="h-16 bg-white dark:bg-gray-900 rounded-2xl shadow-sm dark:shadow-md dark:shadow-black/30"></div>
-          <div className="h-16 bg-white dark:bg-gray-900 rounded-2xl shadow-sm dark:shadow-md dark:shadow-black/30"></div>
-          <div className="h-16 bg-white dark:bg-gray-900 rounded-2xl shadow-sm dark:shadow-md dark:shadow-black/30"></div>
+          <Skeleton className="h-16 rounded-2xl" />
+          <Skeleton className="h-16 rounded-2xl" />
+          <Skeleton className="h-16 rounded-2xl" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1,2,3,4,5,6].map(i => (
-            <div key={i} className="h-40 bg-white dark:bg-gray-900 rounded-2xl shadow-sm dark:shadow-md dark:shadow-black/30"></div>
+            <Skeleton key={i} className="h-40 rounded-2xl" />
           ))}
         </div>
       </div>
