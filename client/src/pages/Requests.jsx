@@ -415,9 +415,9 @@ const Requests = () => {
           >
             <motion.div
               className={`bg-white dark:bg-gray-900 w-full max-w-lg flex flex-col shadow-2xl dark:shadow-black/50 ${
-                isMobile ? 'rounded-t-[32px] mb-12' : 'rounded-2xl'
+                isMobile ? 'rounded-[32px] mb-16' : 'rounded-2xl'
               }`}
-              style={isMobile ? { maxHeight: '85dvh' } : { maxHeight: '85vh' }}
+              style={isMobile ? { maxHeight: '80dvh' } : { maxHeight: '85vh' }}
               onClick={e => e.stopPropagation()}
               variants={isMobile ? modalVariants : desktopModalVariants}
               initial="hidden"
@@ -440,7 +440,7 @@ const Requests = () => {
                 </button>
               </div>
               
-              <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 modal-scroll" style={{ paddingBottom: isMobile ? 'calc(80px + env(safe-area-inset-bottom))' : '16px' }}>
+              <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 modal-scroll" style={{ paddingBottom: isMobile ? 'calc(90px + env(safe-area-inset-bottom))' : '16px' }}>
                 {formData.items.map((item, index) => (
                   <div key={index} className="bg-slate-50 dark:bg-gray-800 rounded-xl p-4 border border-slate-100 dark:border-gray-600">
                     <div className="flex items-center justify-between mb-3">
