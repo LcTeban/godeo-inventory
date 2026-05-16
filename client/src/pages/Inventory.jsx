@@ -16,6 +16,7 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
+import Skeleton from '../components/Skeleton';
 
 const Inventory = () => {
   const [products, setProducts] = useState([]);
@@ -546,11 +547,12 @@ const Inventory = () => {
       </div>
 
       {isLoadingProducts ? (
-        <div className="animate-pulse space-y-3">
-          {[1,2,3,4,5].map(i => (
-            <div key={i} className="h-20 bg-white dark:bg-gray-900 rounded-2xl shadow-sm dark:shadow-md dark:shadow-black/30"></div>
-          ))}
-        </div>
+  <div className="space-y-3">
+    {[1,2,3,4,5].map(i => (
+      <Skeleton key={i} className="h-20 rounded-2xl" />
+    ))}
+  </div>
+      
       ) : searchTerm.trim() !== '' ? (
         <>
           <p className="text-sm text-slate-500 dark:text-gray-300">
