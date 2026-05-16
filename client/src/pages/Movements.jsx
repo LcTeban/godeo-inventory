@@ -121,7 +121,7 @@ const Movements = () => {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm dark:shadow-md dark:shadow-black/30 p-3 space-y-3">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-card dark:shadow-card-dark p-3 space-y-3">
         <div className="flex gap-2">
           <div className="flex-1 relative">
             <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-2.5 text-slate-400 dark:text-gray-300" />
@@ -172,7 +172,7 @@ const Movements = () => {
         )}
       </div>
 
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm dark:shadow-md dark:shadow-black/30 overflow-hidden">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-card dark:shadow-card-dark overflow-hidden">
         {filteredMovements.length === 0 ? (
           hasActiveFilters ? (
             <EmptyState
