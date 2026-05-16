@@ -24,7 +24,7 @@ import {
 } from 'recharts';
 
 const Dashboard = () => {
-  const { currentRestaurant, isAdmin, getDashboard, getMovements, getRequests, getProducts } = useAuth();
+  const { currentRestaurant, isAdmin, getDashboard, getMovements, getRequests, getProducts, switchRestaurant } = useAuth();
   const [stats, setStats] = useState({ restaurants: {}, pendingTransfers: 0 });
   const [recentMovements, setRecentMovements] = useState([]);
   const [pendingRequests, setPendingRequests] = useState([]);
@@ -169,9 +169,18 @@ const Dashboard = () => {
       {/* Panel de Administrador */}
       {isAdmin && (
         <>
+          {/* Tarjetas de las 3 sucursales - AHORA SON CLICABLES */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {restaurants.map((rest, i) => (
-              <div key={rest.id} className={`rounded-2xl p-5 shadow-sm ${rest.bg} animate-fade-in-up`} style={{ animationDelay: `${0.1 * i}s` }}>
+              <div
+                key={rest.id}
+                onClick={() => switchRestaurant(rest.id)}
+                className={`rounded-2xl p-5 shadow-sm ${rest.bg} animate-fade-in-up cursor-pointer hover:shadow-md transition-shadow border-2 border-transparent hover:border-orange-300 dark:hover:border-orange-600`}
+                style={{ animationDelay: `${0.1 * i}s` }}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter') switchRestaurant(rest.id); }}
+              >
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-2xl">{rest.icon}</span>
                   <h3 className="font-semibold text-slate-900 dark:text-white tracking-tight">{rest.name}</h3>
@@ -192,6 +201,7 @@ const Dashboard = () => {
             ))}
           </div>
 
+          {/* Alertas urgentes */}
           {(stats.pendingTransfers > 0 || pendingRequests.length > 0 || (stats.restaurants[currentRestaurant]?.lowStock || 0) > 0) && (
             <div className="bg-amber-50 dark:bg-amber-900/20 rounded-2xl p-4 shadow-sm animate-fade-in-up">
               <h3 className="font-semibold text-amber-800 dark:text-amber-400 mb-3 flex items-center gap-2 tracking-tight">
