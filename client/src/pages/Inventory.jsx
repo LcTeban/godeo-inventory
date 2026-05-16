@@ -440,7 +440,7 @@ const Inventory = () => {
         return (
           <motion.div
             key={product.id}
-            className="bg-white dark:bg-gray-800 rounded-2xl p-3 shadow-sm"
+            className="bg-white dark:bg-gray-900 rounded-2xl p-3 shadow-sm dark:shadow-md dark:shadow-black/30"
             variants={itemVariants}
             layout
           >
@@ -454,7 +454,7 @@ const Inventory = () => {
                     {isExpiring && <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">⏰ Próximo</span>}
                   </div>
                 </div>
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs text-slate-500 dark:text-gray-400">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs text-slate-500 dark:text-gray-300">
                   {product.categories?.name && <span>📁 {product.categories.name}</span>}
                   {product.suppliers?.name && <span>🏢 {product.suppliers.name}</span>}
                   {product.barcode && <span>🏷️ {product.barcode}</span>}
@@ -464,7 +464,7 @@ const Inventory = () => {
                 <div className="flex items-end justify-between mt-2">
                   <div>
                     <span className="text-xl font-bold text-slate-900 dark:text-white">{product.stock}</span>
-                    <span className="text-sm text-slate-500 dark:text-gray-400 ml-1">{product.unit}</span>
+                    <span className="text-sm text-slate-500 dark:text-gray-300 ml-1">{product.unit}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     {isAdmin && (
@@ -486,7 +486,7 @@ const Inventory = () => {
                       <MinusIcon className="h-4 w-4" />
                     </button>
                     {isAdmin && (
-                      <button onClick={() => requestDelete(product.id)} className="p-1.5 text-slate-400 dark:text-gray-500 hover:bg-slate-100 dark:hover:bg-gray-700 rounded-lg" title="Eliminar">
+                      <button onClick={() => requestDelete(product.id)} className="p-1.5 text-slate-400 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-gray-700 rounded-lg" title="Eliminar">
                         <TrashIcon className="h-4 w-4" />
                       </button>
                     )}
@@ -505,7 +505,7 @@ const Inventory = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           {currentFolderId !== null && (
-            <button onClick={goBack} className="p-2 bg-slate-100 dark:bg-gray-700 rounded-lg hover:bg-slate-200 dark:hover:bg-gray-600" title="Volver">
+            <button onClick={goBack} className="p-2 bg-slate-100 dark:bg-gray-800 rounded-lg hover:bg-slate-200 dark:hover:bg-gray-700" title="Volver">
               <ArrowLeftIcon className="h-5 w-5 text-slate-600 dark:text-gray-300" />
             </button>
           )}
@@ -540,20 +540,20 @@ const Inventory = () => {
               setFolderPath([]);
             }
           }}
-          className="w-full p-3 bg-white dark:bg-gray-800 rounded-2xl shadow-sm pl-10 text-sm text-slate-700 dark:text-gray-300 placeholder-slate-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition dark:border-gray-700 border border-slate-200"
+          className="w-full p-3 bg-white dark:bg-gray-900 rounded-2xl shadow-sm dark:shadow-md dark:shadow-black/30 pl-10 text-sm text-slate-700 dark:text-gray-200 placeholder-slate-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition dark:border-white/5 border border-slate-200"
         />
-        <QrCodeIcon className="h-5 w-5 absolute left-3 top-3.5 text-slate-400 dark:text-gray-500" />
+        <QrCodeIcon className="h-5 w-5 absolute left-3 top-3.5 text-slate-400 dark:text-gray-300" />
       </div>
 
       {isLoadingProducts ? (
         <div className="animate-pulse space-y-3">
           {[1,2,3,4,5].map(i => (
-            <div key={i} className="h-20 bg-white dark:bg-gray-800 rounded-2xl shadow-sm"></div>
+            <div key={i} className="h-20 bg-white dark:bg-gray-900 rounded-2xl shadow-sm dark:shadow-md dark:shadow-black/30"></div>
           ))}
         </div>
       ) : searchTerm.trim() !== '' ? (
         <>
-          <p className="text-sm text-slate-500 dark:text-gray-400">
+          <p className="text-sm text-slate-500 dark:text-gray-300">
             Resultados para «{searchTerm}» ({displayedProducts.length})
           </p>
           {displayedProducts.length > 0 ? (
@@ -582,7 +582,7 @@ const Inventory = () => {
                   <button
                     key={cat.id}
                     onClick={() => navigateToFolder(cat.id)}
-                    className="flex flex-col items-center p-3 bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-md transition-shadow"
+                    className="flex flex-col items-center p-3 bg-white dark:bg-gray-900 rounded-2xl shadow-sm dark:shadow-md dark:shadow-black/30 hover:shadow-md transition-shadow dark:border-white/5 border border-transparent"
                   >
                     {hasChildren ? (
                       <FolderIcon className="h-12 w-12 text-amber-500 dark:text-amber-400 mb-1" />
@@ -593,7 +593,7 @@ const Inventory = () => {
                       {cat.name}
                     </span>
                     {!hasChildren && (
-                      <span className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">
+                      <span className="text-xs text-slate-500 dark:text-gray-300 mt-0.5">
                         {products.filter(p => p.category_id === cat.id).length} prod.
                       </span>
                     )}
@@ -672,7 +672,7 @@ const Inventory = () => {
             transition={{ duration: 0.2 }}
           >
             <motion.div
-              className={`bg-white dark:bg-gray-800 w-full max-w-md flex flex-col shadow-2xl ${isMobile ? 'rounded-t-[32px] mb-12' : 'rounded-2xl'}`}
+              className={`bg-white dark:bg-gray-900 w-full max-w-md flex flex-col shadow-2xl dark:shadow-black/50 ${isMobile ? 'rounded-t-[32px] mb-12' : 'rounded-2xl'}`}
               style={isMobile ? { maxHeight: '85dvh' } : { maxHeight: '90vh' }}
               onClick={e => e.stopPropagation()}
               variants={isMobile ? modalVariants : desktopModalVariants}
@@ -681,7 +681,7 @@ const Inventory = () => {
               exit="exit"
             >
               {isMobile && <div className="bottom-sheet-handle" />}
-              <div className="px-6 py-4 border-b border-slate-100 dark:border-gray-700 flex-shrink-0">
+              <div className="px-6 py-4 border-b border-slate-100 dark:border-white/5 flex-shrink-0">
                 <h2 className="text-lg font-bold text-slate-900 dark:text-white">
                   {editingProduct ? 'Editar Producto' : 'Nuevo Producto'}
                 </h2>
@@ -693,7 +693,7 @@ const Inventory = () => {
                     <button type="button" onClick={openCamera} className="flex-1 p-3 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-xl text-sm flex items-center justify-center gap-2 border border-blue-200 dark:border-blue-800">
                       <CameraIcon className="h-5 w-5" /> Cámara
                     </button>
-                    <button type="button" onClick={openGallery} className="flex-1 p-3 bg-slate-50 dark:bg-gray-700 text-slate-700 dark:text-gray-300 rounded-xl text-sm flex items-center justify-center gap-2 border border-slate-200 dark:border-gray-600">
+                    <button type="button" onClick={openGallery} className="flex-1 p-3 bg-slate-50 dark:bg-gray-800 text-slate-700 dark:text-gray-300 rounded-xl text-sm flex items-center justify-center gap-2 border border-slate-200 dark:border-gray-600">
                       🖼️ Galería
                     </button>
                   </div>
@@ -707,12 +707,12 @@ const Inventory = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">Nombre *</label>
-                  <input type="text" placeholder="Nombre*" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition" required />
+                  <input type="text" placeholder="Nombre*" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition" required />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">📁 Categoría</label>
-                  <select value={formData.category_id} onChange={(e) => setFormData({...formData, category_id: e.target.value})} className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition">
+                  <select value={formData.category_id} onChange={(e) => setFormData({...formData, category_id: e.target.value})} className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition">
                     <option value="">General (sin categoría)</option>
                     {allCategories.map(cat => (<option key={cat.id} value={cat.id}>{cat.label || cat.name}</option>))}
                   </select>
@@ -720,7 +720,7 @@ const Inventory = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">🏢 Proveedor</label>
-                  <select value={formData.supplier_id} onChange={(e) => setFormData({...formData, supplier_id: e.target.value})} className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition">
+                  <select value={formData.supplier_id} onChange={(e) => setFormData({...formData, supplier_id: e.target.value})} className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition">
                     <option value="">Sin proveedor</option>
                     {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                   </select>
@@ -729,18 +729,18 @@ const Inventory = () => {
                 {isAdmin && (
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">💰 Precio (€)</label>
-                    <input type="number" step="0.01" placeholder="Precio unitario" value={formData.price || ''} onChange={(e) => setFormData({...formData, price: e.target.value})} className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition" />
+                    <input type="number" step="0.01" placeholder="Precio unitario" value={formData.price || ''} onChange={(e) => setFormData({...formData, price: e.target.value})} className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition" />
                   </div>
                 )}
 
                 <div className="flex gap-2">
                   <div className="flex-1">
                     <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">Stock inicial *</label>
-                    <input type="number" step="0.01" placeholder="Stock inicial*" value={formData.stock} onChange={(e) => setFormData({...formData, stock: e.target.value})} className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition" required />
+                    <input type="number" step="0.01" placeholder="Stock inicial*" value={formData.stock} onChange={(e) => setFormData({...formData, stock: e.target.value})} className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition" required />
                   </div>
                   <div className="w-24">
                     <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">Unidad</label>
-                    <select value={formData.unit} onChange={(e) => setFormData({...formData, unit: e.target.value})} className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition">
+                    <select value={formData.unit} onChange={(e) => setFormData({...formData, unit: e.target.value})} className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition">
                       <option value="unidad">ud</option><option value="kg">kg</option><option value="L">L</option><option value="caja">caja</option>
                     </select>
                   </div>
@@ -748,27 +748,27 @@ const Inventory = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">Stock mínimo</label>
-                  <input type="number" placeholder="Stock mínimo" value={formData.min_stock} onChange={(e) => setFormData({...formData, min_stock: e.target.value})} className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition" />
+                  <input type="number" placeholder="Stock mínimo" value={formData.min_stock} onChange={(e) => setFormData({...formData, min_stock: e.target.value})} className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition" />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">Fecha caducidad</label>
-                  <input type="date" placeholder="Fecha caducidad" value={formData.expiry_date} onChange={(e) => setFormData({...formData, expiry_date: e.target.value})} className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition" />
+                  <input type="date" placeholder="Fecha caducidad" value={formData.expiry_date} onChange={(e) => setFormData({...formData, expiry_date: e.target.value})} className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition" />
                 </div>
 
                 <div className="flex gap-2">
                   <div className="flex-1">
                     <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">Código de barras</label>
                     <div className="flex gap-2">
-                      <input type="text" placeholder="Código de barras" value={formData.barcode} onChange={(e) => setFormData({...formData, barcode: e.target.value})} className="flex-1 p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition" />
-                      <button type="button" onClick={() => setShowScanner(true)} className="px-4 bg-slate-100 dark:bg-gray-700 rounded-xl"><QrCodeIcon className="h-5 w-5" /></button>
+                      <input type="text" placeholder="Código de barras" value={formData.barcode} onChange={(e) => setFormData({...formData, barcode: e.target.value})} className="flex-1 p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition" />
+                      <button type="button" onClick={() => setShowScanner(true)} className="px-4 bg-slate-100 dark:bg-gray-800 rounded-xl"><QrCodeIcon className="h-5 w-5" /></button>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="px-6 py-4 border-t border-slate-100 dark:border-gray-700 flex gap-3 flex-shrink-0">
-                <button type="button" onClick={resetModal} className="flex-1 p-3 border border-slate-200 dark:border-gray-600 text-slate-600 dark:text-gray-300 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-700 transition">Cancelar</button>
+              <div className="px-6 py-4 border-t border-slate-100 dark:border-white/5 flex gap-3 flex-shrink-0">
+                <button type="button" onClick={resetModal} className="flex-1 p-3 border border-slate-200 dark:border-gray-600 text-slate-600 dark:text-gray-300 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-800 transition">Cancelar</button>
                 <button onClick={handleAddProduct} disabled={isSaving} className="flex-1 p-3 bg-orange-500 text-white rounded-xl shadow-sm shadow-orange-200 hover:bg-orange-600 disabled:opacity-50 transition">
                   {isSaving ? 'Guardando...' : editingProduct ? 'Actualizar' : 'Guardar'}
                 </button>
@@ -790,7 +790,7 @@ const Inventory = () => {
             transition={{ duration: 0.2 }}
           >
             <motion.div
-              className={`bg-white dark:bg-gray-800 w-full max-w-md flex flex-col shadow-2xl ${isMobile ? 'rounded-t-[32px] mb-12' : 'rounded-2xl'}`}
+              className={`bg-white dark:bg-gray-900 w-full max-w-md flex flex-col shadow-2xl dark:shadow-black/50 ${isMobile ? 'rounded-t-[32px] mb-12' : 'rounded-2xl'}`}
               onClick={e => e.stopPropagation()}
               variants={isMobile ? modalVariants : desktopModalVariants}
               initial="hidden"
@@ -803,19 +803,19 @@ const Inventory = () => {
                   {movementData.type === 'entrada' ? '📥 Entrada' : '📤 Salida'} - {selectedProduct?.name}
                 </h2>
                 <form onSubmit={handleMovement} className="space-y-3">
-                  <div className="text-center p-4 bg-slate-50 dark:bg-gray-700 rounded-xl">
+                  <div className="text-center p-4 bg-slate-50 dark:bg-gray-800 rounded-xl">
                     <span className="text-3xl font-bold text-slate-900 dark:text-white">{selectedProduct?.stock}</span>
-                    <span className="text-slate-500 dark:text-gray-400 ml-1">{selectedProduct?.unit}</span>
-                    <p className="text-sm text-slate-400 dark:text-gray-500">Stock actual</p>
+                    <span className="text-slate-500 dark:text-gray-300 ml-1">{selectedProduct?.unit}</span>
+                    <p className="text-sm text-slate-400 dark:text-gray-300">Stock actual</p>
                   </div>
                   <input type="number" step="0.01" placeholder="Cantidad" value={movementData.quantity}
                     onChange={(e) => setMovementData({...movementData, quantity: e.target.value})}
-                    className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-slate-900 dark:text-white text-lg text-center focus:ring-2 focus:ring-orange-500/20 outline-none transition" required autoFocus />
+                    className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-slate-900 dark:text-white text-lg text-center focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition" required autoFocus />
                   <input type="text" placeholder="Motivo (opcional)" value={movementData.reason}
                     onChange={(e) => setMovementData({...movementData, reason: e.target.value})}
-                    className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 outline-none transition" />
+                    className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition" />
                   <div className="flex gap-2 pt-2">
-                    <button type="button" onClick={() => setShowMovementModal(false)} className="flex-1 p-3 border border-slate-200 dark:border-gray-600 text-slate-600 dark:text-gray-300 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-700 transition">Cancelar</button>
+                    <button type="button" onClick={() => setShowMovementModal(false)} className="flex-1 p-3 border border-slate-200 dark:border-gray-600 text-slate-600 dark:text-gray-300 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-800 transition">Cancelar</button>
                     <button type="submit" disabled={isSaving} className={`flex-1 p-3 text-white rounded-xl shadow-sm disabled:opacity-50 transition ${movementData.type === 'entrada' ? 'bg-emerald-600 shadow-emerald-200 hover:bg-emerald-700' : 'bg-red-600 shadow-red-200 hover:bg-red-700'}`}>
                       {isSaving ? 'Registrando...' : 'Confirmar'}
                     </button>
@@ -839,7 +839,7 @@ const Inventory = () => {
             transition={{ duration: 0.2 }}
           >
             <motion.div
-              className={`bg-white dark:bg-gray-800 w-full max-w-md flex flex-col shadow-2xl ${isMobile ? 'rounded-t-[32px] mb-12' : 'rounded-2xl'}`}
+              className={`bg-white dark:bg-gray-900 w-full max-w-md flex flex-col shadow-2xl dark:shadow-black/50 ${isMobile ? 'rounded-t-[32px] mb-12' : 'rounded-2xl'}`}
               onClick={e => e.stopPropagation()}
               variants={isMobile ? modalVariants : desktopModalVariants}
               initial="hidden"
@@ -849,13 +849,13 @@ const Inventory = () => {
               {isMobile && <div className="bottom-sheet-handle" />}
               <div className="p-6">
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">📋 Copiar Producto</h2>
-                <p className="text-sm text-slate-500 dark:text-gray-400 mb-4">
+                <p className="text-sm text-slate-500 dark:text-gray-300 mb-4">
                   Copiarás <strong className="text-slate-700 dark:text-gray-200">{selectedProduct.name}</strong> a otro restaurante.
                 </p>
                 <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">🏢 Restaurante destino</label>
-                    <select value={copyTarget} onChange={(e) => setCopyTarget(e.target.value)} className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 outline-none transition">
+                    <select value={copyTarget} onChange={(e) => setCopyTarget(e.target.value)} className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition">
                       <option value="">Seleccionar destino</option>
                       {['POZOBLANCO', 'FUERTEVENTURA', 'GRAN_CAPITAN'].filter(r => r !== currentRestaurant).map(r => (
                         <option key={r} value={r}>{r === 'POZOBLANCO' ? '🍽️ Pozoblanco' : r === 'FUERTEVENTURA' ? '🏖️ Fuerteventura' : '🏛️ Gran Capitán'}</option>
@@ -863,7 +863,7 @@ const Inventory = () => {
                     </select>
                   </div>
                   <div className="flex gap-2 pt-2">
-                    <button onClick={() => setShowCopyModal(false)} className="flex-1 p-3 border border-slate-200 dark:border-gray-600 text-slate-600 dark:text-gray-300 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-700 transition">Cancelar</button>
+                    <button onClick={() => setShowCopyModal(false)} className="flex-1 p-3 border border-slate-200 dark:border-gray-600 text-slate-600 dark:text-gray-300 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-800 transition">Cancelar</button>
                     <button onClick={handleCopyProduct} disabled={isCopying || !copyTarget} className="flex-1 p-3 bg-orange-500 text-white rounded-xl shadow-sm shadow-orange-200 hover:bg-orange-600 disabled:opacity-50 transition">
                       {isCopying ? 'Copiando...' : 'Copiar'}
                     </button>
@@ -887,7 +887,7 @@ const Inventory = () => {
             transition={{ duration: 0.2 }}
           >
             <motion.div
-              className={`bg-white dark:bg-gray-800 w-full max-w-md flex flex-col shadow-2xl ${isMobile ? 'rounded-t-[32px] mb-12' : 'rounded-2xl'}`}
+              className={`bg-white dark:bg-gray-900 w-full max-w-md flex flex-col shadow-2xl dark:shadow-black/50 ${isMobile ? 'rounded-t-[32px] mb-12' : 'rounded-2xl'}`}
               onClick={e => e.stopPropagation()}
               variants={isMobile ? modalVariants : desktopModalVariants}
               initial="hidden"
@@ -902,13 +902,13 @@ const Inventory = () => {
                   </div>
                   <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Eliminar productos sin categoría</h2>
                 </div>
-                <p className="text-sm text-slate-500 dark:text-gray-400 mb-2">Esta acción eliminará permanentemente los {uncategorizedProducts.length} productos sin categoría.</p>
-                <p className="text-sm text-slate-500 dark:text-gray-400 mb-4">Escribe <span className="font-bold text-red-600 dark:text-red-400">ELIMINAR</span> para confirmar.</p>
+                <p className="text-sm text-slate-500 dark:text-gray-300 mb-2">Esta acción eliminará permanentemente los {uncategorizedProducts.length} productos sin categoría.</p>
+                <p className="text-sm text-slate-500 dark:text-gray-300 mb-4">Escribe <span className="font-bold text-red-600 dark:text-red-400">ELIMINAR</span> para confirmar.</p>
                 <input type="text" value={deleteConfirmText} onChange={(e) => setDeleteConfirmText(e.target.value)}
                   placeholder="Escribe ELIMINAR para confirmar"
-                  className="w-full px-4 py-2.5 border border-slate-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-red-500/20 focus:border-red-400 outline-none transition mb-4" autoFocus />
+                  className="w-full px-4 py-2.5 border border-slate-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-red-500/20 focus:border-red-500 dark:focus:border-red-400 outline-none transition mb-4" autoFocus />
                 <div className="flex gap-3">
-                  <button onClick={() => { setShowDeleteAllModal(false); setDeleteConfirmText(''); }} className="flex-1 py-2.5 border border-slate-200 dark:border-gray-600 text-slate-600 dark:text-gray-300 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-700 transition">Cancelar</button>
+                  <button onClick={() => { setShowDeleteAllModal(false); setDeleteConfirmText(''); }} className="flex-1 py-2.5 border border-slate-200 dark:border-gray-600 text-slate-600 dark:text-gray-300 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-800 transition">Cancelar</button>
                   <button onClick={handleDeleteAllUncategorized} disabled={deleteConfirmText !== 'ELIMINAR' || isDeletingAll}
                     className="flex-1 py-2.5 bg-red-600 text-white rounded-xl shadow-sm shadow-red-200 hover:bg-red-700 disabled:opacity-50 transition">
                     {isDeletingAll ? 'Eliminando...' : 'Eliminar todos'}
