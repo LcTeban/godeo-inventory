@@ -8,6 +8,7 @@ import useLockBodyScroll from '../hooks/useLockBodyScroll';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import EmptyState from '../components/EmptyState';
+import SuccessCheck from '../components/SuccessCheck';
 
 const Requests = () => {
   const { isAdmin, user, getRequests, addRequest, updateRequest, getProducts } = useAuth();
@@ -16,6 +17,7 @@ const Requests = () => {
   const [showModal, setShowModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [showCheck, setShowCheck] = useState(false);
   
   const [formData, setFormData] = useState({
     items: [{ productName: '', quantity: '', unit: 'unidad' }],
@@ -129,6 +131,8 @@ const Requests = () => {
       setProductExists({});
       loadData();
       toast.success('Pedido enviado correctamente');
+      setShowCheck(true);
+      setTimeout(() => setShowCheck(false), 1500);
       
       if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
         new Notification('✅ Pedido enviado', {
@@ -145,7 +149,8 @@ const Requests = () => {
     try {
       await updateRequest(id, status);
       loadData();
-      toast.success(status === 'aprobado' ? 'Pedido aprobado' : 'Pedido rechazado');
+      setShowCheck(true);
+      setTimeout(() => setShowCheck(false), 1500);
       
       if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
         const request = requests.find(r => r.id === id);
@@ -401,6 +406,8 @@ const Requests = () => {
           )}
         </div>
       )}
+
+      <SuccessCheck show={showCheck} />
 
       {/* Modal Nueva Lista */}
       <AnimatePresence>
