@@ -22,6 +22,7 @@ import {
   Pie,
   Cell,
 } from 'recharts';
+import Skeleton from '../components/Skeleton';
 
 const Dashboard = () => {
   const { currentRestaurant, isAdmin, getDashboard, getMovements, getRequests, getProducts, switchRestaurant } = useAuth();
@@ -109,15 +110,15 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="space-y-6 animate-pulse">
-        <div className="h-24 bg-white dark:bg-gray-900 rounded-2xl shadow-sm dark:shadow-md dark:shadow-black/30"></div>
+      <div className="space-y-6">
+        <Skeleton className="h-24 rounded-2xl" />
         <div className="grid grid-cols-3 gap-3">
-          <div className="h-20 bg-white dark:bg-gray-900 rounded-2xl shadow-sm dark:shadow-md dark:shadow-black/30"></div>
-          <div className="h-20 bg-white dark:bg-gray-900 rounded-2xl shadow-sm dark:shadow-md dark:shadow-black/30"></div>
-          <div className="h-20 bg-white dark:bg-gray-900 rounded-2xl shadow-sm dark:shadow-md dark:shadow-black/30"></div>
+          <Skeleton className="h-20 rounded-2xl" />
+          <Skeleton className="h-20 rounded-2xl" />
+          <Skeleton className="h-20 rounded-2xl" />
         </div>
-        <div className="h-64 bg-white dark:bg-gray-900 rounded-2xl shadow-sm dark:shadow-md dark:shadow-black/30"></div>
-        <div className="h-64 bg-white dark:bg-gray-900 rounded-2xl shadow-sm dark:shadow-md dark:shadow-black/30"></div>
+        <Skeleton className="h-64 rounded-2xl" />
+        <Skeleton className="h-64 rounded-2xl" />
       </div>
     );
   }
@@ -232,7 +233,6 @@ const Dashboard = () => {
 
       {/* Gráficos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Área Chart */}
         <div className="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow-sm dark:shadow-md dark:shadow-black/30 animate-fade-in-up">
           <h3 className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2 tracking-tight">
             <ClockIcon className="h-5 w-5 text-slate-500 dark:text-gray-300" />
@@ -266,7 +266,6 @@ const Dashboard = () => {
           )}
         </div>
 
-        {/* Pie Chart */}
         <div className="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow-sm dark:shadow-md dark:shadow-black/30 animate-fade-in-up">
           <h3 className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2 tracking-tight">
             <ChartBarIcon className="h-5 w-5 text-slate-500 dark:text-gray-300" />
