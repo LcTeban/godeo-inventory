@@ -50,12 +50,12 @@ const Layout = () => {
   };
 
   const getThemeIcon = () => {
-    if (theme === 'light') return <SunIcon className="h-5 w-5" />;
-    if (theme === 'dark') return <MoonIcon className="h-5 w-5" />;
+    if (theme === 'light') return <SunIcon className="h-4 w-4" />;
+    if (theme === 'dark') return <MoonIcon className="h-4 w-4" />;
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? (
-      <MoonIcon className="h-5 w-5" />
+      <MoonIcon className="h-4 w-4" />
     ) : (
-      <SunIcon className="h-5 w-5" />
+      <SunIcon className="h-4 w-4" />
     );
   };
 
@@ -82,30 +82,29 @@ const Layout = () => {
   const toggleSidebar = () => setSidebarOpen(prev => !prev);
 
   return (
-    // En Layout.jsx, el div principal:
-<div className="min-h-screen bg-slate-50 dark:bg-gray-950 transition-colors duration-300">
+    <div className="min-h-screen bg-slate-50 dark:bg-gray-950 transition-colors duration-300">
       <Toaster
-  position="top-center"
-  toastOptions={{
-    duration: 3000,
-    style: {
-      background: '#0f172a', // Slate-900
-      color: '#f1f5f9',
-      borderRadius: '12px',
-      fontSize: '14px',
-      padding: '12px 16px',
-      boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
-    },
-    success: {
-      style: { background: '#065f46', color: '#ecfdf5' },
-      iconTheme: { primary: '#34d399', secondary: '#ecfdf5' },
-    },
-    error: {
-      style: { background: '#7f1d1d', color: '#fef2f2' },
-      iconTheme: { primary: '#f87171', secondary: '#fef2f2' },
-    },
-  }}
-/>
+        position="top-center"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: '#0f172a',
+            color: '#f1f5f9',
+            borderRadius: '12px',
+            fontSize: '14px',
+            padding: '12px 16px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+          },
+          success: {
+            style: { background: '#065f46', color: '#ecfdf5' },
+            iconTheme: { primary: '#34d399', secondary: '#ecfdf5' },
+          },
+          error: {
+            style: { background: '#7f1d1d', color: '#fef2f2' },
+            iconTheme: { primary: '#f87171', secondary: '#fef2f2' },
+          },
+        }}
+      />
       {!isMobile && (
         <div className="lg:hidden bg-white dark:bg-gray-800 shadow-sm p-4 flex items-center justify-between">
           <button onClick={toggleSidebar} className="p-2">
@@ -138,9 +137,36 @@ const Layout = () => {
               </button>
             </div>
 
+            {/* Bloque de usuario con iconos de notificación y tema a la derecha */}
             <div className="p-4 bg-gray-50 dark:bg-gray-900 flex-shrink-0">
-              <p className="text-sm text-slate-600 dark:text-gray-400">{user?.name}</p>
-              <p className="text-xs text-purple-600 font-semibold">{user?.role}</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-slate-600 dark:text-gray-400">{user?.name}</p>
+                  <p className="text-xs text-purple-600 font-semibold">{user?.role}</p>
+                </div>
+                <div className="flex items-center gap-1">
+                  {isAdmin && (
+                    <button
+                      onClick={enableNotifications}
+                      className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                      title={notificationsEnabled ? 'Notificaciones activadas' : 'Activar notificaciones'}
+                    >
+                      {notificationsEnabled ? (
+                        <BellAlertIcon className="h-4 w-4 text-green-600" />
+                      ) : (
+                        <BellIcon className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                      )}
+                    </button>
+                  )}
+                  <button
+                    onClick={toggleTheme}
+                    className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                    title="Cambiar tema"
+                  >
+                    {getThemeIcon()}
+                  </button>
+                </div>
+              </div>
             </div>
 
             {isAdmin && (
@@ -156,32 +182,6 @@ const Layout = () => {
                 </select>
               </div>
             )}
-
-            {isAdmin && (
-              <div className="px-4 pt-2 flex-shrink-0">
-                <button
-                  onClick={enableNotifications}
-                  className="w-full p-2 border rounded-lg text-sm flex items-center justify-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
-                >
-                  {notificationsEnabled ? (
-                    <BellAlertIcon className="h-4 w-4 text-green-600" />
-                  ) : (
-                    <BellIcon className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                  )}
-                  {notificationsEnabled ? 'Notificaciones ON' : 'Activar Notificaciones'}
-                </button>
-              </div>
-            )}
-
-            <div className="px-4 pt-2 flex-shrink-0">
-              <button
-                onClick={toggleTheme}
-                className="w-full p-2 border rounded-lg text-sm flex items-center justify-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
-              >
-                {getThemeIcon()}
-                {theme === 'light' ? 'Modo Claro' : theme === 'dark' ? 'Modo Oscuro' : 'Automático'}
-              </button>
-            </div>
 
             <nav className="flex-1 overflow-y-auto px-2 py-2">
               {navigation.map(item => {
@@ -219,10 +219,36 @@ const Layout = () => {
           <div className="w-64 bg-white dark:bg-gray-800 shadow-lg flex flex-col h-full">
             <div className="p-6 border-b dark:border-gray-700 flex-shrink-0">
               <h1 className="text-2xl font-bold dark:text-white">🍴 Godeo</h1>
-              <p className="text-sm text-slate-600 dark:text-gray-400 mt-1">{user?.name}</p>
-              <span className="inline-block mt-1 px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded">
-                {user?.role}
-              </span>
+              <div className="flex items-center justify-between mt-1">
+                <div>
+                  <p className="text-sm text-slate-600 dark:text-gray-400">{user?.name}</p>
+                  <span className="inline-block mt-1 px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded">
+                    {user?.role}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  {isAdmin && (
+                    <button
+                      onClick={enableNotifications}
+                      className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                      title={notificationsEnabled ? 'Notificaciones activadas' : 'Activar notificaciones'}
+                    >
+                      {notificationsEnabled ? (
+                        <BellAlertIcon className="h-4 w-4 text-green-600" />
+                      ) : (
+                        <BellIcon className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                      )}
+                    </button>
+                  )}
+                  <button
+                    onClick={toggleTheme}
+                    className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                    title="Cambiar tema"
+                  >
+                    {getThemeIcon()}
+                  </button>
+                </div>
+              </div>
 
               {isAdmin && (
                 <select
@@ -235,28 +261,6 @@ const Layout = () => {
                   ))}
                 </select>
               )}
-
-              {isAdmin && (
-                <button
-                  onClick={enableNotifications}
-                  className="w-full mt-2 p-2 border rounded-lg text-sm flex items-center justify-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
-                >
-                  {notificationsEnabled ? (
-                    <BellAlertIcon className="h-4 w-4 text-green-600" />
-                  ) : (
-                    <BellIcon className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                  )}
-                  {notificationsEnabled ? 'Notificaciones ON' : 'Activar Notificaciones'}
-                </button>
-              )}
-
-              <button
-                onClick={toggleTheme}
-                className="w-full mt-2 p-2 border rounded-lg text-sm flex items-center justify-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
-              >
-                {getThemeIcon()}
-                {theme === 'light' ? 'Modo Claro' : theme === 'dark' ? 'Modo Oscuro' : 'Automático'}
-              </button>
             </div>
 
             <nav className="flex-1 overflow-y-auto px-3 py-2">
