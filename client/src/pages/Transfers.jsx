@@ -360,8 +360,10 @@ const Transfers = () => {
             transition={{ duration: 0.2 }}
           >
             <motion.div
-              className={`bg-white dark:bg-gray-900 w-full max-w-md flex flex-col shadow-2xl dark:shadow-black/50 ${isMobile ? 'rounded-t-[32px] mb-12' : 'rounded-2xl'}`}
-              style={isMobile ? { maxHeight: '85dvh' } : { maxHeight: '90vh' }}
+              className={`bg-white dark:bg-gray-900 w-full max-w-md flex flex-col shadow-2xl dark:shadow-black/50 ${
+                isMobile ? 'rounded-[32px] mb-16' : 'rounded-2xl'
+              }`}
+              style={isMobile ? { maxHeight: '80dvh' } : { maxHeight: '90vh' }}
               onClick={e => e.stopPropagation()}
               variants={isMobile ? modalVariants : desktopModalVariants}
               initial="hidden"
@@ -375,7 +377,7 @@ const Transfers = () => {
                   <XMarkIcon className="h-5 w-5" />
                 </button>
               </div>
-              <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-4 space-y-4 modal-scroll" style={{ paddingBottom: isMobile ? 'calc(80px + env(safe-area-inset-bottom))' : '16px' }}>
+              <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-4 space-y-4 modal-scroll" style={{ paddingBottom: isMobile ? 'calc(90px + env(safe-area-inset-bottom))' : '16px' }}>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">📦 Producto *</label>
                   <select
