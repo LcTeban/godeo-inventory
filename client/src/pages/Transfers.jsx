@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import EmptyState from '../components/EmptyState';
 import Skeleton from '../components/Skeleton';
+import SuccessCheck from '../components/SuccessCheck';
 
 const Transfers = () => {
   const { currentRestaurant, isAdmin, getTransfers, getProducts, addTransfer, completeTransfer } = useAuth();
@@ -16,6 +17,7 @@ const Transfers = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [showCheck, setShowCheck] = useState(false);
   
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -71,6 +73,8 @@ const Transfers = () => {
       setFormData({ productId: '', quantity: '', toRestaurant: '', reason: '' });
       loadData();
       toast.success('Transferencia enviada correctamente');
+      setShowCheck(true);
+      setTimeout(() => setShowCheck(false), 1500);
     } catch (error) {
       toast.error('Error: ' + error.message);
     } finally {
@@ -83,7 +87,8 @@ const Transfers = () => {
     try {
       await completeTransfer(id);
       loadData();
-      toast.success('Transferencia confirmada correctamente');
+      setShowCheck(true);
+      setTimeout(() => setShowCheck(false), 1500);
     } catch (error) {
       toast.error('Error al completar: ' + error.message);
     } finally {
@@ -149,7 +154,7 @@ const Transfers = () => {
     exit: { scale: 0.95, opacity: 0, transition: { duration: 0.2 } },
   };
 
-if (loading) {
+  if (loading) {
     return (
       <div className="space-y-4">
         <Skeleton className="h-8 rounded-2xl w-1/3" />
@@ -348,6 +353,8 @@ if (loading) {
           ))}
         </motion.div>
       )}
+
+      <SuccessCheck show={showCheck} />
 
       {/* Modal Nueva Transferencia */}
       <AnimatePresence>
