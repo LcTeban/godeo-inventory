@@ -444,7 +444,7 @@ const Inventory = () => {
         return (
           <motion.div
             key={product.id}
-            className="bg-white dark:bg-gray-900 rounded-2xl p-3 shadow-sm dark:shadow-md dark:shadow-black/30"
+            className="bg-white dark:bg-gray-900 rounded-2xl p-3 shadow-card dark:shadow-card-dark"
             variants={itemVariants}
             layout
           >
@@ -544,7 +544,7 @@ const Inventory = () => {
               setFolderPath([]);
             }
           }}
-          className="w-full p-3 bg-white dark:bg-gray-900 rounded-2xl shadow-sm dark:shadow-md dark:shadow-black/30 pl-10 text-sm text-slate-700 dark:text-gray-200 placeholder-slate-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition dark:border-white/5 border border-slate-200"
+          className="w-full p-3 bg-white dark:bg-gray-900 rounded-2xl shadow-card dark:shadow-card-dark pl-10 text-sm text-slate-700 dark:text-gray-200 placeholder-slate-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition dark:border-white/5 border border-slate-200"
         />
         <QrCodeIcon className="h-5 w-5 absolute left-3 top-3.5 text-slate-400 dark:text-gray-300" />
       </div>
@@ -586,7 +586,7 @@ const Inventory = () => {
                   <button
                     key={cat.id}
                     onClick={() => navigateToFolder(cat.id)}
-                    className="flex flex-col items-center p-3 bg-white dark:bg-gray-900 rounded-2xl shadow-sm dark:shadow-md dark:shadow-black/30 hover:shadow-md transition-shadow dark:border-white/5 border border-transparent"
+                    className="flex flex-col items-center p-3 bg-white dark:bg-gray-900 rounded-2xl shadow-card dark:shadow-card-dark hover:shadow-card-hover dark:hover:shadow-card-dark-hover transition-shadow dark:border-white/5 border border-transparent"
                   >
                     {hasChildren ? (
                       <FolderIcon className="h-12 w-12 text-amber-500 dark:text-amber-400 mb-1" />
@@ -678,7 +678,7 @@ const Inventory = () => {
             transition={{ duration: 0.2 }}
           >
             <motion.div
-              className={`bg-white dark:bg-gray-900 w-full max-w-md flex flex-col shadow-2xl dark:shadow-black/50 ${
+              className={`bg-white dark:bg-gray-900 w-full max-w-md flex flex-col shadow-modal dark:shadow-modal-dark ${
                 isMobile ? 'rounded-[32px] mb-16' : 'rounded-2xl'
               }`}
               style={isMobile ? { maxHeight: '80dvh' } : { maxHeight: '90vh' }}
@@ -798,7 +798,7 @@ const Inventory = () => {
             transition={{ duration: 0.2 }}
           >
             <motion.div
-              className={`bg-white dark:bg-gray-900 w-full max-w-md flex flex-col shadow-2xl dark:shadow-black/50 ${isMobile ? 'rounded-[32px] mb-16' : 'rounded-2xl'}`}
+              className={`bg-white dark:bg-gray-900 w-full max-w-md flex flex-col shadow-modal dark:shadow-modal-dark ${isMobile ? 'rounded-[32px] mb-16' : 'rounded-2xl'}`}
               onClick={e => e.stopPropagation()}
               variants={isMobile ? modalVariants : desktopModalVariants}
               initial="hidden"
@@ -847,7 +847,7 @@ const Inventory = () => {
             transition={{ duration: 0.2 }}
           >
             <motion.div
-              className={`bg-white dark:bg-gray-900 w-full max-w-md flex flex-col shadow-2xl dark:shadow-black/50 ${isMobile ? 'rounded-[32px] mb-16' : 'rounded-2xl'}`}
+              className={`bg-white dark:bg-gray-900 w-full max-w-md flex flex-col shadow-modal dark:shadow-modal-dark ${isMobile ? 'rounded-[32px] mb-16' : 'rounded-2xl'}`}
               onClick={e => e.stopPropagation()}
               variants={isMobile ? modalVariants : desktopModalVariants}
               initial="hidden"
@@ -895,7 +895,7 @@ const Inventory = () => {
             transition={{ duration: 0.2 }}
           >
             <motion.div
-              className={`bg-white dark:bg-gray-900 w-full max-w-md flex flex-col shadow-2xl dark:shadow-black/50 ${isMobile ? 'rounded-[32px] mb-16' : 'rounded-2xl'}`}
+              className={`bg-white dark:bg-gray-900 w-full max-w-md flex flex-col shadow-modal dark:shadow-modal-dark ${isMobile ? 'rounded-[32px] mb-16' : 'rounded-2xl'}`}
               onClick={e => e.stopPropagation()}
               variants={isMobile ? modalVariants : desktopModalVariants}
               initial="hidden"
