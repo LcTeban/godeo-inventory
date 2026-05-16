@@ -85,27 +85,27 @@ const Layout = () => {
     // En Layout.jsx, el div principal:
 <div className="min-h-screen bg-slate-50 dark:bg-gray-950 transition-colors duration-300">
       <Toaster
-        position="top-center"
-        toastOptions={{
-          duration: 3000,
-          style: {
-            background: '#1e293b',
-            color: '#f8fafc',
-            borderRadius: '12px',
-            fontSize: '14px',
-            padding: '12px 16px',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-          },
-          success: {
-            style: { background: '#065f46', color: '#ecfdf5' },
-            iconTheme: { primary: '#34d399', secondary: '#ecfdf5' },
-          },
-          error: {
-            style: { background: '#991b1b', color: '#fef2f2' },
-            iconTheme: { primary: '#f87171', secondary: '#fef2f2' },
-          },
-        }}
-      />
+  position="top-center"
+  toastOptions={{
+    duration: 3000,
+    style: {
+      background: '#0f172a', // Slate-900
+      color: '#f1f5f9',
+      borderRadius: '12px',
+      fontSize: '14px',
+      padding: '12px 16px',
+      boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+    },
+    success: {
+      style: { background: '#065f46', color: '#ecfdf5' },
+      iconTheme: { primary: '#34d399', secondary: '#ecfdf5' },
+    },
+    error: {
+      style: { background: '#7f1d1d', color: '#fef2f2' },
+      iconTheme: { primary: '#f87171', secondary: '#fef2f2' },
+    },
+  }}
+/>
       {!isMobile && (
         <div className="lg:hidden bg-white dark:bg-gray-800 shadow-sm p-4 flex items-center justify-between">
           <button onClick={toggleSidebar} className="p-2">
