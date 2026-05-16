@@ -10,13 +10,14 @@ import BarcodeScanner from '../components/BarcodeScanner';
 import LazyImage from '../components/LazyImage';
 import EmptyState from '../components/EmptyState';
 import ConfirmDialog from '../components/ConfirmDialog';
+import SuccessCheck from '../components/SuccessCheck';
+import Skeleton from '../components/Skeleton';
 import useLockBodyScroll from '../hooks/useLockBodyScroll';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
-import Skeleton from '../components/Skeleton';
 
 const Inventory = () => {
   const [products, setProducts] = useState([]);
@@ -45,6 +46,7 @@ const Inventory = () => {
   const [currentFolderId, setCurrentFolderId] = useState(null);
   const [folderPath, setFolderPath] = useState([]);
   const [allCategories, setAllCategories] = useState([]);
+  const [showCheck, setShowCheck] = useState(false);
 
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmConfig, setConfirmConfig] = useState({
@@ -190,7 +192,8 @@ const Inventory = () => {
       setShowMovementModal(false);
       setMovementData({ type: 'entrada', quantity: '', reason: '' });
       fetchProducts();
-      toast.success('Movimiento registrado correctamente');
+      setShowCheck(true);
+      setTimeout(() => setShowCheck(false), 1500);
     } catch (error) {
       toast.error(error.message || 'Error al registrar movimiento');
     } finally {
@@ -547,12 +550,11 @@ const Inventory = () => {
       </div>
 
       {isLoadingProducts ? (
-  <div className="space-y-3">
-    {[1,2,3,4,5].map(i => (
-      <Skeleton key={i} className="h-20 rounded-2xl" />
-    ))}
-  </div>
-      
+        <div className="space-y-3">
+          {[1,2,3,4,5].map(i => (
+            <Skeleton key={i} className="h-20 rounded-2xl" />
+          ))}
+        </div>
       ) : searchTerm.trim() !== '' ? (
         <>
           <p className="text-sm text-slate-500 dark:text-gray-300">
@@ -651,6 +653,8 @@ const Inventory = () => {
           )}
         </>
       )}
+
+      <SuccessCheck show={showCheck} />
 
       <ConfirmDialog
         isOpen={confirmOpen}
