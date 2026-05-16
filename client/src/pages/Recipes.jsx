@@ -9,10 +9,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import EmptyState from '../components/EmptyState';
 import ConfirmDialog from '../components/ConfirmDialog';
+import Skeleton from '../components/Skeleton';
 
 const Recipes = () => {
   const [recipes, setRecipes] = useState([]);
   const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingRecipe, setEditingRecipe] = useState(null);
   const [name, setName] = useState('');
@@ -43,6 +45,7 @@ const Recipes = () => {
   }, []);
 
   const loadData = async () => {
+    setLoading(true);
     try {
       const [recData, prodData] = await Promise.all([
         getRecipes(),
@@ -53,6 +56,8 @@ const Recipes = () => {
     } catch (error) {
       console.error('Error loading recipes:', error);
       toast.error('Error al cargar las recetas');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -205,6 +210,19 @@ const Recipes = () => {
     visible: { scale: 1, opacity: 1, transition: { type: 'spring', stiffness: 400, damping: 25 } },
     exit: { scale: 0.95, opacity: 0, transition: { duration: 0.2 } },
   };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-8 rounded-2xl w-1/3" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {[1,2,3].map(i => (
+            <Skeleton key={i} className="h-64 rounded-2xl" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
