@@ -26,9 +26,9 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-gray-900 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-gray-950 p-4">
       <motion.div
-        className="max-w-md w-full bg-white dark:bg-gray-800 rounded-3xl shadow-xl dark:shadow-2xl p-8"
+        className="max-w-md w-full bg-white dark:bg-gray-900 rounded-3xl shadow-xl dark:shadow-2xl dark:shadow-black/50 p-8"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 300, damping: 25 }}
@@ -39,7 +39,7 @@ const Login = () => {
             <span className="text-3xl">🍴</span>
           </div>
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Godeo</h1>
-          <p className="text-slate-500 dark:text-gray-400 mt-2 text-sm">Gestión de Inventario</p>
+          <p className="text-slate-500 dark:text-gray-300 mt-2 text-sm">Gestión de Inventario</p>
         </div>
 
         {/* Formulario */}
@@ -63,7 +63,7 @@ const Login = () => {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 bg-slate-50 dark:bg-gray-700 border border-slate-200 dark:border-gray-600 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 focus:bg-white dark:focus:bg-gray-600 outline-none transition-all"
+              className="w-full px-4 py-3 bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-600 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 focus:bg-white dark:focus:bg-gray-700 outline-none transition-all"
               placeholder="admin@godeo.com"
               required
             />
@@ -77,7 +77,7 @@ const Login = () => {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 bg-slate-50 dark:bg-gray-700 border border-slate-200 dark:border-gray-600 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 focus:bg-white dark:focus:bg-gray-600 outline-none transition-all"
+              className="w-full px-4 py-3 bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-600 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 focus:bg-white dark:focus:bg-gray-700 outline-none transition-all"
               placeholder="••••••••"
               required
             />
@@ -93,14 +93,14 @@ const Login = () => {
         </form>
 
         {/* Credenciales de prueba */}
-        <div className="mt-6 p-4 bg-slate-50 dark:bg-gray-700/50 rounded-xl">
+        <div className="mt-6 p-4 bg-slate-50 dark:bg-gray-800/50 rounded-xl">
           <p className="text-sm font-medium text-slate-700 dark:text-gray-300 mb-2">Credenciales de prueba:</p>
           <div className="space-y-1">
-            <p className="text-xs text-slate-500 dark:text-gray-400 flex items-center gap-1.5">
+            <p className="text-xs text-slate-500 dark:text-gray-300 flex items-center gap-1.5">
               <span className="w-5 h-5 bg-slate-200 dark:bg-gray-600 rounded-full flex items-center justify-center text-[10px]">📧</span>
               admin@godeo.com
             </p>
-            <p className="text-xs text-slate-500 dark:text-gray-400 flex items-center gap-1.5">
+            <p className="text-xs text-slate-500 dark:text-gray-300 flex items-center gap-1.5">
               <span className="w-5 h-5 bg-slate-200 dark:bg-gray-600 rounded-full flex items-center justify-center text-[10px]">🔑</span>
               Godeo2024
             </p>
