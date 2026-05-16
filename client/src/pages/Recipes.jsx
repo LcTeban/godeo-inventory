@@ -211,7 +211,7 @@ const Recipes = () => {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">📖 Recetas</h1>
-          <p className="text-sm text-slate-500 dark:text-gray-400 mt-1">Gestiona las recetas y sus ingredientes</p>
+          <p className="text-sm text-slate-500 dark:text-gray-300 mt-1">Gestiona las recetas y sus ingredientes</p>
         </div>
         {isAdmin && (
           <button
@@ -225,13 +225,13 @@ const Recipes = () => {
       </div>
 
       <div className="relative">
-        <MagnifyingGlassIcon className="h-5 w-5 absolute left-4 top-3 text-slate-400 dark:text-gray-500" />
+        <MagnifyingGlassIcon className="h-5 w-5 absolute left-4 top-3 text-slate-400 dark:text-gray-300" />
         <input
           type="text"
           placeholder="Buscar receta por nombre..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-11 pr-4 py-3 bg-white dark:bg-gray-800 rounded-2xl text-sm text-slate-700 dark:text-gray-300 placeholder-slate-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition-all shadow-sm border border-slate-200 dark:border-gray-600"
+          className="w-full pl-11 pr-4 py-3 bg-white dark:bg-gray-900 rounded-2xl text-sm text-slate-700 dark:text-gray-200 placeholder-slate-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition-all shadow-sm dark:shadow-md dark:shadow-black/30 border border-slate-200 dark:border-white/5"
         />
       </div>
 
@@ -258,7 +258,7 @@ const Recipes = () => {
           {filteredRecipes.map((recipe) => (
             <motion.div
               key={recipe.id}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden transition-all hover:shadow-md group"
+              className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm dark:shadow-md dark:shadow-black/30 overflow-hidden transition-all hover:shadow-md dark:hover:shadow-lg group dark:border-white/5 border border-transparent"
               variants={itemVariants}
               layout
             >
@@ -282,7 +282,7 @@ const Recipes = () => {
 
               <div className="p-5">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">
+                  <span className="text-xs font-semibold text-slate-500 dark:text-gray-300 uppercase tracking-wider">
                     {recipe.recipe_ingredients?.length || 0} ingredientes
                   </span>
                   {isAdmin && (
@@ -309,9 +309,9 @@ const Recipes = () => {
                   <ul className="mt-3 space-y-1.5">
                     {recipe.recipe_ingredients.slice(0, 3).map((ing, i) => (
                       <li key={i} className="flex items-center justify-between text-sm">
-                        <span className="text-slate-700 dark:text-gray-300 truncate mr-2">{ing.products?.name || 'Producto'}</span>
+                        <span className="text-slate-700 dark:text-gray-200 truncate mr-2">{ing.products?.name || 'Producto'}</span>
                         <span className="font-medium text-slate-900 dark:text-white whitespace-nowrap tabular-nums">
-                          {ing.quantity} <span className="text-slate-500 dark:text-gray-400 font-normal">{ing.unit}</span>
+                          {ing.quantity} <span className="text-slate-500 dark:text-gray-300 font-normal">{ing.unit}</span>
                         </span>
                       </li>
                     ))}
@@ -322,7 +322,7 @@ const Recipes = () => {
                     )}
                   </ul>
                 ) : (
-                  <p className="text-sm text-slate-400 dark:text-gray-500 italic mt-3">Sin ingredientes aún</p>
+                  <p className="text-sm text-slate-400 dark:text-gray-300 italic mt-3">Sin ingredientes aún</p>
                 )}
               </div>
             </motion.div>
@@ -368,7 +368,7 @@ const Recipes = () => {
                   className="w-full h-64 object-cover rounded-2xl mb-6 shadow-lg"
                 />
               ) : (
-                <div className="w-full h-64 bg-slate-800 dark:bg-gray-700 rounded-2xl flex items-center justify-center mb-6">
+                <div className="w-full h-64 bg-slate-800 dark:bg-gray-800 rounded-2xl flex items-center justify-center mb-6">
                   <BookOpenIcon className="h-16 w-16 text-slate-600 dark:text-gray-500" />
                 </div>
               )}
@@ -385,7 +385,7 @@ const Recipes = () => {
                   ))}
                 </ul>
               ) : (
-                <p className="text-slate-400 dark:text-gray-500 text-center py-8">No hay ingredientes registrados</p>
+                <p className="text-slate-400 dark:text-gray-400 text-center py-8">No hay ingredientes registrados</p>
               )}
             </div>
           </motion.div>
@@ -404,7 +404,7 @@ const Recipes = () => {
             transition={{ duration: 0.2 }}
           >
             <motion.div
-              className={`bg-white dark:bg-gray-800 w-full max-w-lg flex flex-col shadow-2xl ${isMobile ? 'rounded-t-[32px] mb-12' : 'rounded-2xl'}`}
+              className={`bg-white dark:bg-gray-900 w-full max-w-lg flex flex-col shadow-2xl dark:shadow-black/50 ${isMobile ? 'rounded-t-[32px] mb-12' : 'rounded-2xl'}`}
               style={isMobile ? { maxHeight: '85dvh' } : { maxHeight: '85vh' }}
               onClick={e => e.stopPropagation()}
               variants={isMobile ? modalVariants : desktopModalVariants}
@@ -413,13 +413,13 @@ const Recipes = () => {
               exit="exit"
             >
               {isMobile && <div className="bottom-sheet-handle" />}
-              <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 dark:border-gray-700 flex-shrink-0">
+              <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 dark:border-white/5 flex-shrink-0">
                 <h2 className="text-lg font-bold text-slate-900 dark:text-white">
                   {editingRecipe ? '✏️ Editar Receta' : '📖 Nueva Receta'}
                 </h2>
                 <button
                   onClick={() => { setShowModal(false); resetForm(); }}
-                  className="p-2 text-slate-400 dark:text-gray-500 hover:text-slate-600 dark:hover:text-gray-300 hover:bg-slate-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  className="p-2 text-slate-400 dark:text-gray-300 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
                 >
                   <XMarkIcon className="h-5 w-5" />
                 </button>
@@ -434,7 +434,7 @@ const Recipes = () => {
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       placeholder="Ej: Tarta de queso"
-                      className="w-full px-4 py-3 bg-slate-50 dark:bg-gray-700 border border-slate-200 dark:border-gray-600 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 focus:bg-white dark:focus:bg-gray-600 outline-none transition-all"
+                      className="w-full px-4 py-3 bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-600 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 focus:bg-white dark:focus:bg-gray-700 outline-none transition-all"
                       required
                     />
                   </div>
@@ -452,7 +452,7 @@ const Recipes = () => {
                       <button
                         type="button"
                         onClick={openGallery}
-                        className="flex-1 py-3 px-4 bg-slate-50 dark:bg-gray-700 text-slate-700 dark:text-gray-300 rounded-xl text-sm font-medium hover:bg-slate-100 dark:hover:bg-gray-600 transition-colors flex items-center justify-center gap-2 border border-slate-200 dark:border-gray-600"
+                        className="flex-1 py-3 px-4 bg-slate-50 dark:bg-gray-800 text-slate-700 dark:text-gray-300 rounded-xl text-sm font-medium hover:bg-slate-100 dark:hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 border border-slate-200 dark:border-gray-600"
                       >
                         🖼️ Galería
                       </button>
@@ -480,9 +480,9 @@ const Recipes = () => {
                       <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-3">🥄 Ingredientes</label>
                       <div className="space-y-3">
                         {ingredients.map((ing, idx) => (
-                          <div key={idx} className="bg-slate-50 dark:bg-gray-700 border border-slate-200 dark:border-gray-600 rounded-xl p-4">
+                          <div key={idx} className="bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-600 rounded-xl p-4">
                             <div className="flex items-center justify-between mb-3">
-                              <span className="text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">
+                              <span className="text-xs font-semibold text-slate-500 dark:text-gray-300 uppercase tracking-wider">
                                 Ingrediente {idx + 1}
                               </span>
                               {ingredients.length > 1 && (
@@ -499,7 +499,7 @@ const Recipes = () => {
                               <select
                                 value={ing.product_id}
                                 onChange={(e) => handleIngredientChange(idx, 'product_id', e.target.value)}
-                                className="flex-1 px-4 py-2.5 bg-white dark:bg-gray-600 border border-slate-200 dark:border-gray-500 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition-all"
+                                className="flex-1 px-4 py-2.5 bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-500 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition-all"
                                 required
                               >
                                 <option value="">Seleccionar producto</option>
@@ -516,13 +516,13 @@ const Recipes = () => {
                                   placeholder="Cant."
                                   value={ing.quantity}
                                   onChange={(e) => handleIngredientChange(idx, 'quantity', e.target.value)}
-                                  className="w-28 px-4 py-2.5 bg-white dark:bg-gray-600 border border-slate-200 dark:border-gray-500 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition-all"
+                                  className="w-28 px-4 py-2.5 bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-500 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition-all"
                                   required
                                 />
                                 <select
                                   value={ing.unit}
                                   onChange={(e) => handleIngredientChange(idx, 'unit', e.target.value)}
-                                  className="w-24 px-3 py-2.5 bg-white dark:bg-gray-600 border border-slate-200 dark:border-gray-500 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition-all"
+                                  className="w-24 px-3 py-2.5 bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-500 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition-all"
                                 >
                                   <option value="g">g</option>
                                   <option value="kg">kg</option>
@@ -537,7 +537,7 @@ const Recipes = () => {
                         <button
                           type="button"
                           onClick={handleAddIngredient}
-                          className="w-full py-3 border-2 border-dashed border-slate-200 dark:border-gray-600 text-slate-500 dark:text-gray-400 rounded-xl text-sm font-medium hover:border-orange-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50/50 dark:hover:bg-orange-900/20 transition-all"
+                          className="w-full py-3 border-2 border-dashed border-slate-200 dark:border-gray-600 text-slate-500 dark:text-gray-300 rounded-xl text-sm font-medium hover:border-orange-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50/50 dark:hover:bg-orange-900/20 transition-all"
                         >
                           + Agregar ingrediente
                         </button>
@@ -554,11 +554,11 @@ const Recipes = () => {
                   )}
                 </div>
 
-                <div className="px-6 py-4 border-t border-slate-100 dark:border-gray-700 flex gap-3 flex-shrink-0">
+                <div className="px-6 py-4 border-t border-slate-100 dark:border-white/5 flex gap-3 flex-shrink-0">
                   <button
                     type="button"
                     onClick={() => { setShowModal(false); resetForm(); }}
-                    className="flex-1 py-3 border border-slate-200 dark:border-gray-600 text-slate-600 dark:text-gray-300 rounded-xl text-sm font-medium hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors"
+                    className="flex-1 py-3 border border-slate-200 dark:border-gray-600 text-slate-600 dark:text-gray-300 rounded-xl text-sm font-medium hover:bg-slate-50 dark:hover:bg-gray-800 transition-colors"
                   >
                     Cancelar
                   </button>
