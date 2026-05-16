@@ -16,11 +16,11 @@ const TreeNode = ({ category, allCategories, onEdit, onDelete, onAddChild, onCop
 
   return (
     <div className="ml-3 sm:ml-4">
-      <div className="flex items-center gap-2 py-1.5 px-2 hover:bg-slate-50 dark:hover:bg-gray-700/50 rounded-lg cursor-pointer flex-wrap" onClick={() => setExpanded(!expanded)}>
+      <div className="flex items-center gap-2 py-1.5 px-2 hover:bg-slate-50 dark:hover:bg-gray-800/50 rounded-lg cursor-pointer flex-wrap" onClick={() => setExpanded(!expanded)}>
         <button onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }} className="p-1 flex-shrink-0">
-          <FolderIcon className={`h-5 w-5 ${children.length > 0 ? 'text-amber-500 dark:text-amber-400' : 'text-slate-400 dark:text-gray-500'}`} />
+          <FolderIcon className={`h-5 w-5 ${children.length > 0 ? 'text-amber-500 dark:text-amber-400' : 'text-slate-400 dark:text-gray-300'}`} />
         </button>
-        <span className="flex-1 font-medium text-sm sm:text-base text-slate-700 dark:text-gray-300 break-words">
+        <span className="flex-1 font-medium text-sm sm:text-base text-slate-700 dark:text-gray-200 break-words">
           {category.name}
           {!category.restaurant && <GlobeAltIcon className="h-4 w-4 inline ml-1 text-blue-500 dark:text-blue-400" title="Global" />}
         </span>
@@ -151,7 +151,7 @@ const Categories = () => {
     }
   };
 
-  if (!isAdmin) return <div className="text-center py-8 text-slate-500 dark:text-gray-400">Acceso restringido</div>;
+  if (!isAdmin) return <div className="text-center py-8 text-slate-500 dark:text-gray-300">Acceso restringido</div>;
 
   const roots = categories.filter(c => c.parent_id === null);
 
@@ -180,7 +180,7 @@ const Categories = () => {
       </div>
 
       {(showAddRoot || parentForNew !== null || editId !== null) && (
-        <div className="bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl p-4 space-y-3">
+        <div className="bg-slate-50 dark:bg-gray-900 border border-slate-200 dark:border-white/5 rounded-xl p-4 space-y-3 shadow-sm dark:shadow-md dark:shadow-black/30">
           <p className="text-sm font-medium text-slate-700 dark:text-gray-300">
             {editId ? '✏️ Editar categoría' : parentForNew ? '📂 Nueva subcategoría' : '📁 Nueva carpeta raíz'}
           </p>
@@ -190,7 +190,7 @@ const Categories = () => {
               placeholder={editId ? 'Nuevo nombre' : 'Nombre de la categoría'}
               value={editId ? editName : newName}
               onChange={(e) => editId ? setEditName(e.target.value) : setNewName(e.target.value)}
-              className="flex-1 p-2.5 border border-slate-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition"
+              className="flex-1 p-2.5 border border-slate-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition"
               autoFocus
             />
             <div className="flex items-center gap-2">
@@ -211,7 +211,7 @@ const Categories = () => {
               </button>
               <button
                 onClick={() => { setShowAddRoot(false); setParentForNew(null); setEditId(null); setEditName(''); setNewName(''); setIsGlobal(false); }}
-                className="px-4 py-2.5 border border-slate-300 dark:border-gray-600 text-slate-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-slate-100 dark:hover:bg-gray-700 transition"
+                className="px-4 py-2.5 border border-slate-300 dark:border-gray-600 text-slate-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-slate-100 dark:hover:bg-gray-800 transition"
               >
                 Cancelar
               </button>
@@ -220,7 +220,7 @@ const Categories = () => {
         </div>
       )}
 
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm dark:shadow-md dark:shadow-black/30 p-4 dark:border-white/5 border border-transparent">
         {roots.length === 0 && !showAddRoot && parentForNew === null && editId === null && (
           <EmptyState
             icon={FolderIcon}
@@ -270,7 +270,7 @@ const Categories = () => {
             transition={{ duration: 0.2 }}
           >
             <motion.div
-              className={`bg-white dark:bg-gray-800 w-full max-w-md flex flex-col shadow-2xl ${isMobile ? 'rounded-t-[32px] mb-12' : 'rounded-2xl'}`}
+              className={`bg-white dark:bg-gray-900 w-full max-w-md flex flex-col shadow-2xl dark:shadow-black/50 ${isMobile ? 'rounded-t-[32px] mb-12' : 'rounded-2xl'}`}
               onClick={e => e.stopPropagation()}
               variants={isMobile ? modalVariants : desktopModalVariants}
               initial="hidden"
@@ -281,7 +281,7 @@ const Categories = () => {
               <div className="p-6 space-y-4" style={{ paddingBottom: isMobile ? 'calc(80px + env(safe-area-inset-bottom))' : '16px' }}>
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-bold text-slate-900 dark:text-white">📋 Copiar categoría</h2>
-                  <button onClick={() => setShowCopyModal(false)} className="p-2 text-slate-400 dark:text-gray-500 hover:text-slate-600 dark:hover:text-gray-300 hover:bg-slate-100 dark:hover:bg-gray-700 rounded-lg transition">
+                  <button onClick={() => setShowCopyModal(false)} className="p-2 text-slate-400 dark:text-gray-300 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-gray-800 rounded-lg transition">
                     <XMarkIcon className="h-5 w-5" />
                   </button>
                 </div>
@@ -293,7 +293,7 @@ const Categories = () => {
                   <select
                     value={copyTarget}
                     onChange={(e) => setCopyTarget(e.target.value)}
-                    className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl text-sm bg-white dark:bg-gray-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 outline-none transition"
+                    className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl text-sm bg-white dark:bg-gray-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition"
                   >
                     <option value="">Seleccionar destino</option>
                     {['POZOBLANCO', 'FUERTEVENTURA', 'GRAN_CAPITAN']
@@ -308,7 +308,7 @@ const Categories = () => {
                 <div className="flex gap-3 pt-2">
                   <button
                     onClick={() => setShowCopyModal(false)}
-                    className="flex-1 py-2.5 border border-slate-200 dark:border-gray-600 text-slate-600 dark:text-gray-300 rounded-xl text-sm font-medium hover:bg-slate-50 dark:hover:bg-gray-700 transition"
+                    className="flex-1 py-2.5 border border-slate-200 dark:border-gray-600 text-slate-600 dark:text-gray-300 rounded-xl text-sm font-medium hover:bg-slate-50 dark:hover:bg-gray-800 transition"
                   >
                     Cancelar
                   </button>
