@@ -4,6 +4,7 @@ import { MagnifyingGlassIcon, FunnelIcon, XMarkIcon, ClockIcon, ArrowPathIcon } 
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import EmptyState from '../components/EmptyState';
+import Skeleton from '../components/Skeleton';
 
 const Movements = () => {
   const { currentRestaurant, getMovements } = useAuth();
@@ -89,12 +90,12 @@ const Movements = () => {
 
   if (loading) {
     return (
-      <div className="space-y-4 animate-pulse">
-        <div className="h-8 bg-white dark:bg-gray-900 rounded-2xl w-1/3 shadow-sm dark:shadow-md dark:shadow-black/30"></div>
-        <div className="h-12 bg-white dark:bg-gray-900 rounded-2xl shadow-sm dark:shadow-md dark:shadow-black/30"></div>
+      <div className="space-y-4">
+        <Skeleton className="h-8 rounded-2xl w-1/3" />
+        <Skeleton className="h-12 rounded-2xl" />
         <div className="space-y-2">
           {[1,2,3,4,5].map(i => (
-            <div key={i} className="h-16 bg-white dark:bg-gray-900 rounded-2xl shadow-sm dark:shadow-md dark:shadow-black/30"></div>
+            <Skeleton key={i} className="h-16 rounded-2xl" />
           ))}
         </div>
       </div>
