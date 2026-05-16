@@ -90,11 +90,11 @@ const Movements = () => {
   if (loading) {
     return (
       <div className="space-y-4 animate-pulse">
-        <div className="h-8 bg-white dark:bg-gray-800 rounded-2xl w-1/3 shadow-sm"></div>
-        <div className="h-12 bg-white dark:bg-gray-800 rounded-2xl shadow-sm"></div>
+        <div className="h-8 bg-white dark:bg-gray-900 rounded-2xl w-1/3 shadow-sm dark:shadow-md dark:shadow-black/30"></div>
+        <div className="h-12 bg-white dark:bg-gray-900 rounded-2xl shadow-sm dark:shadow-md dark:shadow-black/30"></div>
         <div className="space-y-2">
           {[1,2,3,4,5].map(i => (
-            <div key={i} className="h-16 bg-white dark:bg-gray-800 rounded-2xl shadow-sm"></div>
+            <div key={i} className="h-16 bg-white dark:bg-gray-900 rounded-2xl shadow-sm dark:shadow-md dark:shadow-black/30"></div>
           ))}
         </div>
       </div>
@@ -106,7 +106,7 @@ const Movements = () => {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">🔄 Historial de Movimientos</h1>
-          <p className="text-sm text-slate-500 dark:text-gray-400 mt-1">Consulta todas las entradas y salidas de inventario</p>
+          <p className="text-sm text-slate-500 dark:text-gray-300 mt-1">Consulta todas las entradas y salidas de inventario</p>
         </div>
         <div className="flex items-center gap-3 text-sm">
           <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg">
@@ -120,22 +120,22 @@ const Movements = () => {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-3 space-y-3">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm dark:shadow-md dark:shadow-black/30 p-3 space-y-3">
         <div className="flex gap-2">
           <div className="flex-1 relative">
-            <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-2.5 text-slate-400 dark:text-gray-500" />
+            <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-2.5 text-slate-400 dark:text-gray-300" />
             <input
               type="text"
               placeholder="Buscar por producto, usuario o motivo..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 border border-slate-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition"
+              className="w-full pl-10 pr-4 py-2.5 border border-slate-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition"
             />
           </div>
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={`px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition ${
-              showFilters || hasActiveFilters ? 'bg-orange-500 text-white shadow-sm shadow-orange-200' : 'border border-slate-200 dark:border-gray-600 text-slate-700 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-gray-700'
+              showFilters || hasActiveFilters ? 'bg-orange-500 text-white shadow-sm shadow-orange-200' : 'border border-slate-200 dark:border-gray-600 text-slate-700 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-gray-800'
             }`}
           >
             <FunnelIcon className="h-4 w-4" />
@@ -149,18 +149,18 @@ const Movements = () => {
           )}
         </div>
         {showFilters && (
-          <div className="flex flex-wrap gap-3 pt-2 border-t border-slate-100 dark:border-gray-700">
+          <div className="flex flex-wrap gap-3 pt-2 border-t border-slate-100 dark:border-white/5">
             <div>
-              <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Tipo de movimiento</label>
-              <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="px-3 py-2 border border-slate-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 outline-none">
+              <label className="block text-xs text-slate-500 dark:text-gray-300 mb-1">Tipo de movimiento</label>
+              <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="px-3 py-2 border border-slate-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none">
                 <option value="all">Todos los tipos</option>
                 <option value="entrada">📥 Entradas</option>
                 <option value="salida">📤 Salidas</option>
               </select>
             </div>
             <div>
-              <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Período</label>
-              <select value={filterDate} onChange={(e) => setFilterDate(e.target.value)} className="px-3 py-2 border border-slate-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 outline-none">
+              <label className="block text-xs text-slate-500 dark:text-gray-300 mb-1">Período</label>
+              <select value={filterDate} onChange={(e) => setFilterDate(e.target.value)} className="px-3 py-2 border border-slate-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none">
                 <option value="all">Todo el historial</option>
                 <option value="today">Hoy</option>
                 <option value="week">Última semana</option>
@@ -171,7 +171,7 @@ const Movements = () => {
         )}
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm dark:shadow-md dark:shadow-black/30 overflow-hidden">
         {filteredMovements.length === 0 ? (
           hasActiveFilters ? (
             <EmptyState
@@ -197,13 +197,13 @@ const Movements = () => {
             />
           )
         ) : isMobile ? (
-          <motion.div className="divide-y divide-slate-100 dark:divide-gray-700" variants={containerVariants} initial="hidden" animate="visible">
+          <motion.div className="divide-y divide-slate-100 dark:divide-white/5" variants={containerVariants} initial="hidden" animate="visible">
             {filteredMovements.map(mov => (
-              <motion.div key={mov.id} className="p-4 hover:bg-slate-50 dark:hover:bg-gray-700/50 transition" variants={itemVariants}>
+              <motion.div key={mov.id} className="p-4 hover:bg-slate-50 dark:hover:bg-gray-800/50 transition" variants={itemVariants}>
                 <div className="flex justify-between items-start mb-2">
                   <div>
                     <h3 className="font-bold text-slate-900 dark:text-white">{mov.products?.name || '-'}</h3>
-                    <p className="text-xs text-slate-500 dark:text-gray-400">
+                    <p className="text-xs text-slate-500 dark:text-gray-300">
                       {new Date(mov.created_at).toLocaleString('es', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
@@ -214,7 +214,7 @@ const Movements = () => {
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-slate-500 dark:text-gray-400">{mov.users?.name || '-'}{mov.reason && <span className="text-slate-400 dark:text-gray-500 ml-2">· {mov.reason}</span>}</span>
+                  <span className="text-sm text-slate-500 dark:text-gray-300">{mov.users?.name || '-'}{mov.reason && <span className="text-slate-400 dark:text-gray-300 ml-2">· {mov.reason}</span>}</span>
                   <span className={`font-bold ${mov.type === 'entrada' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>{mov.type === 'entrada' ? '+' : '-'}{mov.quantity}</span>
                 </div>
               </motion.div>
@@ -223,25 +223,25 @@ const Movements = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-slate-50 dark:bg-gray-700/50 border-b border-slate-200 dark:border-gray-700">
+              <thead className="bg-slate-50 dark:bg-gray-800/50 border-b border-slate-200 dark:border-white/5">
                 <tr>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Fecha</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Producto</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Tipo</th>
-                  <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Cantidad</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Usuario</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell">Motivo</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-gray-300 uppercase tracking-wider">Fecha</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-gray-300 uppercase tracking-wider">Producto</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-gray-300 uppercase tracking-wider">Tipo</th>
+                  <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 dark:text-gray-300 uppercase tracking-wider">Cantidad</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-gray-300 uppercase tracking-wider">Usuario</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-gray-300 uppercase tracking-wider hidden md:table-cell">Motivo</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-gray-700">
+              <tbody className="divide-y divide-slate-100 dark:divide-white/5">
                 {filteredMovements.map(mov => (
-                  <tr key={mov.id} className="hover:bg-slate-50 dark:hover:bg-gray-700/50 transition">
-                    <td className="px-4 py-3 text-sm text-slate-500 dark:text-gray-400 whitespace-nowrap">{new Date(mov.created_at).toLocaleString('es', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
+                  <tr key={mov.id} className="hover:bg-slate-50 dark:hover:bg-gray-800/50 transition">
+                    <td className="px-4 py-3 text-sm text-slate-500 dark:text-gray-300 whitespace-nowrap">{new Date(mov.created_at).toLocaleString('es', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
                     <td className="px-4 py-3"><span className="font-bold text-slate-900 dark:text-white">{mov.products?.name || '-'}</span></td>
                     <td className="px-4 py-3"><span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${mov.type === 'entrada' ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' : 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400'}`}>{mov.type === 'entrada' ? '📥 Entrada' : '📤 Salida'}</span></td>
                     <td className="px-4 py-3 text-right"><span className={`font-bold ${mov.type === 'entrada' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>{mov.type === 'entrada' ? '+' : '-'}{mov.quantity}</span></td>
-                    <td className="px-4 py-3 text-sm text-slate-500 dark:text-gray-400">{mov.users?.name || '-'}</td>
-                    <td className="px-4 py-3 text-sm text-slate-400 dark:text-gray-500 hidden md:table-cell">{mov.reason || '-'}</td>
+                    <td className="px-4 py-3 text-sm text-slate-500 dark:text-gray-300">{mov.users?.name || '-'}</td>
+                    <td className="px-4 py-3 text-sm text-slate-400 dark:text-gray-300 hidden md:table-cell">{mov.reason || '-'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -249,7 +249,7 @@ const Movements = () => {
           </div>
         )}
       </div>
-      <div className="text-center text-sm text-slate-500 dark:text-gray-400">Mostrando {filteredMovements.length} de {movements.length} movimientos{hasActiveFilters && ' (filtros activos)'}</div>
+      <div className="text-center text-sm text-slate-500 dark:text-gray-300">Mostrando {filteredMovements.length} de {movements.length} movimientos{hasActiveFilters && ' (filtros activos)'}</div>
 
       {/* Botón flotante de actualización */}
       <AnimatePresence>
