@@ -213,15 +213,15 @@ const Suppliers = () => {
   if (loading) {
     return (
       <div className="space-y-4 animate-pulse">
-        <div className="h-8 bg-white dark:bg-gray-800 rounded-2xl w-1/3 shadow-sm"></div>
+        <div className="h-8 bg-white dark:bg-gray-900 rounded-2xl w-1/3 shadow-sm dark:shadow-md dark:shadow-black/30"></div>
         <div className="grid grid-cols-3 gap-3">
-          <div className="h-16 bg-white dark:bg-gray-800 rounded-2xl shadow-sm"></div>
-          <div className="h-16 bg-white dark:bg-gray-800 rounded-2xl shadow-sm"></div>
-          <div className="h-16 bg-white dark:bg-gray-800 rounded-2xl shadow-sm"></div>
+          <div className="h-16 bg-white dark:bg-gray-900 rounded-2xl shadow-sm dark:shadow-md dark:shadow-black/30"></div>
+          <div className="h-16 bg-white dark:bg-gray-900 rounded-2xl shadow-sm dark:shadow-md dark:shadow-black/30"></div>
+          <div className="h-16 bg-white dark:bg-gray-900 rounded-2xl shadow-sm dark:shadow-md dark:shadow-black/30"></div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1,2,3,4,5,6].map(i => (
-            <div key={i} className="h-40 bg-white dark:bg-gray-800 rounded-2xl shadow-sm"></div>
+            <div key={i} className="h-40 bg-white dark:bg-gray-900 rounded-2xl shadow-sm dark:shadow-md dark:shadow-black/30"></div>
           ))}
         </div>
       </div>
@@ -233,7 +233,7 @@ const Suppliers = () => {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">🏢 Proveedores</h1>
-          <p className="text-sm text-slate-500 dark:text-gray-400 mt-1">Gestiona tus proveedores y su información de contacto</p>
+          <p className="text-sm text-slate-500 dark:text-gray-300 mt-1">Gestiona tus proveedores y su información de contacto</p>
         </div>
         {isAdmin && (
           <button
@@ -246,33 +246,33 @@ const Suppliers = () => {
       </div>
 
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm flex flex-col items-start">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm dark:shadow-md dark:shadow-black/30 flex flex-col items-start">
           <div className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-xl mb-3"><BuildingOffice2Icon className="h-5 w-5 text-blue-600 dark:text-blue-400" /></div>
           <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{suppliers.length}</p>
-          <p className="text-xs text-slate-500 dark:text-gray-400 mt-1 tracking-wide">Total proveedores</p>
+          <p className="text-xs text-slate-500 dark:text-gray-300 mt-1 tracking-wide">Total proveedores</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm flex flex-col items-start">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm dark:shadow-md dark:shadow-black/30 flex flex-col items-start">
           <div className="p-2 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl mb-3"><CubeIcon className="h-5 w-5 text-indigo-600 dark:text-indigo-400" /></div>
           <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{totalProductsWithSupplier}</p>
-          <p className="text-xs text-slate-500 dark:text-gray-400 mt-1 tracking-wide">Productos asignados</p>
+          <p className="text-xs text-slate-500 dark:text-gray-300 mt-1 tracking-wide">Productos asignados</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm flex flex-col items-start">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm dark:shadow-md dark:shadow-black/30 flex flex-col items-start">
           <div className="p-2 bg-emerald-50 dark:bg-emerald-900/30 rounded-xl mb-3"><UserIcon className="h-5 w-5 text-emerald-600 dark:text-emerald-400" /></div>
           <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{suppliers.filter(s => s.contact || s.email || s.phone).length}</p>
-          <p className="text-xs text-slate-500 dark:text-gray-400 mt-1 tracking-wide">Con contacto</p>
+          <p className="text-xs text-slate-500 dark:text-gray-300 mt-1 tracking-wide">Con contacto</p>
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-3">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm dark:shadow-md dark:shadow-black/30 p-3">
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex-1 relative min-w-[200px]">
-            <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-2.5 text-slate-400 dark:text-gray-500" />
-            <input type="text" placeholder="Buscar proveedor..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2.5 border border-slate-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition" />
+            <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-2.5 text-slate-400 dark:text-gray-300" />
+            <input type="text" placeholder="Buscar proveedor..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2.5 border border-slate-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition" />
           </div>
           {!isMobile && (
             <div className="flex items-center gap-2">
-              <button onClick={() => setViewMode('grid')} className={`p-2 rounded-lg transition ${viewMode === 'grid' ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400' : 'text-slate-400 dark:text-gray-500 hover:bg-slate-100 dark:hover:bg-gray-700'}`}><Squares2X2Icon className="h-5 w-5" /></button>
-              <button onClick={() => setViewMode('list')} className={`p-2 rounded-lg transition ${viewMode === 'list' ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400' : 'text-slate-400 dark:text-gray-500 hover:bg-slate-100 dark:hover:bg-gray-700'}`}><ListBulletIcon className="h-5 w-5" /></button>
+              <button onClick={() => setViewMode('grid')} className={`p-2 rounded-lg transition ${viewMode === 'grid' ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400' : 'text-slate-400 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-gray-800'}`}><Squares2X2Icon className="h-5 w-5" /></button>
+              <button onClick={() => setViewMode('list')} className={`p-2 rounded-lg transition ${viewMode === 'list' ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400' : 'text-slate-400 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-gray-800'}`}><ListBulletIcon className="h-5 w-5" /></button>
             </div>
           )}
         </div>
@@ -282,13 +282,13 @@ const Suppliers = () => {
         filteredSuppliers.length > 0 ? (
           <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" variants={containerVariants} initial="hidden" animate="visible">
             {filteredSuppliers.map(supplier => (
-              <motion.div key={supplier.id} className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-5 group" variants={itemVariants} layout>
+              <motion.div key={supplier.id} className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm dark:shadow-md dark:shadow-black/30 p-5 group dark:border-white/5 border border-transparent" variants={itemVariants} layout>
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/30 rounded-lg flex items-center justify-center"><BuildingOffice2Icon className="h-5 w-5 text-blue-600 dark:text-blue-400" /></div>
                     <div>
                       <h3 className="font-bold text-slate-900 dark:text-white">{supplier.name}</h3>
-                      <p className="text-xs text-slate-500 dark:text-gray-400">{getSupplierStats(supplier.id)} productos</p>
+                      <p className="text-xs text-slate-500 dark:text-gray-300">{getSupplierStats(supplier.id)} productos</p>
                     </div>
                   </div>
                   {isAdmin && (
@@ -299,12 +299,12 @@ const Suppliers = () => {
                   )}
                 </div>
                 <div className="space-y-2 text-sm">
-                  {supplier.contact && <div className="flex items-center gap-2 text-slate-600 dark:text-gray-300"><UserIcon className="h-4 w-4 text-slate-400 dark:text-gray-500 flex-shrink-0" /><span className="truncate">{supplier.contact}</span></div>}
-                  {supplier.phone && <div className="flex items-center gap-2 text-slate-600 dark:text-gray-300"><PhoneIcon className="h-4 w-4 text-slate-400 dark:text-gray-500 flex-shrink-0" /><a href={`tel:${supplier.phone}`} className="text-blue-600 dark:text-blue-400 hover:underline truncate">{supplier.phone}</a></div>}
-                  {supplier.email && <div className="flex items-center gap-2 text-slate-600 dark:text-gray-300"><EnvelopeIcon className="h-4 w-4 text-slate-400 dark:text-gray-500 flex-shrink-0" /><a href={`mailto:${supplier.email}`} className="text-blue-600 dark:text-blue-400 hover:underline truncate">{supplier.email}</a></div>}
-                  {supplier.address && <div className="flex items-center gap-2 text-slate-600 dark:text-gray-300"><MapPinIcon className="h-4 w-4 text-slate-400 dark:text-gray-500 flex-shrink-0" /><span className="truncate">{supplier.address}</span></div>}
+                  {supplier.contact && <div className="flex items-center gap-2 text-slate-600 dark:text-gray-300"><UserIcon className="h-4 w-4 text-slate-400 dark:text-gray-300 flex-shrink-0" /><span className="truncate">{supplier.contact}</span></div>}
+                  {supplier.phone && <div className="flex items-center gap-2 text-slate-600 dark:text-gray-300"><PhoneIcon className="h-4 w-4 text-slate-400 dark:text-gray-300 flex-shrink-0" /><a href={`tel:${supplier.phone}`} className="text-blue-600 dark:text-blue-400 hover:underline truncate">{supplier.phone}</a></div>}
+                  {supplier.email && <div className="flex items-center gap-2 text-slate-600 dark:text-gray-300"><EnvelopeIcon className="h-4 w-4 text-slate-400 dark:text-gray-300 flex-shrink-0" /><a href={`mailto:${supplier.email}`} className="text-blue-600 dark:text-blue-400 hover:underline truncate">{supplier.email}</a></div>}
+                  {supplier.address && <div className="flex items-center gap-2 text-slate-600 dark:text-gray-300"><MapPinIcon className="h-4 w-4 text-slate-400 dark:text-gray-300 flex-shrink-0" /><span className="truncate">{supplier.address}</span></div>}
                 </div>
-                {!supplier.contact && !supplier.phone && !supplier.email && !supplier.address && <p className="text-sm text-slate-400 dark:text-gray-500 italic mt-2">Sin información de contacto</p>}
+                {!supplier.contact && !supplier.phone && !supplier.email && !supplier.address && <p className="text-sm text-slate-400 dark:text-gray-300 italic mt-2">Sin información de contacto</p>}
               </motion.div>
             ))}
           </motion.div>
@@ -329,22 +329,22 @@ const Suppliers = () => {
 
       {!isMobile && effectiveViewMode === 'list' && (
         filteredSuppliers.length > 0 ? (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm dark:shadow-md dark:shadow-black/30 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-slate-50 dark:bg-gray-700/50 border-b border-slate-200 dark:border-gray-700">
+                <thead className="bg-slate-50 dark:bg-gray-800/50 border-b border-slate-200 dark:border-white/5">
                   <tr>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => toggleSort('name')}><div className="flex items-center gap-1">Proveedor {sortBy === 'name' && (sortOrder === 'asc' ? <ArrowUpIcon className="h-3 w-3" /> : <ArrowDownIcon className="h-3 w-3" />)}</div></th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Contacto</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Teléfono</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell">Email</th>
-                    <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Productos</th>
-                    {isAdmin && <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Acciones</th>}
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer" onClick={() => toggleSort('name')}><div className="flex items-center gap-1">Proveedor {sortBy === 'name' && (sortOrder === 'asc' ? <ArrowUpIcon className="h-3 w-3" /> : <ArrowDownIcon className="h-3 w-3" />)}</div></th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-gray-300 uppercase tracking-wider">Contacto</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-gray-300 uppercase tracking-wider">Teléfono</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-gray-300 uppercase tracking-wider hidden md:table-cell">Email</th>
+                    <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 dark:text-gray-300 uppercase tracking-wider">Productos</th>
+                    {isAdmin && <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 dark:text-gray-300 uppercase tracking-wider">Acciones</th>}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-gray-700">
+                <tbody className="divide-y divide-slate-100 dark:divide-white/5">
                   {filteredSuppliers.map(supplier => (
-                    <tr key={supplier.id} className="hover:bg-slate-50 dark:hover:bg-gray-700/50 transition">
+                    <tr key={supplier.id} className="hover:bg-slate-50 dark:hover:bg-gray-800/50 transition">
                       <td className="px-4 py-3"><span className="font-bold text-slate-900 dark:text-white">{supplier.name}</span></td>
                       <td className="px-4 py-3 text-sm text-slate-600 dark:text-gray-300">{supplier.contact || '-'}</td>
                       <td className="px-4 py-3 text-sm">{supplier.phone ? <a href={`tel:${supplier.phone}`} className="text-blue-600 dark:text-blue-400 hover:underline">{supplier.phone}</a> : '-'}</td>
@@ -398,7 +398,7 @@ const Suppliers = () => {
             transition={{ duration: 0.2 }}
           >
             <motion.div
-              className={`bg-white dark:bg-gray-800 w-full max-w-md flex flex-col shadow-2xl ${isMobile ? 'rounded-t-[32px] mb-12' : 'rounded-2xl'}`}
+              className={`bg-white dark:bg-gray-900 w-full max-w-md flex flex-col shadow-2xl dark:shadow-black/50 ${isMobile ? 'rounded-t-[32px] mb-12' : 'rounded-2xl'}`}
               style={isMobile ? { maxHeight: '85dvh' } : { maxHeight: '90vh' }}
               onClick={e => e.stopPropagation()}
               variants={isMobile ? modalVariants : desktopModalVariants}
@@ -407,20 +407,20 @@ const Suppliers = () => {
               exit="exit"
             >
               {isMobile && <div className="bottom-sheet-handle" />}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-gray-700">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-white/5">
                 <h2 className="text-lg font-bold text-slate-900 dark:text-white">{editingSupplier ? '✏️ Editar Proveedor' : '🏢 Nuevo Proveedor'}</h2>
-                <button onClick={() => setShowModal(false)} className="p-2 text-slate-400 dark:text-gray-500 hover:text-slate-600 dark:hover:text-gray-300 rounded-lg"><XMarkIcon className="h-5 w-5" /></button>
+                <button onClick={() => setShowModal(false)} className="p-2 text-slate-400 dark:text-gray-300 hover:text-slate-600 dark:hover:text-white rounded-lg"><XMarkIcon className="h-5 w-5" /></button>
               </div>
               <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-4 space-y-4 modal-scroll" style={{ paddingBottom: isMobile ? 'calc(80px + env(safe-area-inset-bottom))' : '16px' }}>
-                <div><label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">🏢 Nombre *</label><input type="text" placeholder="Nombre de la empresa" value={formData.name} onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))} className="w-full px-4 py-2.5 border border-slate-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition" required autoFocus /></div>
+                <div><label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">🏢 Nombre *</label><input type="text" placeholder="Nombre de la empresa" value={formData.name} onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))} className="w-full px-4 py-2.5 border border-slate-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition" required autoFocus /></div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div><label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">👤 Contacto</label><input type="text" placeholder="Nombre del contacto" value={formData.contact} onChange={(e) => setFormData(prev => ({ ...prev, contact: e.target.value }))} className="w-full px-4 py-2.5 border border-slate-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition" /></div>
-                  <div><label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">📞 Teléfono</label><input type="tel" placeholder="+34 123 456 789" value={formData.phone} onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))} className="w-full px-4 py-2.5 border border-slate-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition" /></div>
+                  <div><label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">👤 Contacto</label><input type="text" placeholder="Nombre del contacto" value={formData.contact} onChange={(e) => setFormData(prev => ({ ...prev, contact: e.target.value }))} className="w-full px-4 py-2.5 border border-slate-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition" /></div>
+                  <div><label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">📞 Teléfono</label><input type="tel" placeholder="+34 123 456 789" value={formData.phone} onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))} className="w-full px-4 py-2.5 border border-slate-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition" /></div>
                 </div>
-                <div><label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">✉️ Email</label><input type="email" placeholder="correo@proveedor.com" value={formData.email} onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))} className="w-full px-4 py-2.5 border border-slate-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition" /></div>
-                <div><label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">📍 Dirección</label><input type="text" placeholder="Dirección fiscal o almacén" value={formData.address} onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))} className="w-full px-4 py-2.5 border border-slate-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition" /></div>
+                <div><label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">✉️ Email</label><input type="email" placeholder="correo@proveedor.com" value={formData.email} onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))} className="w-full px-4 py-2.5 border border-slate-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition" /></div>
+                <div><label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">📍 Dirección</label><input type="text" placeholder="Dirección fiscal o almacén" value={formData.address} onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))} className="w-full px-4 py-2.5 border border-slate-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition" /></div>
                 <div className="flex gap-3 pt-2">
-                  <button type="button" onClick={() => setShowModal(false)} className="flex-1 py-2.5 border border-slate-200 dark:border-gray-600 text-slate-600 dark:text-gray-300 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-700 transition">Cancelar</button>
+                  <button type="button" onClick={() => setShowModal(false)} className="flex-1 py-2.5 border border-slate-200 dark:border-gray-600 text-slate-600 dark:text-gray-300 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-800 transition">Cancelar</button>
                   <button type="submit" disabled={isSaving} className="flex-1 py-2.5 bg-orange-500 text-white rounded-xl shadow-sm shadow-orange-200 hover:bg-orange-600 disabled:opacity-50 transition">{isSaving ? 'Guardando...' : editingSupplier ? 'Actualizar' : 'Guardar'}</button>
                 </div>
               </form>
