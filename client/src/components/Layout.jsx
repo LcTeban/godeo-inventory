@@ -82,7 +82,8 @@ const Layout = () => {
   const toggleSidebar = () => setSidebarOpen(prev => !prev);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-gray-900 transition-colors duration-300">
+    // En Layout.jsx, el div principal:
+<div className="min-h-screen bg-slate-50 dark:bg-gray-950 transition-colors duration-300">
       <Toaster
         position="top-center"
         toastOptions={{
