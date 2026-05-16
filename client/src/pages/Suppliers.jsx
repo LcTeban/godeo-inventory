@@ -247,24 +247,24 @@ const Suppliers = () => {
       </div>
 
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm dark:shadow-md dark:shadow-black/30 flex flex-col items-start">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-kpi dark:shadow-kpi-dark flex flex-col items-start">
           <div className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-xl mb-3"><BuildingOffice2Icon className="h-5 w-5 text-blue-600 dark:text-blue-400" /></div>
           <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{suppliers.length}</p>
           <p className="text-xs text-slate-500 dark:text-gray-300 mt-1 tracking-wide">Total proveedores</p>
         </div>
-        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm dark:shadow-md dark:shadow-black/30 flex flex-col items-start">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-kpi dark:shadow-kpi-dark flex flex-col items-start">
           <div className="p-2 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl mb-3"><CubeIcon className="h-5 w-5 text-indigo-600 dark:text-indigo-400" /></div>
           <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{totalProductsWithSupplier}</p>
           <p className="text-xs text-slate-500 dark:text-gray-300 mt-1 tracking-wide">Productos asignados</p>
         </div>
-        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm dark:shadow-md dark:shadow-black/30 flex flex-col items-start">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-kpi dark:shadow-kpi-dark flex flex-col items-start">
           <div className="p-2 bg-emerald-50 dark:bg-emerald-900/30 rounded-xl mb-3"><UserIcon className="h-5 w-5 text-emerald-600 dark:text-emerald-400" /></div>
           <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{suppliers.filter(s => s.contact || s.email || s.phone).length}</p>
           <p className="text-xs text-slate-500 dark:text-gray-300 mt-1 tracking-wide">Con contacto</p>
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm dark:shadow-md dark:shadow-black/30 p-3">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-card dark:shadow-card-dark p-3">
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex-1 relative min-w-[200px]">
             <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-2.5 text-slate-400 dark:text-gray-300" />
@@ -283,7 +283,7 @@ const Suppliers = () => {
         filteredSuppliers.length > 0 ? (
           <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" variants={containerVariants} initial="hidden" animate="visible">
             {filteredSuppliers.map(supplier => (
-              <motion.div key={supplier.id} className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm dark:shadow-md dark:shadow-black/30 p-5 group dark:border-white/5 border border-transparent" variants={itemVariants} layout>
+              <motion.div key={supplier.id} className="bg-white dark:bg-gray-900 rounded-2xl shadow-card dark:shadow-card-dark p-5 group dark:border-white/5 border border-transparent hover:shadow-card-hover dark:hover:shadow-card-dark-hover transition-shadow" variants={itemVariants} layout>
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/30 rounded-lg flex items-center justify-center"><BuildingOffice2Icon className="h-5 w-5 text-blue-600 dark:text-blue-400" /></div>
@@ -330,7 +330,7 @@ const Suppliers = () => {
 
       {!isMobile && effectiveViewMode === 'list' && (
         filteredSuppliers.length > 0 ? (
-          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm dark:shadow-md dark:shadow-black/30 overflow-hidden">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-card dark:shadow-card-dark overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-slate-50 dark:bg-gray-800/50 border-b border-slate-200 dark:border-white/5">
@@ -399,7 +399,7 @@ const Suppliers = () => {
             transition={{ duration: 0.2 }}
           >
             <motion.div
-              className={`bg-white dark:bg-gray-900 w-full max-w-md flex flex-col shadow-2xl dark:shadow-black/50 ${
+              className={`bg-white dark:bg-gray-900 w-full max-w-md flex flex-col shadow-modal dark:shadow-modal-dark ${
                 isMobile ? 'rounded-[32px] mb-16' : 'rounded-2xl'
               }`}
               style={isMobile ? { maxHeight: '80dvh' } : { maxHeight: '90vh' }}
