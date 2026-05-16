@@ -404,8 +404,10 @@ const Recipes = () => {
             transition={{ duration: 0.2 }}
           >
             <motion.div
-              className={`bg-white dark:bg-gray-900 w-full max-w-lg flex flex-col shadow-2xl dark:shadow-black/50 ${isMobile ? 'rounded-t-[32px] mb-12' : 'rounded-2xl'}`}
-              style={isMobile ? { maxHeight: '85dvh' } : { maxHeight: '85vh' }}
+              className={`bg-white dark:bg-gray-900 w-full max-w-lg flex flex-col shadow-2xl dark:shadow-black/50 ${
+                isMobile ? 'rounded-[32px] mb-16' : 'rounded-2xl'
+              }`}
+              style={isMobile ? { maxHeight: '80dvh' } : { maxHeight: '85vh' }}
               onClick={e => e.stopPropagation()}
               variants={isMobile ? modalVariants : desktopModalVariants}
               initial="hidden"
@@ -426,7 +428,7 @@ const Recipes = () => {
               </div>
 
               <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto modal-scroll">
-                <div className="px-6 py-5 space-y-5" style={{ paddingBottom: isMobile ? 'calc(80px + env(safe-area-inset-bottom))' : '16px' }}>
+                <div className="px-6 py-5 space-y-5" style={{ paddingBottom: isMobile ? 'calc(90px + env(safe-area-inset-bottom))' : '16px' }}>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1.5">Nombre de la receta *</label>
                     <input
