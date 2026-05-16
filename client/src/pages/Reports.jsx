@@ -207,7 +207,7 @@ const Reports = () => {
   if (loading) return (
     <div className="text-center py-20">
       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
-      <p className="text-slate-500 dark:text-gray-400">Cargando reportes...</p>
+      <p className="text-slate-500 dark:text-gray-300">Cargando reportes...</p>
     </div>
   );
 
@@ -217,13 +217,13 @@ const Reports = () => {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">📊 Reportes Financieros</h1>
-          <p className="text-sm text-slate-500 dark:text-gray-400">Panel de control y análisis de inventario</p>
+          <p className="text-sm text-slate-500 dark:text-gray-300">Panel de control y análisis de inventario</p>
         </div>
         <div className="flex items-center gap-3">
           <select
             value={currentRestaurant}
             onChange={(e) => switchRestaurant(e.target.value)}
-            className="border border-slate-200 dark:border-gray-600 rounded-xl px-4 py-2.5 text-sm bg-white dark:bg-gray-800 text-slate-900 dark:text-white shadow-sm focus:ring-2 focus:ring-orange-500/20 outline-none"
+            className="border border-slate-200 dark:border-gray-600 rounded-xl px-4 py-2.5 text-sm bg-white dark:bg-gray-800 text-slate-900 dark:text-white shadow-sm dark:shadow-md dark:shadow-black/30 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none"
           >
             {restaurants.map(rest => (
               <option key={rest} value={rest}>{restaurantNames[rest]}</option>
@@ -232,7 +232,7 @@ const Reports = () => {
           <select
             value={period}
             onChange={(e) => setPeriod(e.target.value)}
-            className="border border-slate-200 dark:border-gray-600 rounded-xl px-4 py-2.5 text-sm bg-white dark:bg-gray-800 text-slate-900 dark:text-white shadow-sm focus:ring-2 focus:ring-orange-500/20 outline-none"
+            className="border border-slate-200 dark:border-gray-600 rounded-xl px-4 py-2.5 text-sm bg-white dark:bg-gray-800 text-slate-900 dark:text-white shadow-sm dark:shadow-md dark:shadow-black/30 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none"
           >
             <option value="week">Última semana</option>
             <option value="month">Último mes</option>
@@ -243,39 +243,39 @@ const Reports = () => {
 
       {/* KPIs */}
       <motion.div className="grid grid-cols-2 lg:grid-cols-4 gap-4" variants={containerVariants} initial="hidden" animate="visible">
-        <motion.div className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm flex items-center gap-3" variants={itemVariants}>
+        <motion.div className="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow-sm dark:shadow-md dark:shadow-black/30 flex items-center gap-3" variants={itemVariants}>
           <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-xl">
             <CurrencyDollarIcon className="h-6 w-6 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
-            <p className="text-sm text-slate-500 dark:text-gray-400">Valor Inventario</p>
+            <p className="text-sm text-slate-500 dark:text-gray-300">Valor Inventario</p>
             <p className="text-2xl font-bold text-slate-900 dark:text-white">€{totalInventoryValue.toFixed(0)}</p>
           </div>
         </motion.div>
-        <motion.div className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm flex items-center gap-3" variants={itemVariants}>
+        <motion.div className="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow-sm dark:shadow-md dark:shadow-black/30 flex items-center gap-3" variants={itemVariants}>
           <div className="p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl">
             <CubeIcon className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
           </div>
           <div>
-            <p className="text-sm text-slate-500 dark:text-gray-400">Total Productos</p>
+            <p className="text-sm text-slate-500 dark:text-gray-300">Total Productos</p>
             <p className="text-2xl font-bold text-slate-900 dark:text-white">{totalProducts}</p>
           </div>
         </motion.div>
-        <motion.div className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm flex items-center gap-3" variants={itemVariants}>
+        <motion.div className="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow-sm dark:shadow-md dark:shadow-black/30 flex items-center gap-3" variants={itemVariants}>
           <div className="p-3 bg-amber-50 dark:bg-amber-900/30 rounded-xl">
             <TruckIcon className="h-6 w-6 text-amber-600 dark:text-amber-400" />
           </div>
           <div>
-            <p className="text-sm text-slate-500 dark:text-gray-400">Transf. Pendientes</p>
+            <p className="text-sm text-slate-500 dark:text-gray-300">Transf. Pendientes</p>
             <p className="text-2xl font-bold text-slate-900 dark:text-white">{pendingTransfers}</p>
           </div>
         </motion.div>
-        <motion.div className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm flex items-center gap-3" variants={itemVariants}>
+        <motion.div className="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow-sm dark:shadow-md dark:shadow-black/30 flex items-center gap-3" variants={itemVariants}>
           <div className="p-3 bg-red-50 dark:bg-red-900/30 rounded-xl">
             <ArrowTrendingDownIcon className="h-6 w-6 text-red-600 dark:text-red-400" />
           </div>
           <div>
-            <p className="text-sm text-slate-500 dark:text-gray-400">Costo de Ventas</p>
+            <p className="text-sm text-slate-500 dark:text-gray-300">Costo de Ventas</p>
             <p className="text-2xl font-bold text-slate-900 dark:text-white">€{costOfSales.toFixed(0)}</p>
           </div>
         </motion.div>
@@ -287,18 +287,18 @@ const Reports = () => {
           const value = inventoryValueByRestaurant()[rest] || 0;
           const prods = allProducts.filter(p => p.restaurant === rest).length;
           return (
-            <div key={rest} className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm">
+            <div key={rest} className="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow-sm dark:shadow-md dark:shadow-black/30 dark:border-white/5 border border-transparent">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-bold text-slate-900 dark:text-white">{restaurantNames[rest]}</h3>
                 <div className="w-3 h-3 rounded-full" style={{ backgroundColor: restaurantColors[rest] }}></div>
               </div>
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-500 dark:text-gray-400">Valor inventario</span>
+                  <span className="text-slate-500 dark:text-gray-300">Valor inventario</span>
                   <span className="font-bold text-slate-900 dark:text-white">€{value.toFixed(0)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-500 dark:text-gray-400">Productos</span>
+                  <span className="text-slate-500 dark:text-gray-300">Productos</span>
                   <span className="font-bold text-slate-900 dark:text-white">{prods}</span>
                 </div>
               </div>
@@ -321,7 +321,7 @@ const Reports = () => {
             className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
               activeTab === tab.key
                 ? 'bg-orange-500 text-white shadow-sm shadow-orange-200'
-                : 'bg-white dark:bg-gray-800 text-slate-600 dark:text-gray-300 border border-slate-200 dark:border-gray-600 hover:bg-slate-50 dark:hover:bg-gray-700'
+                : 'bg-white dark:bg-gray-900 text-slate-600 dark:text-gray-300 border border-slate-200 dark:border-gray-600 hover:bg-slate-50 dark:hover:bg-gray-800 shadow-sm dark:shadow-md dark:shadow-black/30'
             }`}
           >
             {tab.label}
@@ -334,7 +334,7 @@ const Reports = () => {
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Barras: Top 5 consumo */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-sm dark:shadow-md dark:shadow-black/30">
               <h3 className="font-bold text-slate-900 dark:text-white mb-4">📊 Top 5 productos más consumidos</h3>
               {topConsumed.length > 0 ? (
                 <ResponsiveContainer width="100%" height={280}>
@@ -351,12 +351,12 @@ const Reports = () => {
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <p className="text-slate-400 dark:text-gray-500 text-center py-12">Sin datos de consumo en este período</p>
+                <p className="text-slate-400 dark:text-gray-300 text-center py-12">Sin datos de consumo en este período</p>
               )}
             </div>
 
             {/* Pastel: Distribución por categoría */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-sm dark:shadow-md dark:shadow-black/30">
               <h3 className="font-bold text-slate-900 dark:text-white mb-4">🥧 Distribución por categoría</h3>
               {categoryData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={280}>
@@ -371,19 +371,19 @@ const Reports = () => {
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <p className="text-slate-400 dark:text-gray-500 text-center py-12">Sin datos de categorías</p>
+                <p className="text-slate-400 dark:text-gray-300 text-center py-12">Sin datos de categorías</p>
               )}
             </div>
           </div>
 
           {/* Totales de movimientos */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm">
-              <p className="text-sm text-slate-500 dark:text-gray-400">Total entradas</p>
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow-sm dark:shadow-md dark:shadow-black/30">
+              <p className="text-sm text-slate-500 dark:text-gray-300">Total entradas</p>
               <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">+€{totalEntries.toFixed(0)}</p>
             </div>
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm">
-              <p className="text-sm text-slate-500 dark:text-gray-400">Total salidas</p>
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow-sm dark:shadow-md dark:shadow-black/30">
+              <p className="text-sm text-slate-500 dark:text-gray-300">Total salidas</p>
               <p className="text-2xl font-bold text-red-600 dark:text-red-400">-€{totalExits.toFixed(0)}</p>
             </div>
           </div>
@@ -391,8 +391,8 @@ const Reports = () => {
       )}
 
       {activeTab === 'inventory' && (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-100 dark:border-gray-700 flex justify-between items-center">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm dark:shadow-md dark:shadow-black/30 overflow-hidden dark:border-white/5 border border-transparent">
+          <div className="px-6 py-4 border-b border-slate-100 dark:border-white/5 flex justify-between items-center">
             <h3 className="font-bold text-slate-900 dark:text-white">Inventario actual de {restaurantNames[currentRestaurant]}</h3>
             <div className="flex gap-2">
               <button onClick={exportToExcel} className="p-2 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-lg transition" title="Excel">
@@ -405,28 +405,28 @@ const Reports = () => {
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-slate-50 dark:bg-gray-700/50">
+              <thead className="bg-slate-50 dark:bg-gray-800/50">
                 <tr>
-                  <th className="text-left px-4 py-3 cursor-pointer hover:text-orange-500 text-slate-500 dark:text-gray-400" onClick={() => requestSort('name')}>
+                  <th className="text-left px-4 py-3 cursor-pointer hover:text-orange-500 text-slate-500 dark:text-gray-300" onClick={() => requestSort('name')}>
                     Producto {getSortIcon('name')}
                   </th>
-                  <th className="text-left px-4 py-3 cursor-pointer hover:text-orange-500 text-slate-500 dark:text-gray-400" onClick={() => requestSort('category')}>
+                  <th className="text-left px-4 py-3 cursor-pointer hover:text-orange-500 text-slate-500 dark:text-gray-300" onClick={() => requestSort('category')}>
                     Categoría {getSortIcon('category')}
                   </th>
-                  <th className="text-right px-4 py-3 cursor-pointer hover:text-orange-500 text-slate-500 dark:text-gray-400" onClick={() => requestSort('stock')}>
+                  <th className="text-right px-4 py-3 cursor-pointer hover:text-orange-500 text-slate-500 dark:text-gray-300" onClick={() => requestSort('stock')}>
                     Stock {getSortIcon('stock')}
                   </th>
-                  <th className="text-right px-4 py-3 cursor-pointer hover:text-orange-500 text-slate-500 dark:text-gray-400" onClick={() => requestSort('price')}>
+                  <th className="text-right px-4 py-3 cursor-pointer hover:text-orange-500 text-slate-500 dark:text-gray-300" onClick={() => requestSort('price')}>
                     Precio {getSortIcon('price')}
                   </th>
-                  <th className="text-right px-4 py-3 text-slate-500 dark:text-gray-400">Valor total</th>
+                  <th className="text-right px-4 py-3 text-slate-500 dark:text-gray-300">Valor total</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-gray-700">
+              <tbody className="divide-y divide-slate-100 dark:divide-white/5">
                 {sortedProducts.map(p => (
-                  <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-gray-700/50">
+                  <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-gray-800/50">
                     <td className="px-4 py-3 font-bold text-slate-900 dark:text-white">{p.name}</td>
-                    <td className="px-4 py-3 text-slate-500 dark:text-gray-400">{p.categories?.name || '-'}</td>
+                    <td className="px-4 py-3 text-slate-500 dark:text-gray-300">{p.categories?.name || '-'}</td>
                     <td className="px-4 py-3 text-right text-slate-900 dark:text-white">{p.stock || 0} {p.unit}</td>
                     <td className="px-4 py-3 text-right text-slate-900 dark:text-white">€{(p.price || 0).toFixed(2)}</td>
                     <td className="px-4 py-3 text-right font-bold text-slate-900 dark:text-white">€{((p.stock || 0) * (p.price || 0)).toFixed(2)}</td>
@@ -439,33 +439,33 @@ const Reports = () => {
       )}
 
       {activeTab === 'movements' && (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-100 dark:border-gray-700">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm dark:shadow-md dark:shadow-black/30 overflow-hidden dark:border-white/5 border border-transparent">
+          <div className="px-6 py-4 border-b border-slate-100 dark:border-white/5">
             <h3 className="font-bold text-slate-900 dark:text-white">Últimos movimientos en {restaurantNames[currentRestaurant]}</h3>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-slate-50 dark:bg-gray-700/50">
+              <thead className="bg-slate-50 dark:bg-gray-800/50">
                 <tr>
-                  <th className="text-left px-4 py-3 text-slate-500 dark:text-gray-400">Fecha</th>
-                  <th className="text-left px-4 py-3 text-slate-500 dark:text-gray-400">Producto</th>
-                  <th className="text-left px-4 py-3 text-slate-500 dark:text-gray-400">Tipo</th>
-                  <th className="text-right px-4 py-3 text-slate-500 dark:text-gray-400">Cantidad</th>
-                  <th className="text-right px-4 py-3 text-slate-500 dark:text-gray-400">Precio ud.</th>
-                  <th className="text-right px-4 py-3 text-slate-500 dark:text-gray-400">Valor</th>
-                  <th className="text-left px-4 py-3 text-slate-500 dark:text-gray-400">Usuario</th>
+                  <th className="text-left px-4 py-3 text-slate-500 dark:text-gray-300">Fecha</th>
+                  <th className="text-left px-4 py-3 text-slate-500 dark:text-gray-300">Producto</th>
+                  <th className="text-left px-4 py-3 text-slate-500 dark:text-gray-300">Tipo</th>
+                  <th className="text-right px-4 py-3 text-slate-500 dark:text-gray-300">Cantidad</th>
+                  <th className="text-right px-4 py-3 text-slate-500 dark:text-gray-300">Precio ud.</th>
+                  <th className="text-right px-4 py-3 text-slate-500 dark:text-gray-300">Valor</th>
+                  <th className="text-left px-4 py-3 text-slate-500 dark:text-gray-300">Usuario</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-gray-700">
+              <tbody className="divide-y divide-slate-100 dark:divide-white/5">
                 {filteredMovements.slice(0, 30).map(m => (
-                  <tr key={m.id} className="hover:bg-slate-50 dark:hover:bg-gray-700/50">
-                    <td className="px-4 py-3 text-slate-500 dark:text-gray-400">{new Date(m.created_at).toLocaleDateString('es')}</td>
+                  <tr key={m.id} className="hover:bg-slate-50 dark:hover:bg-gray-800/50">
+                    <td className="px-4 py-3 text-slate-500 dark:text-gray-300">{new Date(m.created_at).toLocaleDateString('es')}</td>
                     <td className="px-4 py-3 font-bold text-slate-900 dark:text-white">{m.products?.name || '-'}</td>
                     <td className={`px-4 py-3 font-medium ${m.type === 'entrada' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>{m.type}</td>
                     <td className="px-4 py-3 text-right text-slate-900 dark:text-white">{m.quantity}</td>
                     <td className="px-4 py-3 text-right text-slate-900 dark:text-white">€{(m.products?.price || 0).toFixed(2)}</td>
                     <td className="px-4 py-3 text-right font-bold text-slate-900 dark:text-white">€{((m.quantity || 0) * (m.products?.price || 0)).toFixed(2)}</td>
-                    <td className="px-4 py-3 text-slate-500 dark:text-gray-400">{m.users?.name || '-'}</td>
+                    <td className="px-4 py-3 text-slate-500 dark:text-gray-300">{m.users?.name || '-'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -476,7 +476,7 @@ const Reports = () => {
 
       {activeTab === 'alerts' && (
         <div className="space-y-6">
-          <div className="bg-amber-50 dark:bg-amber-900/20 rounded-2xl p-5 shadow-sm">
+          <div className="bg-amber-50 dark:bg-amber-900/20 rounded-2xl p-5 shadow-sm dark:shadow-md dark:shadow-black/30 dark:border-white/5 border border-transparent">
             <div className="flex items-center gap-2 mb-2">
               <ExclamationTriangleIcon className="h-5 w-5 text-amber-600 dark:text-amber-400" />
               <h3 className="font-bold text-slate-900 dark:text-white">Productos con stock bajo en {restaurantNames[currentRestaurant]}</h3>
@@ -489,19 +489,19 @@ const Reports = () => {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {allProducts.filter(p => p.restaurant === currentRestaurant && p.stock <= p.min_stock).map(p => (
-              <div key={p.id} className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm flex flex-col">
+              <div key={p.id} className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm dark:shadow-md dark:shadow-black/30 flex flex-col dark:border-white/5 border border-transparent">
                 <div className="flex justify-between items-start mb-2">
                   <h4 className="font-bold text-slate-900 dark:text-white">{p.name}</h4>
                   <span className="px-2 py-0.5 text-xs font-semibold bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full">Bajo</span>
                 </div>
-                <div className="text-sm text-slate-500 dark:text-gray-400 mb-2">{p.stock || 0} {p.unit} (mín {p.min_stock || 10})</div>
+                <div className="text-sm text-slate-500 dark:text-gray-300 mb-2">{p.stock || 0} {p.unit} (mín {p.min_stock || 10})</div>
                 <div className="mt-auto text-right font-bold text-slate-900 dark:text-white">
                   €{((p.stock || 0) * (p.price || 0)).toFixed(2)}
                 </div>
               </div>
             ))}
             {allProducts.filter(p => p.restaurant === currentRestaurant && p.stock <= p.min_stock).length === 0 && (
-              <div className="col-span-full text-center py-8 text-slate-500 dark:text-gray-400">🎉 No hay productos con stock bajo</div>
+              <div className="col-span-full text-center py-8 text-slate-500 dark:text-gray-300">🎉 No hay productos con stock bajo</div>
             )}
           </div>
         </div>
