@@ -673,7 +673,7 @@ const Inventory = () => {
           >
             <motion.div
               className={`bg-white dark:bg-gray-900 w-full max-w-md flex flex-col shadow-2xl dark:shadow-black/50 ${
-                isMobile ? 'rounded-t-[32px] mb-16' : 'rounded-2xl'
+                isMobile ? 'rounded-[32px] mb-16' : 'rounded-2xl'
               }`}
               style={isMobile ? { maxHeight: '80dvh' } : { maxHeight: '90vh' }}
               onClick={e => e.stopPropagation()}
@@ -792,7 +792,7 @@ const Inventory = () => {
             transition={{ duration: 0.2 }}
           >
             <motion.div
-              className={`bg-white dark:bg-gray-900 w-full max-w-md flex flex-col shadow-2xl dark:shadow-black/50 ${isMobile ? 'rounded-t-[32px] mb-16' : 'rounded-2xl'}`}
+              className={`bg-white dark:bg-gray-900 w-full max-w-md flex flex-col shadow-2xl dark:shadow-black/50 ${isMobile ? 'rounded-[32px] mb-16' : 'rounded-2xl'}`}
               onClick={e => e.stopPropagation()}
               variants={isMobile ? modalVariants : desktopModalVariants}
               initial="hidden"
@@ -841,7 +841,7 @@ const Inventory = () => {
             transition={{ duration: 0.2 }}
           >
             <motion.div
-              className={`bg-white dark:bg-gray-900 w-full max-w-md flex flex-col shadow-2xl dark:shadow-black/50 ${isMobile ? 'rounded-t-[32px] mb-16' : 'rounded-2xl'}`}
+              className={`bg-white dark:bg-gray-900 w-full max-w-md flex flex-col shadow-2xl dark:shadow-black/50 ${isMobile ? 'rounded-[32px] mb-16' : 'rounded-2xl'}`}
               onClick={e => e.stopPropagation()}
               variants={isMobile ? modalVariants : desktopModalVariants}
               initial="hidden"
@@ -889,7 +889,7 @@ const Inventory = () => {
             transition={{ duration: 0.2 }}
           >
             <motion.div
-              className={`bg-white dark:bg-gray-900 w-full max-w-md flex flex-col shadow-2xl dark:shadow-black/50 ${isMobile ? 'rounded-t-[32px] mb-16' : 'rounded-2xl'}`}
+              className={`bg-white dark:bg-gray-900 w-full max-w-md flex flex-col shadow-2xl dark:shadow-black/50 ${isMobile ? 'rounded-[32px] mb-16' : 'rounded-2xl'}`}
               onClick={e => e.stopPropagation()}
               variants={isMobile ? modalVariants : desktopModalVariants}
               initial="hidden"
