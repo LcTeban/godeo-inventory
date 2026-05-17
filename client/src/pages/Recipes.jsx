@@ -249,7 +249,7 @@ const Recipes = () => {
           placeholder="Buscar receta por nombre..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-11 pr-4 py-3 bg-white dark:bg-gray-900 rounded-2xl text-sm text-slate-700 dark:text-gray-200 placeholder-slate-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition-all shadow-sm dark:shadow-md dark:shadow-black/30 border border-slate-200 dark:border-white/5"
+          className="w-full pl-11 pr-4 py-3 bg-white dark:bg-gray-900 rounded-2xl text-sm text-slate-700 dark:text-gray-200 placeholder-slate-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition-all shadow-card dark:shadow-card-dark border border-slate-200 dark:border-white/5"
         />
       </div>
 
@@ -276,7 +276,7 @@ const Recipes = () => {
           {filteredRecipes.map((recipe) => (
             <motion.div
               key={recipe.id}
-              className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm dark:shadow-md dark:shadow-black/30 overflow-hidden transition-all hover:shadow-md dark:hover:shadow-lg group dark:border-white/5 border border-transparent"
+              className="bg-white dark:bg-gray-900 rounded-2xl shadow-card dark:shadow-card-dark overflow-hidden transition-all hover:shadow-card-hover dark:hover:shadow-card-dark-hover group dark:border-white/5 border border-transparent"
               variants={itemVariants}
               layout
             >
@@ -422,7 +422,7 @@ const Recipes = () => {
             transition={{ duration: 0.2 }}
           >
             <motion.div
-              className={`bg-white dark:bg-gray-900 w-full max-w-lg flex flex-col shadow-2xl dark:shadow-black/50 ${
+              className={`bg-white dark:bg-gray-900 w-full max-w-lg flex flex-col shadow-modal dark:shadow-modal-dark ${
                 isMobile ? 'rounded-[32px] mb-16' : 'rounded-2xl'
               }`}
               style={isMobile ? { maxHeight: '80dvh' } : { maxHeight: '85vh' }}
