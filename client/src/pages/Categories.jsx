@@ -180,7 +180,7 @@ const Categories = () => {
       </div>
 
       {(showAddRoot || parentForNew !== null || editId !== null) && (
-        <div className="bg-slate-50 dark:bg-gray-900 border border-slate-200 dark:border-white/5 rounded-xl p-4 space-y-3 shadow-sm dark:shadow-md dark:shadow-black/30">
+        <div className="bg-slate-50 dark:bg-gray-900 border border-slate-200 dark:border-white/5 rounded-xl p-4 space-y-3 shadow-card dark:shadow-card-dark">
           <p className="text-sm font-medium text-slate-700 dark:text-gray-300">
             {editId ? '✏️ Editar categoría' : parentForNew ? '📂 Nueva subcategoría' : '📁 Nueva carpeta raíz'}
           </p>
@@ -220,7 +220,7 @@ const Categories = () => {
         </div>
       )}
 
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm dark:shadow-md dark:shadow-black/30 p-4 dark:border-white/5 border border-transparent">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-card dark:shadow-card-dark p-4 dark:border-white/5 border border-transparent">
         {roots.length === 0 && !showAddRoot && parentForNew === null && editId === null && (
           <EmptyState
             icon={FolderIcon}
@@ -270,7 +270,7 @@ const Categories = () => {
             transition={{ duration: 0.2 }}
           >
             <motion.div
-              className={`bg-white dark:bg-gray-900 w-full max-w-md flex flex-col shadow-2xl dark:shadow-black/50 ${
+              className={`bg-white dark:bg-gray-900 w-full max-w-md flex flex-col shadow-modal dark:shadow-modal-dark ${
                 isMobile ? 'rounded-[32px] mb-16' : 'rounded-2xl'
               }`}
               onClick={e => e.stopPropagation()}
