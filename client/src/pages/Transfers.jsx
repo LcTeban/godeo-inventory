@@ -190,21 +190,21 @@ const Transfers = () => {
 
       {/* KPIs rápidos */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm dark:shadow-md dark:shadow-black/30 flex flex-col items-start">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-kpi dark:shadow-kpi-dark flex flex-col items-start">
           <div className="p-2 bg-amber-50 dark:bg-amber-900/30 rounded-xl mb-3">
             <ClockIcon className="h-5 w-5 text-amber-600 dark:text-amber-400" />
           </div>
           <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{pendingCount}</p>
           <p className="text-xs text-slate-500 dark:text-gray-300 mt-1 tracking-wide">Pendientes</p>
         </div>
-        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm dark:shadow-md dark:shadow-black/30 flex flex-col items-start">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-kpi dark:shadow-kpi-dark flex flex-col items-start">
           <div className="p-2 bg-emerald-50 dark:bg-emerald-900/30 rounded-xl mb-3">
             <CheckCircleIcon className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
           </div>
           <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{completedToday}</p>
           <p className="text-xs text-slate-500 dark:text-gray-300 mt-1 tracking-wide">Completadas hoy</p>
         </div>
-        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm dark:shadow-md dark:shadow-black/30 flex flex-col items-start">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-kpi dark:shadow-kpi-dark flex flex-col items-start">
           <div className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-xl mb-3">
             <ArrowPathIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
           </div>
@@ -214,7 +214,7 @@ const Transfers = () => {
       </div>
 
       {/* Barra de búsqueda y filtros */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm dark:shadow-md dark:shadow-black/30 p-3 space-y-3">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-card dark:shadow-card-dark p-3 space-y-3">
         <div className="flex gap-2">
           <div className="flex-1 relative">
             <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-2.5 text-slate-400 dark:text-gray-300" />
@@ -302,7 +302,7 @@ const Transfers = () => {
           {filteredTransfers.map((transfer) => (
             <motion.div 
               key={transfer.id} 
-              className={`bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm dark:shadow-md dark:shadow-black/30 transition ${
+              className={`bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-card dark:shadow-card-dark transition ${
                 transfer.status === 'pendiente' ? 'border border-amber-200 dark:border-amber-800' : 'dark:border-white/5 border border-transparent'
               }`}
               variants={itemVariants}
@@ -368,7 +368,7 @@ const Transfers = () => {
             transition={{ duration: 0.2 }}
           >
             <motion.div
-              className={`bg-white dark:bg-gray-900 w-full max-w-md flex flex-col shadow-2xl dark:shadow-black/50 ${
+              className={`bg-white dark:bg-gray-900 w-full max-w-md flex flex-col shadow-modal dark:shadow-modal-dark ${
                 isMobile ? 'rounded-[32px] mb-16' : 'rounded-2xl'
               }`}
               style={isMobile ? { maxHeight: '80dvh' } : { maxHeight: '90vh' }}
