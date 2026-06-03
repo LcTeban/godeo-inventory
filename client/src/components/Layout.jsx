@@ -30,6 +30,7 @@ const Layout = () => {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+  const location = useLocation();
 
   useLockBodyScroll(sidebarOpen && isMobile);
 
