@@ -7,6 +7,7 @@ import {
   ArrowsRightLeftIcon,
   Bars3Icon,
 } from '@heroicons/react/24/outline';
+import { motion } from 'framer-motion';
 
 const MobileBottomBar = ({ onMenuToggle }) => {
   const navigate = useNavigate();
@@ -59,12 +60,16 @@ const MobileBottomBar = ({ onMenuToggle }) => {
                 }`}
                 strokeWidth={active ? 2 : 1.5}
               />
-              {/* Indicador tipo pastilla naranja */}
-              <div
-                className={`mt-0.5 transition-all duration-300 rounded-full ${
-                  active ? 'w-4 h-1 bg-orange-500 opacity-100' : 'w-1 h-1 bg-transparent opacity-0'
-                }`}
-              />
+              {/* Indicador tipo pastilla naranja animado */}
+<div className="mt-0.5 h-1 rounded-full relative">
+  {active && (
+    <motion.div
+      className="absolute inset-0 bg-orange-500 rounded-full"
+      layoutId="bottomBarIndicator"
+      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+    />
+  )}
+</div>
               <span className="text-[10px] tracking-wider font-medium leading-none mt-0.5">
                 {item.label}
               </span>
