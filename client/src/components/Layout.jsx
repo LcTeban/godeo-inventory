@@ -22,6 +22,7 @@ import { useState, useEffect } from 'react';
 import MobileBottomBar from './MobileBottomBar';
 import useLockBodyScroll from '../hooks/useLockBodyScroll';
 import { Toaster } from 'react-hot-toast';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Layout = () => {
   const { user, logout, currentRestaurant, switchRestaurant, isAdmin, notificationsEnabled, enableNotifications } = useAuth();
