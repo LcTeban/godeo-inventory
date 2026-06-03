@@ -295,10 +295,20 @@ const Layout = () => {
       )}
 
       <div className={`${!isMobile ? 'lg:pl-64' : 'pb-20'}`}>
-        <div className="p-4 lg:p-6">
-          <Outlet />
-        </div>
-      </div>
+  <div className="p-4 lg:p-6">
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={location.pathname}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.15 }}
+      >
+        <Outlet />
+      </motion.div>
+    </AnimatePresence>
+  </div>
+</div>
 
       {isMobile && (
         <MobileBottomBar onMenuToggle={toggleSidebar} />
