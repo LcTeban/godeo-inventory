@@ -84,3 +84,18 @@ body.modal-open {
   opacity: 1;
   transition: background-size 0s, opacity 0s;
 }
+
+/* Transición suave entre páginas */
+@keyframes fadeInPage {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fadeInPage {
+  animation: fadeInPage 0.2s ease-out;
+}
