@@ -173,7 +173,7 @@ const Categories = () => {
         <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">📁 Gestión de Categorías</h1>
         <button
           onClick={() => { setShowAddRoot(true); setParentForNew(null); setEditId(null); setIsGlobal(false); }}
-          className="w-full sm:w-auto bg-orange-500 text-white px-4 py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-1.5 hover:bg-orange-600 transition shadow-sm shadow-orange-200"
+          className="w-full sm:w-auto bg-orange-500 text-white px-4 py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-1.5 hover:bg-orange-600 transition shadow-sm shadow-orange-200 ripple"
         >
           <PlusIcon className="h-4 w-4" /> Nueva Carpeta Raíz
         </button>
