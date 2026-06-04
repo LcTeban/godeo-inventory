@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import {
   PlusIcon, DocumentArrowDownIcon, TableCellsIcon,
   ArrowLeftIcon, XMarkIcon, ExclamationTriangleIcon,
-  CubeIcon, FolderOpenIcon
+  CubeIcon, FolderOpenIcon, CameraIcon, QrCodeIcon
 } from '@heroicons/react/24/outline';
 import BarcodeScanner from '../components/BarcodeScanner';
 import EmptyState from '../components/EmptyState';
