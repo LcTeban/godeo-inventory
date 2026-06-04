@@ -525,7 +525,7 @@ const Inventory = () => {
             <DocumentArrowDownIcon className="h-5 w-5" />
           </button>
           {isAdmin && (
-            <button onClick={() => openAddModal(currentFolderId)} className="bg-orange-500 text-white p-3 rounded-full shadow-lg shadow-orange-200">
+            <button onClick={() => openAddModal(currentFolderId)} className="bg-orange-500 text-white p-3 rounded-full shadow-lg shadow-orange-200 ripple">
               <PlusIcon className="h-6 w-6" />
             </button>
           )}
@@ -777,7 +777,7 @@ const Inventory = () => {
 
               <div className="px-6 py-4 border-t border-slate-100 dark:border-white/5 flex gap-3 flex-shrink-0">
                 <button type="button" onClick={resetModal} className="flex-1 p-3 border border-slate-200 dark:border-gray-600 text-slate-600 dark:text-gray-300 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-800 transition">Cancelar</button>
-                <button onClick={handleAddProduct} disabled={isSaving} className="flex-1 p-3 bg-orange-500 text-white rounded-xl shadow-sm shadow-orange-200 hover:bg-orange-600 disabled:opacity-50 transition">
+                <button onClick={handleAddProduct} disabled={isSaving} className="flex-1 p-3 bg-orange-500 text-white rounded-xl shadow-sm shadow-orange-200 hover:bg-orange-600 disabled:opacity-50 transition ripple">
                   {isSaving ? 'Guardando...' : editingProduct ? 'Actualizar' : 'Guardar'}
                 </button>
               </div>
@@ -872,7 +872,7 @@ const Inventory = () => {
                   </div>
                   <div className="flex gap-2 pt-2">
                     <button onClick={() => setShowCopyModal(false)} className="flex-1 p-3 border border-slate-200 dark:border-gray-600 text-slate-600 dark:text-gray-300 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-800 transition">Cancelar</button>
-                    <button onClick={handleCopyProduct} disabled={isCopying || !copyTarget} className="flex-1 p-3 bg-orange-500 text-white rounded-xl shadow-sm shadow-orange-200 hover:bg-orange-600 disabled:opacity-50 transition">
+                    <button onClick={handleCopyProduct} disabled={isCopying || !copyTarget} className="flex-1 p-3 bg-orange-500 text-white rounded-xl shadow-sm shadow-orange-200 hover:bg-orange-600 disabled:opacity-50 transition ripple">
                       {isCopying ? 'Copiando...' : 'Copiar'}
                     </button>
                   </div>
@@ -928,26 +928,25 @@ const Inventory = () => {
         )}
       </AnimatePresence>
 
-{showScanner && (
-  <BarcodeScanner
-    onScan={(code) => {
-      setShowScanner(false);
-      // Buscar si existe un producto con ese código
-      const existingProduct = products.find(p => p.barcode === code);
-      if (existingProduct) {
-        // Si existe, abrir directamente el modal de movimiento
-        setSelectedProduct(existingProduct);
-        setMovementData({ type: 'entrada', quantity: '1', reason: 'Escaneo automático' });
-        setShowMovementModal(true);
-      } else {
-        // Si no existe, rellenar el campo de código en el formulario
-        setFormData({...formData, barcode: code});
-        toast('Producto no encontrado. Puedes crearlo ahora.', { icon: 'ℹ️' });
-      }
-    }}
-    onClose={() => setShowScanner(false)}
-  />
-)}
+      {/* Escáner con registro automático */}
+      {showScanner && (
+        <BarcodeScanner
+          onScan={(code) => {
+            setShowScanner(false);
+            const existingProduct = products.find(p => p.barcode === code);
+            if (existingProduct) {
+              setSelectedProduct(existingProduct);
+              setMovementData({ type: 'entrada', quantity: '1', reason: 'Escaneo automático' });
+              setShowMovementModal(true);
+            } else {
+              setFormData({...formData, barcode: code});
+              toast('Producto no encontrado. Puedes crearlo ahora.', { icon: 'ℹ️' });
+            }
+          }}
+          onClose={() => setShowScanner(false)}
+        />
+      )}
+    </div>
   );
 };
 
