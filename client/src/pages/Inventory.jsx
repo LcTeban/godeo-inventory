@@ -929,8 +929,21 @@ const Inventory = () => {
       </AnimatePresence>
 
       {showScanner && (
-        <BarcodeScanner onScan={(code) => { setFormData({...formData, barcode: code}); setShowScanner(false); }} onClose={() => setShowScanner(false)} />
-      )}
+        <BarcodeScanner onScan={(code) => {
+  setShowScanner(false);
+  // Buscar si existe un producto con ese código
+  const existingProduct = products.find(p => p.barcode === code);
+  if (existingProduct) {
+    // Si existe, abrir directamente el modal de movimiento
+    setSelectedProduct(existingProduct);
+    setMovementData({ type: 'entrada', quantity: '1', reason: 'Escaneo automático' });
+    setShowMovementModal(true);
+  } else {
+    // Si no existe, rellenar el campo de código en el formulario
+    setFormData({...formData, barcode: code});
+    toast('Producto no encontrado. Puedes crearlo ahora.', { icon: 'ℹ️' });
+  }
+}}
     </div>
   );
 };
