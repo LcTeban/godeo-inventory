@@ -22,15 +22,14 @@ import { useState, useEffect } from 'react';
 import MobileBottomBar from './MobileBottomBar';
 import useLockBodyScroll from '../hooks/useLockBodyScroll';
 import { Toaster } from 'react-hot-toast';
-import { motion, AnimatePresence } from 'framer-motion';
 
 const Layout = () => {
   const { user, logout, currentRestaurant, switchRestaurant, isAdmin, notificationsEnabled, enableNotifications } = useAuth();
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
-  const location = useLocation();
 
   useLockBodyScroll(sidebarOpen && isMobile);
 
@@ -139,36 +138,9 @@ const Layout = () => {
               </button>
             </div>
 
-            {/* Bloque de usuario con iconos de notificación y tema a la derecha */}
             <div className="p-4 bg-gray-50 dark:bg-gray-900 flex-shrink-0">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-slate-600 dark:text-gray-400">{user?.name}</p>
-                  <p className="text-xs text-purple-600 font-semibold">{user?.role}</p>
-                </div>
-                <div className="flex items-center gap-1">
-                  {isAdmin && (
-                    <button
-                      onClick={enableNotifications}
-                      className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
-                      title={notificationsEnabled ? 'Notificaciones activadas' : 'Activar notificaciones'}
-                    >
-                      {notificationsEnabled ? (
-                        <BellAlertIcon className="h-4 w-4 text-green-600" />
-                      ) : (
-                        <BellIcon className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                      )}
-                    </button>
-                  )}
-                  <button
-                    onClick={toggleTheme}
-                    className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
-                    title="Cambiar tema"
-                  >
-                    {getThemeIcon()}
-                  </button>
-                </div>
-              </div>
+              <p className="text-sm text-slate-600 dark:text-gray-400">{user?.name}</p>
+              <p className="text-xs text-purple-600 font-semibold">{user?.role}</p>
             </div>
 
             {isAdmin && (
@@ -184,6 +156,32 @@ const Layout = () => {
                 </select>
               </div>
             )}
+
+            {isAdmin && (
+              <div className="px-4 pt-2 flex-shrink-0">
+                <button
+                  onClick={enableNotifications}
+                  className="w-full p-2 border rounded-lg text-sm flex items-center justify-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
+                >
+                  {notificationsEnabled ? (
+                    <BellAlertIcon className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <BellIcon className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                  )}
+                  {notificationsEnabled ? 'Notificaciones ON' : 'Activar Notificaciones'}
+                </button>
+              </div>
+            )}
+
+            <div className="px-4 pt-2 flex-shrink-0">
+              <button
+                onClick={toggleTheme}
+                className="w-full p-2 border rounded-lg text-sm flex items-center justify-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
+              >
+                {getThemeIcon()}
+                {theme === 'light' ? 'Modo Claro' : theme === 'dark' ? 'Modo Oscuro' : 'Automático'}
+              </button>
+            </div>
 
             <nav className="flex-1 overflow-y-auto px-2 py-2">
               {navigation.map(item => {
@@ -221,36 +219,10 @@ const Layout = () => {
           <div className="w-64 bg-white dark:bg-gray-800 shadow-lg flex flex-col h-full">
             <div className="p-6 border-b dark:border-gray-700 flex-shrink-0">
               <h1 className="text-2xl font-bold dark:text-white">🍴 Godeo</h1>
-              <div className="flex items-center justify-between mt-1">
-                <div>
-                  <p className="text-sm text-slate-600 dark:text-gray-400">{user?.name}</p>
-                  <span className="inline-block mt-1 px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded">
-                    {user?.role}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1">
-                  {isAdmin && (
-                    <button
-                      onClick={enableNotifications}
-                      className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
-                      title={notificationsEnabled ? 'Notificaciones activadas' : 'Activar notificaciones'}
-                    >
-                      {notificationsEnabled ? (
-                        <BellAlertIcon className="h-4 w-4 text-green-600" />
-                      ) : (
-                        <BellIcon className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                      )}
-                    </button>
-                  )}
-                  <button
-                    onClick={toggleTheme}
-                    className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
-                    title="Cambiar tema"
-                  >
-                    {getThemeIcon()}
-                  </button>
-                </div>
-              </div>
+              <p className="text-sm text-slate-600 dark:text-gray-400 mt-1">{user?.name}</p>
+              <span className="inline-block mt-1 px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded">
+                {user?.role}
+              </span>
 
               {isAdmin && (
                 <select
@@ -263,6 +235,28 @@ const Layout = () => {
                   ))}
                 </select>
               )}
+
+              {isAdmin && (
+                <button
+                  onClick={enableNotifications}
+                  className="w-full mt-2 p-2 border rounded-lg text-sm flex items-center justify-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
+                >
+                  {notificationsEnabled ? (
+                    <BellAlertIcon className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <BellIcon className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                  )}
+                  {notificationsEnabled ? 'Notificaciones ON' : 'Activar Notificaciones'}
+                </button>
+              )}
+
+              <button
+                onClick={toggleTheme}
+                className="w-full mt-2 p-2 border rounded-lg text-sm flex items-center justify-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
+              >
+                {getThemeIcon()}
+                {theme === 'light' ? 'Modo Claro' : theme === 'dark' ? 'Modo Oscuro' : 'Automático'}
+              </button>
             </div>
 
             <nav className="flex-1 overflow-y-auto px-3 py-2">
@@ -294,21 +288,14 @@ const Layout = () => {
         </div>
       )}
 
+      {/* Contenido principal con transición CSS */}
       <div className={`${!isMobile ? 'lg:pl-64' : 'pb-20'}`}>
-  <div className="p-4 lg:p-6">
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={location.pathname}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.15 }}
-      >
-        <Outlet />
-      </motion.div>
-    </AnimatePresence>
-  </div>
-</div>
+        <div className="p-4 lg:p-6">
+          <div key={location.pathname} className="animate-fadeInPage">
+            <Outlet />
+          </div>
+        </div>
+      </div>
 
       {isMobile && (
         <MobileBottomBar onMenuToggle={toggleSidebar} />
