@@ -944,7 +944,6 @@ const Inventory = () => {
     toast('Producto no encontrado. Puedes crearlo ahora.', { icon: 'ℹ️' });
   }
 }}
-    </div>
   );
 };
 
