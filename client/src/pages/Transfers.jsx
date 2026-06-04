@@ -83,18 +83,22 @@ const Transfers = () => {
   };
 
   const handleComplete = async (id) => {
-    setIsCompleting(id);
-    try {
-      await completeTransfer(id);
-      loadData();
-      setShowCheck(true);
-      setTimeout(() => setShowCheck(false), 1500);
-    } catch (error) {
-      toast.error('Error al completar: ' + error.message);
-    } finally {
-      setIsCompleting(null);
+  setIsCompleting(id);
+  try {
+    await completeTransfer(id);
+    loadData();
+    setShowCheck(true);
+    setTimeout(() => setShowCheck(false), 1500);
+    // Vibración háptica sutil
+    if (window.navigator && window.navigator.vibrate) {
+      window.navigator.vibrate([10, 50, 10]);
     }
-  };
+  } catch (error) {
+    toast.error('Error al completar: ' + error.message);
+  } finally {
+    setIsCompleting(null);
+  }
+};
 
   // Filtrado
   const filteredTransfers = transfers.filter(t => {
