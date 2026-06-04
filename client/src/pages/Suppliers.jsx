@@ -239,7 +239,7 @@ const Suppliers = () => {
         {isAdmin && (
           <button
             onClick={openAdd}
-            className="bg-orange-500 text-white px-5 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-orange-600 transition shadow-sm shadow-orange-200"
+            className="bg-orange-500 text-white px-5 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-orange-600 transition shadow-sm shadow-orange-200 ripple"
           >
             <PlusIcon className="h-4 w-4" /> Nuevo Proveedor
           </button>
