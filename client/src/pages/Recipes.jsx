@@ -55,7 +55,6 @@ const Recipes = () => {
       setProducts(Array.isArray(prodData) ? prodData : []);
     } catch (error) {
       console.error('Error loading recipes:', error);
-      toast.error('Error al cargar las recetas');
     } finally {
       setLoading(false);
     }
@@ -154,7 +153,7 @@ const Recipes = () => {
       resetForm();
       loadData();
     } catch (error) {
-      toast.error('Error: ' + error.message);
+      // El toast de error ya se mostró automáticamente desde apiCall
     }
   };
 
@@ -171,7 +170,7 @@ const Recipes = () => {
           loadData();
           toast.success('Receta eliminada');
         } catch (error) {
-          toast.error('Error al eliminar');
+          // El toast de error ya se mostró automáticamente desde apiCall
         }
       },
     });
@@ -584,7 +583,7 @@ const Recipes = () => {
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 py-3 bg-orange-500 text-white rounded-xl text-sm font-medium hover:bg-orange-600 transition-colors shadow-sm shadow-orange-200"
+                    className="flex-1 py-3 bg-orange-500 text-white rounded-xl text-sm font-medium hover:bg-orange-600 transition-colors shadow-sm shadow-orange-200 ripple"
                   >
                     {editingRecipe ? 'Actualizar Receta' : 'Crear Receta'}
                   </button>
