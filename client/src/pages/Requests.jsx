@@ -49,7 +49,6 @@ const Requests = () => {
       setProducts(Array.isArray(prodData) ? prodData : []);
     } catch (error) {
       console.error('Error:', error);
-      toast.error('Error al cargar los pedidos');
     }
   };
 
@@ -141,7 +140,7 @@ const Requests = () => {
         });
       }
     } catch (error) {
-      toast.error('Error al enviar: ' + error.message);
+      // El toast de error ya se mostró automáticamente desde apiCall
     }
   };
 
@@ -161,7 +160,7 @@ const Requests = () => {
         }
       }
     } catch (error) {
-      toast.error('Error al actualizar');
+      // El toast de error ya se mostró automáticamente desde apiCall
     }
   };
 
@@ -233,14 +232,14 @@ const Requests = () => {
       {/* KPIs (solo admin) */}
       {isAdmin && (
         <div className="grid grid-cols-3 gap-3">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm dark:shadow-md dark:shadow-black/30 flex flex-col items-start">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-kpi dark:shadow-kpi-dark flex flex-col items-start">
             <div className="p-2 bg-amber-50 dark:bg-amber-900/30 rounded-xl mb-3">
               <ClockIcon className="h-5 w-5 text-amber-600 dark:text-amber-400" />
             </div>
             <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{pendingCount}</p>
             <p className="text-xs text-slate-500 dark:text-gray-300 mt-1 tracking-wide">Pendientes</p>
           </div>
-          <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm dark:shadow-md dark:shadow-black/30 flex flex-col items-start">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-kpi dark:shadow-kpi-dark flex flex-col items-start">
             <div className="p-2 bg-emerald-50 dark:bg-emerald-900/30 rounded-xl mb-3">
               <CheckCircleIcon className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
             </div>
@@ -254,7 +253,7 @@ const Requests = () => {
             </p>
             <p className="text-xs text-slate-500 dark:text-gray-300 mt-1 tracking-wide">Aprobados hoy</p>
           </div>
-          <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm dark:shadow-md dark:shadow-black/30 flex flex-col items-start">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-kpi dark:shadow-kpi-dark flex flex-col items-start">
             <div className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-xl mb-3">
               <ClipboardDocumentListIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             </div>
@@ -289,7 +288,7 @@ const Requests = () => {
       </div>
 
       {/* Mis Solicitudes */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm dark:shadow-md dark:shadow-black/30 overflow-hidden dark:border-white/5 border border-transparent">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-card dark:shadow-card-dark overflow-hidden dark:border-white/5 border border-transparent">
         <div className="px-5 py-4 border-b border-slate-100 dark:border-white/5">
           <h2 className="font-bold text-slate-900 dark:text-white">📝 Mis Solicitudes ({filteredMyRequests.length})</h2>
         </div>
@@ -346,7 +345,7 @@ const Requests = () => {
 
       {/* Panel Admin - Pendientes de aprobar */}
       {isAdmin && pendingRequests.length > 0 && (
-        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm dark:shadow-md dark:shadow-black/30 overflow-hidden dark:border-white/5 border border-transparent">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-card dark:shadow-card-dark overflow-hidden dark:border-white/5 border border-transparent">
           <div className="px-5 py-4 border-b border-slate-100 dark:border-white/5">
             <h2 className="font-bold text-slate-900 dark:text-white">
               ⏳ Pendientes de aprobar
@@ -421,7 +420,7 @@ const Requests = () => {
             transition={{ duration: 0.2 }}
           >
             <motion.div
-              className={`bg-white dark:bg-gray-900 w-full max-w-lg flex flex-col shadow-2xl dark:shadow-black/50 ${
+              className={`bg-white dark:bg-gray-900 w-full max-w-lg flex flex-col shadow-modal dark:shadow-modal-dark ${
                 isMobile ? 'rounded-[32px] mb-16' : 'rounded-2xl'
               }`}
               style={isMobile ? { maxHeight: '80dvh' } : { maxHeight: '85vh' }}
