@@ -90,23 +90,31 @@ const Categories = () => {
 
   const handleAddSub = async (parentId) => {
     if (!newName.trim()) return;
-    await addCategory(newName, parentId, isGlobal);
-    setNewName('');
-    setParentForNew(null);
-    setIsGlobal(false);
-    loadCategories();
-    toast.success('Categoría creada correctamente');
+    try {
+      await addCategory(newName, parentId, isGlobal);
+      setNewName('');
+      setParentForNew(null);
+      setIsGlobal(false);
+      loadCategories();
+      toast.success('Categoría creada correctamente');
+    } catch (error) {
+      // El toast de error ya se mostró automáticamente desde apiCall
+    }
   };
 
   const handleEdit = async () => {
     if (editId && editName.trim()) {
-      const cat = categories.find(c => c.id === editId);
-      await updateCategory(editId, editName, cat?.parent_id || null, editIsGlobal);
-      setEditId(null);
-      setEditName('');
-      setEditIsGlobal(false);
-      loadCategories();
-      toast.success('Categoría actualizada correctamente');
+      try {
+        const cat = categories.find(c => c.id === editId);
+        await updateCategory(editId, editName, cat?.parent_id || null, editIsGlobal);
+        setEditId(null);
+        setEditName('');
+        setEditIsGlobal(false);
+        loadCategories();
+        toast.success('Categoría actualizada correctamente');
+      } catch (error) {
+        // El toast de error ya se mostró automáticamente desde apiCall
+      }
     }
   };
 
@@ -118,9 +126,13 @@ const Categories = () => {
       confirmColor: 'red',
       onConfirm: async () => {
         setConfirmOpen(false);
-        await deleteCategory(id);
-        loadCategories();
-        toast.success('Categoría eliminada');
+        try {
+          await deleteCategory(id);
+          loadCategories();
+          toast.success('Categoría eliminada');
+        } catch (error) {
+          // El toast de error ya se mostró automáticamente desde apiCall
+        }
       },
     });
     setConfirmOpen(true);
@@ -145,7 +157,7 @@ const Categories = () => {
       setCopyCategory(null);
       loadCategories();
     } catch (error) {
-      toast.error('Error al copiar: ' + error.message);
+      // El toast de error ya se mostró automáticamente desde apiCall
     } finally {
       setIsCopying(false);
     }
@@ -317,7 +329,7 @@ const Categories = () => {
                   <button
                     onClick={executeCopy}
                     disabled={isCopying || !copyTarget}
-                    className="flex-1 py-2.5 bg-orange-500 text-white rounded-xl text-sm font-medium hover:bg-orange-600 transition disabled:opacity-50 shadow-sm shadow-orange-200"
+                    className="flex-1 py-2.5 bg-orange-500 text-white rounded-xl text-sm font-medium hover:bg-orange-600 transition disabled:opacity-50 shadow-sm shadow-orange-200 ripple"
                   >
                     {isCopying ? 'Copiando...' : 'Copiar todo'}
                   </button>
