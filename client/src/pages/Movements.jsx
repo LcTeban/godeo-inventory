@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import EmptyState from '../components/EmptyState';
 import Skeleton from '../components/Skeleton';
+import ScrollToTopButton from '../components/ScrollToTopButton';
 
 const Movements = () => {
   const { currentRestaurant, getMovements } = useAuth();
@@ -274,6 +275,7 @@ const Movements = () => {
           </motion.button>
         )}
       </AnimatePresence>
+      <ScrollToTopButton />
     </div>
   );
 };
