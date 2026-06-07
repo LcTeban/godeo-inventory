@@ -10,6 +10,7 @@ import toast from 'react-hot-toast';
 import EmptyState from '../components/EmptyState';
 import Skeleton from '../components/Skeleton';
 import SuccessCheck from '../components/SuccessCheck';
+import ScrollToTopButton from '../components/ScrollToTopButton';
 
 const Transfers = () => {
   const { currentRestaurant, isAdmin, getTransfers, getProducts, addTransfer, completeTransfer } = useAuth();
@@ -476,6 +477,7 @@ const Transfers = () => {
           </motion.div>
         )}
       </AnimatePresence>
+      <ScrollToTopButton />
     </div>
   );
 };
