@@ -56,7 +56,6 @@ const Suppliers = () => {
       setProducts(Array.isArray(prodData) ? prodData : []);
     } catch (error) {
       console.error('Error:', error);
-      toast.error('Error al cargar los proveedores');
     } finally {
       setLoading(false);
     }
@@ -102,7 +101,7 @@ const Suppliers = () => {
       setEditingSupplier(null);
       loadData();
     } catch (error) {
-      toast.error('Error: ' + error.message);
+      // El toast de error ya se mostró automáticamente desde apiCall
     } finally {
       setIsSaving(false);
     }
@@ -121,7 +120,7 @@ const Suppliers = () => {
           loadData();
           toast.success('Proveedor eliminado');
         } catch (error) {
-          toast.error('Error al eliminar');
+          // El toast de error ya se mostró automáticamente desde apiCall
         }
       },
     });
@@ -424,7 +423,7 @@ const Suppliers = () => {
                 <div><label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">📍 Dirección</label><input type="text" placeholder="Dirección fiscal o almacén" value={formData.address} onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))} className="w-full px-4 py-2.5 border border-slate-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition" /></div>
                 <div className="flex gap-3 pt-2">
                   <button type="button" onClick={() => setShowModal(false)} className="flex-1 py-2.5 border border-slate-200 dark:border-gray-600 text-slate-600 dark:text-gray-300 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-800 transition">Cancelar</button>
-                  <button type="submit" disabled={isSaving} className="flex-1 py-2.5 bg-orange-500 text-white rounded-xl shadow-sm shadow-orange-200 hover:bg-orange-600 disabled:opacity-50 transition">{isSaving ? 'Guardando...' : editingSupplier ? 'Actualizar' : 'Guardar'}</button>
+                  <button type="submit" disabled={isSaving} className="flex-1 py-2.5 bg-orange-500 text-white rounded-xl shadow-sm shadow-orange-200 hover:bg-orange-600 disabled:opacity-50 transition ripple">{isSaving ? 'Guardando...' : editingSupplier ? 'Actualizar' : 'Guardar'}</button>
                 </div>
               </form>
             </motion.div>
