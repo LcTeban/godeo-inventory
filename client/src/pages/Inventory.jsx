@@ -255,41 +255,53 @@ const Inventory = () => {
   };
 
   const getDisplayedProducts = () => {
-    let filtered = products;
+  let filtered = products;
 
-    if (searchTerm.trim() !== '') {
-      filtered = filtered.filter(p =>
-        p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.barcode?.includes(searchTerm)
-      );
+  // Filtro por búsqueda de texto
+  if (searchTerm.trim() !== '') {
+    filtered = filtered.filter(p =>
+      p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.barcode?.includes(searchTerm)
+    );
+  }
+
+  // Filtro por carpeta (solo si no hay búsqueda de texto)
+  if (searchTerm.trim() === '') {
+    if (currentFolderId === null) {
+      filtered = filtered.filter(p => !p.category_id);
+    } else {
+      filtered = filtered.filter(p => p.category_id === currentFolderId);
     }
+  }
 
-    if (searchTerm.trim() === '') {
-      if (currentFolderId === null) {
-        filtered = filtered.filter(p => !p.category_id);
-      } else {
-        filtered = filtered.filter(p => p.category_id === currentFolderId);
-      }
-    }
+  // Filtro rápido: Stock bajo (convertir a número para comparar correctamente)
+  if (quickFilter === 'lowStock') {
+    filtered = filtered.filter(p => {
+      const stock = parseFloat(p.stock) || 0;
+      const minStock = parseFloat(p.min_stock) || 10;
+      return stock > 0 && stock <= minStock;
+    });
+  }
 
-    if (quickFilter === 'lowStock') {
-      filtered = filtered.filter(p => p.stock > 0 && p.stock <= p.min_stock);
-    } else if (quickFilter === 'expiring') {
-      const today = new Date();
-      const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
-      filtered = filtered.filter(p => {
-        if (!p.expiry_date) return false;
-        const expiry = new Date(p.expiry_date);
-        return expiry >= today && expiry <= nextWeek;
-      });
-    }
+  // Filtro rápido: Próximos a caducar
+  if (quickFilter === 'expiring') {
+    const today = new Date();
+    const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+    filtered = filtered.filter(p => {
+      if (!p.expiry_date) return false;
+      const expiry = new Date(p.expiry_date);
+      return expiry >= today && expiry <= nextWeek;
+    });
+  }
 
-    if (supplierFilter) {
-      filtered = filtered.filter(p => p.supplier_id === parseInt(supplierFilter));
-    }
+  // Filtro por proveedor (convertir a número para comparar correctamente)
+  if (supplierFilter) {
+    const supplierId = parseInt(supplierFilter, 10);
+    filtered = filtered.filter(p => parseInt(p.supplier_id, 10) === supplierId);
+  }
 
-    return filtered;
-  };
+  return filtered;
+};
 
   const displayedProducts = getDisplayedProducts();
 
