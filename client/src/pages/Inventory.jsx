@@ -10,6 +10,7 @@ import EmptyState from '../components/EmptyState';
 import ConfirmDialog from '../components/ConfirmDialog';
 import SuccessCheck from '../components/SuccessCheck';
 import Skeleton from '../components/Skeleton';
+import ScrollToTopButton from '../components/ScrollToTopButton';
 import ProductList from '../components/inventory/ProductList';
 import InventorySearchBar from '../components/inventory/InventorySearchBar';
 import InventoryFolderGrid from '../components/inventory/InventoryFolderGrid';
@@ -19,7 +20,6 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
-import ScrollToTopButton from '../components/ScrollToTopButton';
 
 const Inventory = () => {
   const [products, setProducts] = useState([]);
@@ -33,6 +33,8 @@ const Inventory = () => {
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [quickFilter, setQuickFilter] = useState(null);
+  const [supplierFilter, setSupplierFilter] = useState('');
   const [formData, setFormData] = useState({
     name: '', category_id: '', stock: '', unit: 'unidad', min_stock: '10',
     expiry_date: '', image: '', barcode: '', supplier_id: '', price: ''
@@ -253,16 +255,40 @@ const Inventory = () => {
   };
 
   const getDisplayedProducts = () => {
+    let filtered = products;
+
     if (searchTerm.trim() !== '') {
-      return products.filter(p =>
+      filtered = filtered.filter(p =>
         p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.barcode?.includes(searchTerm)
       );
     }
-    if (currentFolderId === null) {
-      return products.filter(p => !p.category_id);
+
+    if (searchTerm.trim() === '') {
+      if (currentFolderId === null) {
+        filtered = filtered.filter(p => !p.category_id);
+      } else {
+        filtered = filtered.filter(p => p.category_id === currentFolderId);
+      }
     }
-    return products.filter(p => p.category_id === currentFolderId);
+
+    if (quickFilter === 'lowStock') {
+      filtered = filtered.filter(p => p.stock > 0 && p.stock <= p.min_stock);
+    } else if (quickFilter === 'expiring') {
+      const today = new Date();
+      const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+      filtered = filtered.filter(p => {
+        if (!p.expiry_date) return false;
+        const expiry = new Date(p.expiry_date);
+        return expiry >= today && expiry <= nextWeek;
+      });
+    }
+
+    if (supplierFilter) {
+      filtered = filtered.filter(p => p.supplier_id === parseInt(supplierFilter));
+    }
+
+    return filtered;
   };
 
   const displayedProducts = getDisplayedProducts();
@@ -421,6 +447,8 @@ const Inventory = () => {
       setCurrentFolderId(null);
       setFolderPath([]);
     }
+    setQuickFilter(null);
+    setSupplierFilter('');
   };
 
   const handleEntrada = (product) => {
@@ -467,6 +495,46 @@ const Inventory = () => {
       {/* Barra de búsqueda */}
       <InventorySearchBar searchTerm={searchTerm} onSearchChange={handleSearchChange} />
 
+      {/* Chips de filtro rápido */}
+      <div className="flex gap-2 flex-wrap">
+        <button
+          onClick={() => setQuickFilter(quickFilter === 'lowStock' ? null : 'lowStock')}
+          className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${
+            quickFilter === 'lowStock'
+              ? 'bg-amber-500 text-white'
+              : 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-700'
+          }`}
+        >
+          ⚠️ Stock bajo
+        </button>
+        <button
+          onClick={() => setQuickFilter(quickFilter === 'expiring' ? null : 'expiring')}
+          className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${
+            quickFilter === 'expiring'
+              ? 'bg-red-500 text-white'
+              : 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-700'
+          }`}
+        >
+          ⏰ Próximos a caducar
+        </button>
+        {suppliers.length > 0 && (
+          <select
+            value={supplierFilter}
+            onChange={(e) => setSupplierFilter(e.target.value)}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${
+              supplierFilter
+                ? 'bg-blue-500 text-white'
+                : 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-700'
+            }`}
+          >
+            <option value="">🏢 Todos los proveedores</option>
+            {suppliers.map(s => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </select>
+        )}
+      </div>
+
       {/* Contenido principal */}
       {isLoadingProducts ? (
         <div className="space-y-3">
@@ -474,10 +542,14 @@ const Inventory = () => {
             <Skeleton key={i} className="h-20 rounded-2xl" />
           ))}
         </div>
-      ) : searchTerm.trim() !== '' ? (
+      ) : searchTerm.trim() !== '' || quickFilter || supplierFilter ? (
         <>
           <p className="text-sm text-slate-500 dark:text-gray-300">
-            Resultados para «{searchTerm}» ({displayedProducts.length})
+            {searchTerm.trim() !== '' && `Resultados para «${searchTerm}»`}
+            {quickFilter === 'lowStock' && ' • Stock bajo'}
+            {quickFilter === 'expiring' && ' • Próximos a caducar'}
+            {supplierFilter && ` • Proveedor: ${suppliers.find(s => s.id === parseInt(supplierFilter))?.name || ''}`}
+            {' '}({displayedProducts.length})
           </p>
           {displayedProducts.length > 0 ? (
             <ProductList
@@ -495,10 +567,12 @@ const Inventory = () => {
             <EmptyState
               icon={CubeIcon}
               title="Sin resultados"
-              message="Prueba con otro término de búsqueda"
-              actionLabel="Ver todos los productos"
+              message="Prueba con otros filtros"
+              actionLabel="Limpiar filtros"
               onAction={() => {
                 setSearchTerm('');
+                setQuickFilter(null);
+                setSupplierFilter('');
                 setCurrentFolderId(null);
                 setFolderPath([]);
               }}
@@ -585,6 +659,7 @@ const Inventory = () => {
         </>
       )}
 
+      <ScrollToTopButton />
       <SuccessCheck show={showCheck} />
 
       <ConfirmDialog
@@ -877,7 +952,6 @@ const Inventory = () => {
           onClose={() => setShowScanner(false)}
         />
       )}
-      <ScrollToTopButton />
     </div>
   );
 };
