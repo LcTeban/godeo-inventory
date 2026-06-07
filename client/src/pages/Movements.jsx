@@ -25,7 +25,6 @@ const Movements = () => {
       toast.success('Movimientos actualizados');
     } catch (error) {
       console.error('Error loading movements:', error);
-      toast.error('Error al actualizar los movimientos');
     } finally {
       setIsRefreshing(false);
     }
@@ -39,7 +38,6 @@ const Movements = () => {
         setMovements(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error('Error loading movements:', error);
-        toast.error('Error al cargar los movimientos');
       } finally {
         setLoading(false);
       }
