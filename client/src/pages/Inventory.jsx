@@ -19,6 +19,7 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
+import ScrollToTopButton from '../components/ScrollToTopButton';
 
 const Inventory = () => {
   const [products, setProducts] = useState([]);
@@ -876,6 +877,7 @@ const Inventory = () => {
           onClose={() => setShowScanner(false)}
         />
       )}
+      <ScrollToTopButton />
     </div>
   );
 };
