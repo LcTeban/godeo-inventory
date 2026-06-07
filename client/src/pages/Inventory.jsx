@@ -102,7 +102,6 @@ const Inventory = () => {
       setProducts(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error:', error);
-      toast.error('Error al cargar productos');
     } finally {
       setIsLoadingProducts(false);
     }
@@ -176,7 +175,7 @@ const Inventory = () => {
       resetModal();
       await fetchProducts();
     } catch (error) {
-      toast.error('Error al guardar: ' + error.message);
+      // El toast de error ya se mostró automáticamente desde apiCall
     } finally {
       setIsSaving(false);
     }
@@ -196,7 +195,7 @@ const Inventory = () => {
       setShowCheck(true);
       setTimeout(() => setShowCheck(false), 1500);
     } catch (error) {
-      toast.error(error.message || 'Error al registrar movimiento');
+      // El toast de error ya se mostró automáticamente desde apiCall
     } finally {
       setIsSaving(false);
     }
@@ -215,7 +214,7 @@ const Inventory = () => {
           fetchProducts();
           toast.success('Producto eliminado');
         } catch (error) {
-          toast.error('Error al eliminar');
+          // El toast de error ya se mostró automáticamente desde apiCall
         }
       },
     });
@@ -234,7 +233,7 @@ const Inventory = () => {
       setCopyTarget('');
       toast.success('✅ Producto copiado con éxito.');
     } catch (error) {
-      toast.error('Error al copiar: ' + error.message);
+      // El toast de error ya se mostró automáticamente desde apiCall
     } finally {
       setIsCopying(false);
     }
@@ -385,7 +384,7 @@ const Inventory = () => {
       setDeleteConfirmText('');
       await fetchProducts();
     } catch (error) {
-      toast.error('❌ Error al eliminar: ' + error.message);
+      // El toast de error ya se mostró automáticamente desde apiCall
     } finally {
       setIsDeletingAll(false);
     }
