@@ -151,6 +151,20 @@ const Categories = () => {
     setCategories(all || []);
   };
 
+// Cerrar modales con Escape
+useEffect(() => {
+  const handleKeyDown = (e) => {
+    if (e.key === 'Escape') {
+      if (showCopyModal) setShowCopyModal(false);
+      if (confirmOpen) setConfirmOpen(false);
+    }
+  };
+  if (showCopyModal || confirmOpen) {
+    document.addEventListener('keydown', handleKeyDown);
+  }
+  return () => document.removeEventListener('keydown', handleKeyDown);
+}, [showCopyModal, confirmOpen]);
+  
   const handleAddSub = async (parentId) => {
     if (!newName.trim()) return;
     try {
