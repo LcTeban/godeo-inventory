@@ -45,6 +45,20 @@ const Suppliers = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+// Cerrar modales con Escape
+useEffect(() => {
+  const handleKeyDown = (e) => {
+    if (e.key === 'Escape') {
+      if (showModal) setShowModal(false);
+      if (confirmOpen) setConfirmOpen(false);
+    }
+  };
+  if (showModal || confirmOpen) {
+    document.addEventListener('keydown', handleKeyDown);
+  }
+  return () => document.removeEventListener('keydown', handleKeyDown);
+}, [showModal, confirmOpen]);
+  
   const loadData = async () => {
     setLoading(true);
     try {
