@@ -93,6 +93,27 @@ const Inventory = () => {
     return () => window.removeEventListener('openAddProduct', handleOpenAddProduct);
   }, []);
 
+// Cerrar modales con Escape
+useEffect(() => {
+  const handleKeyDown = (e) => {
+    if (e.key === 'Escape') {
+      if (showAddModal) resetModal();
+      if (showMovementModal) setShowMovementModal(false);
+      if (showCopyModal) setShowCopyModal(false);
+      if (showDeleteAllModal) {
+        setShowDeleteAllModal(false);
+        setDeleteConfirmText('');
+      }
+      if (showScanner) setShowScanner(false);
+      if (confirmOpen) setConfirmOpen(false);
+    }
+  };
+  if (isAnyModalOpen) {
+    document.addEventListener('keydown', handleKeyDown);
+  }
+  return () => document.removeEventListener('keydown', handleKeyDown);
+}, [isAnyModalOpen, showAddModal, showMovementModal, showCopyModal, showDeleteAllModal, showScanner, confirmOpen]);
+  
   const loadCategories = async () => {
     const flat = await getAllCategoriesFlat();
     setAllCategories(flat || []);
