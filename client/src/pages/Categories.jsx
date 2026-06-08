@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import {
   PlusIcon, PencilIcon, TrashIcon, FolderIcon, GlobeAltIcon,
@@ -10,13 +10,59 @@ import toast from 'react-hot-toast';
 import EmptyState from '../components/EmptyState';
 import ConfirmDialog from '../components/ConfirmDialog';
 
-const TreeNode = ({ category, allCategories, onEdit, onDelete, onAddChild, onCopy }) => {
+const TreeNode = ({ category, allCategories, onEdit, onDelete, onAddChild, onCopy, onMove, draggedId, dropTargetId, setDraggedId, setDropTargetId }) => {
   const [expanded, setExpanded] = useState(false);
   const children = allCategories.filter(c => c.parent_id === category.id);
+  const isDragging = draggedId === category.id;
+  const isDropTarget = dropTargetId === category.id;
+
+  const handleDragStart = (e) => {
+    e.dataTransfer.setData('text/plain', category.id.toString());
+    e.dataTransfer.effectAllowed = 'move';
+    setDraggedId(category.id);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedId(null);
+    setDropTargetId(null);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (draggedId && draggedId !== category.id) {
+      setDropTargetId(category.id);
+    }
+  };
+
+  const handleDragLeave = () => {
+    setDropTargetId(null);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    const draggedCategoryId = parseInt(e.dataTransfer.getData('text/plain'), 10);
+    if (draggedCategoryId && draggedCategoryId !== category.id) {
+      onMove(draggedCategoryId, category.id);
+    }
+    setDraggedId(null);
+    setDropTargetId(null);
+  };
 
   return (
     <div className="ml-3 sm:ml-4">
-      <div className="flex items-center gap-2 py-1.5 px-2 hover:bg-slate-50 dark:hover:bg-gray-800/50 rounded-lg cursor-pointer flex-wrap" onClick={() => setExpanded(!expanded)}>
+      <div
+        className={`flex items-center gap-2 py-1.5 px-2 hover:bg-slate-50 dark:hover:bg-gray-800/50 rounded-lg cursor-pointer flex-wrap transition ${
+          isDragging ? 'opacity-40' : ''
+        } ${isDropTarget ? 'ring-2 ring-orange-500 dark:ring-orange-400 bg-orange-50 dark:bg-orange-900/20' : ''}`}
+        onClick={() => setExpanded(!expanded)}
+        draggable
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
         <button onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }} className="p-1 flex-shrink-0">
           <FolderIcon className={`h-5 w-5 ${children.length > 0 ? 'text-amber-500 dark:text-amber-400' : 'text-slate-400 dark:text-gray-300'}`} />
         </button>
@@ -42,7 +88,20 @@ const TreeNode = ({ category, allCategories, onEdit, onDelete, onAddChild, onCop
       {expanded && children.length > 0 && (
         <div className="border-l-2 border-slate-200 dark:border-gray-600 ml-2 pl-2 sm:pl-3">
           {children.map(child => (
-            <TreeNode key={child.id} category={child} allCategories={allCategories} onEdit={onEdit} onDelete={onDelete} onAddChild={onAddChild} onCopy={onCopy} />
+            <TreeNode
+              key={child.id}
+              category={child}
+              allCategories={allCategories}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              onAddChild={onAddChild}
+              onCopy={onCopy}
+              onMove={onMove}
+              draggedId={draggedId}
+              dropTargetId={dropTargetId}
+              setDraggedId={setDraggedId}
+              setDropTargetId={setDropTargetId}
+            />
           ))}
         </div>
       )}
@@ -72,6 +131,10 @@ const Categories = () => {
     onConfirm: () => {},
   });
 
+  // Estados para drag and drop
+  const [draggedId, setDraggedId] = useState(null);
+  const [dropTargetId, setDropTargetId] = useState(null);
+
   useLockBodyScroll(showCopyModal || confirmOpen);
 
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -98,7 +161,7 @@ const Categories = () => {
       loadCategories();
       toast.success('Categoría creada correctamente');
     } catch (error) {
-      // El toast de error ya se mostró automáticamente desde apiCall
+      // El toast de error ya se mostró automáticamente
     }
   };
 
@@ -113,7 +176,7 @@ const Categories = () => {
         loadCategories();
         toast.success('Categoría actualizada correctamente');
       } catch (error) {
-        // El toast de error ya se mostró automáticamente desde apiCall
+        // El toast de error ya se mostró automáticamente
       }
     }
   };
@@ -131,7 +194,7 @@ const Categories = () => {
           loadCategories();
           toast.success('Categoría eliminada');
         } catch (error) {
-          // El toast de error ya se mostró automáticamente desde apiCall
+          // El toast de error ya se mostró automáticamente
         }
       },
     });
@@ -157,11 +220,24 @@ const Categories = () => {
       setCopyCategory(null);
       loadCategories();
     } catch (error) {
-      // El toast de error ya se mostró automáticamente desde apiCall
+      // El toast de error ya se mostró automáticamente
     } finally {
       setIsCopying(false);
     }
   };
+
+  // Mover categoría (drag and drop)
+  const handleMove = useCallback(async (draggedCategoryId, newParentId) => {
+    const draggedCat = categories.find(c => c.id === draggedCategoryId);
+    if (!draggedCat) return;
+    try {
+      await updateCategory(draggedCategoryId, draggedCat.name, newParentId, !draggedCat.restaurant);
+      loadCategories();
+      toast.success('Categoría movida correctamente');
+    } catch (error) {
+      // El toast de error ya se mostró automáticamente
+    }
+  }, [categories, updateCategory]);
 
   if (!isAdmin) return <div className="text-center py-8 text-slate-500 dark:text-gray-300">Acceso restringido</div>;
 
@@ -237,7 +313,7 @@ const Categories = () => {
           <EmptyState
             icon={FolderIcon}
             title="No hay categorías"
-            message="Crea la primera carpeta para organizar tu inventario"
+            message="Crea la primera carpeta para organizar tu inventario. Puedes arrastrar para reordenar."
             actionLabel="Nueva carpeta raíz"
             onAction={() => setShowAddRoot(true)}
           />
@@ -257,6 +333,11 @@ const Categories = () => {
               setEditId(null);
             }}
             onCopy={handleCopy}
+            onMove={handleMove}
+            draggedId={draggedId}
+            dropTargetId={dropTargetId}
+            setDraggedId={setDraggedId}
+            setDropTargetId={setDropTargetId}
           />
         ))}
       </div>
