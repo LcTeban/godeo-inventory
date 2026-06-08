@@ -1,5 +1,20 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
+import { useEffect } from 'react';
+
+// Dentro del componente, añade:
+useEffect(() => {
+  const handleKeyDown = (e) => {
+    if (e.key === 'Escape' && isOpen) {
+      onClose();
+    }
+  };
+  if (isOpen) {
+    document.addEventListener('keydown', handleKeyDown);
+  }
+  return () => document.removeEventListener('keydown', handleKeyDown);
+}, [isOpen, onClose]);
+
 
 const ConfirmDialog = ({ isOpen, onClose, onConfirm, title, message, confirmText = 'Confirmar', confirmColor = 'red' }) => {
   const colorMap = {
