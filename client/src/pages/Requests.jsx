@@ -39,6 +39,22 @@ const Requests = () => {
     loadData();
   }, []);
 
+// Cerrar modales con Escape
+useEffect(() => {
+  const handleKeyDown = (e) => {
+    if (e.key === 'Escape' && showModal) {
+      setShowModal(false);
+      setFormData({ items: [{ productName: '', quantity: '', unit: 'unidad' }], notes: '' });
+      setActiveSuggestionIndex(null);
+      setProductExists({});
+    }
+  };
+  if (showModal) {
+    document.addEventListener('keydown', handleKeyDown);
+  }
+  return () => document.removeEventListener('keydown', handleKeyDown);
+}, [showModal]);
+  
   const loadData = async () => {
     try {
       const [reqData, prodData] = await Promise.all([
