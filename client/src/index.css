@@ -99,3 +99,11 @@ body.modal-open {
 .animate-fadeInPage {
   animation: fadeInPage 0.2s ease-out;
 }
+
+/* Transición suave al cambiar tema */
+html {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+html.dark {
+  color-scheme: dark;
+}
