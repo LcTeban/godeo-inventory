@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { CameraIcon } from '@heroicons/react/24/outline';
 
-const LazyImage = ({ productId, fetchImage }) => {
+const LazyImage = ({ productId, fetchImage, alt = 'Imagen del producto' }) => {
   const [imageSrc, setImageSrc] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
@@ -40,10 +40,10 @@ const LazyImage = ({ productId, fetchImage }) => {
   return (
     <div ref={containerRef} className="w-16 h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
       {imageSrc ? (
-        <img src={imageSrc} alt="" className="w-full h-full object-cover" />
+        <img src={imageSrc} alt={alt} className="w-full h-full object-cover" />
       ) : (
         <div className="w-full h-full flex items-center justify-center">
-          <CameraIcon className="h-6 w-6 text-gray-400" />
+          <CameraIcon className="h-6 w-6 text-gray-400" aria-hidden="true" />
         </div>
       )}
     </div>
