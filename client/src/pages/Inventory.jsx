@@ -93,27 +93,27 @@ const Inventory = () => {
     return () => window.removeEventListener('openAddProduct', handleOpenAddProduct);
   }, []);
 
-// Cerrar modales con Escape
-useEffect(() => {
-  const handleKeyDown = (e) => {
-    if (e.key === 'Escape') {
-      if (showAddModal) resetModal();
-      if (showMovementModal) setShowMovementModal(false);
-      if (showCopyModal) setShowCopyModal(false);
-      if (showDeleteAllModal) {
-        setShowDeleteAllModal(false);
-        setDeleteConfirmText('');
+  // Cerrar modales con Escape
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        if (showAddModal) resetModal();
+        if (showMovementModal) setShowMovementModal(false);
+        if (showCopyModal) setShowCopyModal(false);
+        if (showDeleteAllModal) {
+          setShowDeleteAllModal(false);
+          setDeleteConfirmText('');
+        }
+        if (showScanner) setShowScanner(false);
+        if (confirmOpen) setConfirmOpen(false);
       }
-      if (showScanner) setShowScanner(false);
-      if (confirmOpen) setConfirmOpen(false);
+    };
+    if (isAnyModalOpen) {
+      document.addEventListener('keydown', handleKeyDown);
     }
-  };
-  if (isAnyModalOpen) {
-    document.addEventListener('keydown', handleKeyDown);
-  }
-  return () => document.removeEventListener('keydown', handleKeyDown);
-}, [isAnyModalOpen, showAddModal, showMovementModal, showCopyModal, showDeleteAllModal, showScanner, confirmOpen]);
-  
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isAnyModalOpen, showAddModal, showMovementModal, showCopyModal, showDeleteAllModal, showScanner, confirmOpen]);
+
   const loadCategories = async () => {
     const flat = await getAllCategoriesFlat();
     setAllCategories(flat || []);
@@ -276,53 +276,46 @@ useEffect(() => {
   };
 
   const getDisplayedProducts = () => {
-  let filtered = products;
+    let filtered = products;
 
-  // Filtro por búsqueda de texto
-  if (searchTerm.trim() !== '') {
-    filtered = filtered.filter(p =>
-      p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.barcode?.includes(searchTerm)
-    );
-  }
-
-  // Filtro por carpeta (solo si no hay búsqueda de texto)
-  if (searchTerm.trim() === '') {
-    if (currentFolderId === null) {
-      filtered = filtered.filter(p => !p.category_id);
-    } else {
-      filtered = filtered.filter(p => p.category_id === currentFolderId);
+    if (searchTerm.trim() !== '') {
+      filtered = filtered.filter(p =>
+        p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.barcode?.includes(searchTerm)
+      );
     }
-  }
 
-  // Filtro rápido: Stock bajo (convertir a número para comparar correctamente)
-  if (quickFilter === 'lowStock') {
-    filtered = filtered.filter(p => {
-      const stock = parseFloat(p.stock) || 0;
-      const minStock = parseFloat(p.min_stock) || 10;
-      return stock > 0 && stock <= minStock;
-    });
-  }
+    if (searchTerm.trim() === '') {
+      if (currentFolderId === null) {
+        filtered = filtered.filter(p => !p.category_id);
+      } else {
+        filtered = filtered.filter(p => p.category_id === currentFolderId);
+      }
+    }
 
-  // Filtro rápido: Próximos a caducar
-  if (quickFilter === 'expiring') {
-    const today = new Date();
-    const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
-    filtered = filtered.filter(p => {
-      if (!p.expiry_date) return false;
-      const expiry = new Date(p.expiry_date);
-      return expiry >= today && expiry <= nextWeek;
-    });
-  }
+    if (quickFilter === 'lowStock') {
+      filtered = filtered.filter(p => {
+        const stock = parseFloat(p.stock) || 0;
+        const minStock = parseFloat(p.min_stock) || 10;
+        return stock > 0 && stock <= minStock;
+      });
+    } else if (quickFilter === 'expiring') {
+      const today = new Date();
+      const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+      filtered = filtered.filter(p => {
+        if (!p.expiry_date) return false;
+        const expiry = new Date(p.expiry_date);
+        return expiry >= today && expiry <= nextWeek;
+      });
+    }
 
-  // Filtro por proveedor (convertir a número para comparar correctamente)
-  if (supplierFilter) {
-    const supplierId = parseInt(supplierFilter, 10);
-    filtered = filtered.filter(p => parseInt(p.supplier_id, 10) === supplierId);
-  }
+    if (supplierFilter) {
+      const supplierId = parseInt(supplierFilter, 10);
+      filtered = filtered.filter(p => parseInt(p.supplier_id, 10) === supplierId);
+    }
 
-  return filtered;
-};
+    return filtered;
+  };
 
   const displayedProducts = getDisplayedProducts();
 
@@ -502,8 +495,8 @@ useEffect(() => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           {currentFolderId !== null && (
-            <button onClick={goBack} className="p-2 bg-slate-100 dark:bg-gray-800 rounded-lg hover:bg-slate-200 dark:hover:bg-gray-700" title="Volver">
-              <ArrowLeftIcon className="h-5 w-5 text-slate-600 dark:text-gray-300" />
+            <button onClick={goBack} className="p-2 bg-slate-100 dark:bg-gray-800 rounded-lg hover:bg-slate-200 dark:hover:bg-gray-700" title="Volver" aria-label="Volver a la carpeta anterior">
+              <ArrowLeftIcon className="h-5 w-5 text-slate-600 dark:text-gray-300" aria-hidden="true" />
             </button>
           )}
           <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
@@ -511,15 +504,15 @@ useEffect(() => {
           </h1>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={exportToExcel} className="p-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-lg" title="Excel">
-            <TableCellsIcon className="h-5 w-5" />
+          <button onClick={exportToExcel} className="p-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-lg" title="Exportar a Excel" aria-label="Exportar a Excel">
+            <TableCellsIcon className="h-5 w-5" aria-hidden="true" />
           </button>
-          <button onClick={exportToPDF} className="p-2 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg" title="PDF">
-            <DocumentArrowDownIcon className="h-5 w-5" />
+          <button onClick={exportToPDF} className="p-2 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg" title="Exportar a PDF" aria-label="Exportar a PDF">
+            <DocumentArrowDownIcon className="h-5 w-5" aria-hidden="true" />
           </button>
           {isAdmin && (
-            <button onClick={() => openAddModal(currentFolderId)} className="bg-orange-500 text-white p-3 rounded-full shadow-lg shadow-orange-200 ripple">
-              <PlusIcon className="h-6 w-6" />
+            <button onClick={() => openAddModal(currentFolderId)} className="bg-orange-500 text-white p-3 rounded-full shadow-lg shadow-orange-200 ripple" title="Añadir producto" aria-label="Añadir nuevo producto">
+              <PlusIcon className="h-6 w-6" aria-hidden="true" />
             </button>
           )}
         </div>
@@ -537,6 +530,8 @@ useEffect(() => {
               ? 'bg-amber-500 text-white'
               : 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-700'
           }`}
+          aria-pressed={quickFilter === 'lowStock'}
+          aria-label="Filtrar productos con stock bajo"
         >
           ⚠️ Stock bajo
         </button>
@@ -547,6 +542,8 @@ useEffect(() => {
               ? 'bg-red-500 text-white'
               : 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-700'
           }`}
+          aria-pressed={quickFilter === 'expiring'}
+          aria-label="Filtrar productos próximos a caducar"
         >
           ⏰ Próximos a caducar
         </button>
@@ -559,6 +556,7 @@ useEffect(() => {
                 ? 'bg-blue-500 text-white'
                 : 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-700'
             }`}
+            aria-label="Filtrar por proveedor"
           >
             <option value="">🏢 Todos los proveedores</option>
             {suppliers.map(s => (
@@ -649,8 +647,9 @@ useEffect(() => {
                   <button
                     onClick={() => setShowDeleteAllModal(true)}
                     className="px-3 py-1.5 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg text-xs font-medium hover:bg-red-100 dark:hover:bg-red-900/50 transition flex items-center gap-1"
+                    aria-label="Eliminar todos los productos sin categoría"
                   >
-                    <TrashIcon className="h-3.5 w-3.5" />
+                    <TrashIcon className="h-3.5 w-3.5" aria-hidden="true" />
                     Eliminar todos
                   </button>
                 )}
@@ -726,10 +725,13 @@ useEffect(() => {
               initial="hidden"
               animate="visible"
               exit="exit"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="modal-title-product"
             >
               {isMobile && <div className="bottom-sheet-handle" />}
               <div className="px-6 py-4 border-b border-slate-100 dark:border-white/5 flex-shrink-0">
-                <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+                <h2 id="modal-title-product" className="text-lg font-bold text-slate-900 dark:text-white">
                   {editingProduct ? 'Editar Producto' : 'Nuevo Producto'}
                 </h2>
               </div>
@@ -737,37 +739,39 @@ useEffect(() => {
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-2">📸 Foto del producto</label>
                   <div className="flex gap-2">
-                    <button type="button" onClick={openCamera} className="flex-1 p-3 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-xl text-sm flex items-center justify-center gap-2 border border-blue-200 dark:border-blue-800">
-                      <CameraIcon className="h-5 w-5" /> Cámara
+                    <button type="button" onClick={openCamera} className="flex-1 p-3 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-xl text-sm flex items-center justify-center gap-2 border border-blue-200 dark:border-blue-800" aria-label="Tomar foto con cámara">
+                      <CameraIcon className="h-5 w-5" aria-hidden="true" /> Cámara
                     </button>
-                    <button type="button" onClick={openGallery} className="flex-1 p-3 bg-slate-50 dark:bg-gray-800 text-slate-700 dark:text-gray-300 rounded-xl text-sm flex items-center justify-center gap-2 border border-slate-200 dark:border-gray-600">
+                    <button type="button" onClick={openGallery} className="flex-1 p-3 bg-slate-50 dark:bg-gray-800 text-slate-700 dark:text-gray-300 rounded-xl text-sm flex items-center justify-center gap-2 border border-slate-200 dark:border-gray-600" aria-label="Seleccionar imagen de la galería">
                       🖼️ Galería
                     </button>
                   </div>
                   {formData.image && (
                     <div className="mt-3 relative inline-block">
-                      <img src={formData.image} alt="Vista previa" className="w-20 h-20 object-cover rounded-lg border dark:border-gray-600" />
-                      <button type="button" onClick={() => setFormData({...formData, image: ''})} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow">✕</button>
+                      <img src={formData.image} alt="Vista previa de la foto del producto" className="w-20 h-20 object-cover rounded-lg border dark:border-gray-600" />
+                      <button type="button" onClick={() => setFormData({...formData, image: ''})} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow" aria-label="Eliminar foto">
+                        ✕
+                      </button>
                     </div>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">Nombre *</label>
-                  <input type="text" placeholder="Nombre*" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition" required />
+                  <label htmlFor="product-name" className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">Nombre *</label>
+                  <input id="product-name" type="text" placeholder="Nombre*" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition" required />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">📁 Categoría</label>
-                  <select value={formData.category_id} onChange={(e) => setFormData({...formData, category_id: e.target.value})} className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition">
+                  <label htmlFor="product-category" className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">📁 Categoría</label>
+                  <select id="product-category" value={formData.category_id} onChange={(e) => setFormData({...formData, category_id: e.target.value})} className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition">
                     <option value="">General (sin categoría)</option>
                     {allCategories.map(cat => (<option key={cat.id} value={cat.id}>{cat.label || cat.name}</option>))}
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">🏢 Proveedor</label>
-                  <select value={formData.supplier_id} onChange={(e) => setFormData({...formData, supplier_id: e.target.value})} className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition">
+                  <label htmlFor="product-supplier" className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">🏢 Proveedor</label>
+                  <select id="product-supplier" value={formData.supplier_id} onChange={(e) => setFormData({...formData, supplier_id: e.target.value})} className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition">
                     <option value="">Sin proveedor</option>
                     {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                   </select>
@@ -775,40 +779,40 @@ useEffect(() => {
 
                 {isAdmin && (
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">💰 Precio (€)</label>
-                    <input type="number" step="0.01" placeholder="Precio unitario" value={formData.price || ''} onChange={(e) => setFormData({...formData, price: e.target.value})} className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition" />
+                    <label htmlFor="product-price" className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">💰 Precio (€)</label>
+                    <input id="product-price" type="number" step="0.01" placeholder="Precio unitario" value={formData.price || ''} onChange={(e) => setFormData({...formData, price: e.target.value})} className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition" />
                   </div>
                 )}
 
                 <div className="flex gap-2">
                   <div className="flex-1">
-                    <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">Stock inicial *</label>
-                    <input type="number" step="0.01" placeholder="Stock inicial*" value={formData.stock} onChange={(e) => setFormData({...formData, stock: e.target.value})} className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition" required />
+                    <label htmlFor="product-stock" className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">Stock inicial *</label>
+                    <input id="product-stock" type="number" step="0.01" placeholder="Stock inicial*" value={formData.stock} onChange={(e) => setFormData({...formData, stock: e.target.value})} className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition" required />
                   </div>
                   <div className="w-24">
-                    <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">Unidad</label>
-                    <select value={formData.unit} onChange={(e) => setFormData({...formData, unit: e.target.value})} className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition">
+                    <label htmlFor="product-unit" className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">Unidad</label>
+                    <select id="product-unit" value={formData.unit} onChange={(e) => setFormData({...formData, unit: e.target.value})} className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition">
                       <option value="unidad">ud</option><option value="kg">kg</option><option value="L">L</option><option value="caja">caja</option>
                     </select>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">Stock mínimo</label>
-                  <input type="number" placeholder="Stock mínimo" value={formData.min_stock} onChange={(e) => setFormData({...formData, min_stock: e.target.value})} className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition" />
+                  <label htmlFor="product-min-stock" className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">Stock mínimo</label>
+                  <input id="product-min-stock" type="number" placeholder="Stock mínimo" value={formData.min_stock} onChange={(e) => setFormData({...formData, min_stock: e.target.value})} className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition" />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">Fecha caducidad</label>
-                  <input type="date" placeholder="Fecha caducidad" value={formData.expiry_date} onChange={(e) => setFormData({...formData, expiry_date: e.target.value})} className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition" />
+                  <label htmlFor="product-expiry" className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">Fecha caducidad</label>
+                  <input id="product-expiry" type="date" placeholder="Fecha caducidad" value={formData.expiry_date} onChange={(e) => setFormData({...formData, expiry_date: e.target.value})} className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition" />
                 </div>
 
                 <div className="flex gap-2">
                   <div className="flex-1">
-                    <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">Código de barras</label>
+                    <label htmlFor="product-barcode" className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">Código de barras</label>
                     <div className="flex gap-2">
-                      <input type="text" placeholder="Código de barras" value={formData.barcode} onChange={(e) => setFormData({...formData, barcode: e.target.value})} className="flex-1 p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition" />
-                      <button type="button" onClick={() => setShowScanner(true)} className="px-4 bg-slate-100 dark:bg-gray-800 rounded-xl"><QrCodeIcon className="h-5 w-5" /></button>
+                      <input id="product-barcode" type="text" placeholder="Código de barras" value={formData.barcode} onChange={(e) => setFormData({...formData, barcode: e.target.value})} className="flex-1 p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition" />
+                      <button type="button" onClick={() => setShowScanner(true)} className="px-4 bg-slate-100 dark:bg-gray-800 rounded-xl" aria-label="Escanear código de barras"><QrCodeIcon className="h-5 w-5" aria-hidden="true" /></button>
                     </div>
                   </div>
                 </div>
@@ -843,24 +847,27 @@ useEffect(() => {
               initial="hidden"
               animate="visible"
               exit="exit"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="modal-title-movement"
             >
               {isMobile && <div className="bottom-sheet-handle" />}
               <div className="p-6">
-                <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
+                <h2 id="modal-title-movement" className="text-xl font-bold text-slate-900 dark:text-white mb-4">
                   {movementData.type === 'entrada' ? '📥 Entrada' : '📤 Salida'} - {selectedProduct?.name}
                 </h2>
                 <form onSubmit={handleMovement} className="space-y-3">
-                  <div className="text-center p-4 bg-slate-50 dark:bg-gray-800 rounded-xl">
+                  <div className="text-center p-4 bg-slate-50 dark:bg-gray-800 rounded-xl" aria-live="polite">
                     <span className="text-3xl font-bold text-slate-900 dark:text-white">{selectedProduct?.stock}</span>
                     <span className="text-slate-500 dark:text-gray-300 ml-1">{selectedProduct?.unit}</span>
                     <p className="text-sm text-slate-400 dark:text-gray-300">Stock actual</p>
                   </div>
                   <input type="number" step="0.01" placeholder="Cantidad" value={movementData.quantity}
                     onChange={(e) => setMovementData({...movementData, quantity: e.target.value})}
-                    className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-slate-900 dark:text-white text-lg text-center focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition" required autoFocus />
+                    className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-slate-900 dark:text-white text-lg text-center focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition" required autoFocus aria-label="Cantidad del movimiento" />
                   <input type="text" placeholder="Motivo (opcional)" value={movementData.reason}
                     onChange={(e) => setMovementData({...movementData, reason: e.target.value})}
-                    className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition" />
+                    className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition" aria-label="Motivo del movimiento" />
                   <div className="flex gap-2 pt-2">
                     <button type="button" onClick={() => setShowMovementModal(false)} className="flex-1 p-3 border border-slate-200 dark:border-gray-600 text-slate-600 dark:text-gray-300 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-800 transition">Cancelar</button>
                     <button type="submit" disabled={isSaving} className={`flex-1 p-3 text-white rounded-xl shadow-sm disabled:opacity-50 transition ${movementData.type === 'entrada' ? 'bg-emerald-600 shadow-emerald-200 hover:bg-emerald-700' : 'bg-red-600 shadow-red-200 hover:bg-red-700'}`}>
@@ -892,17 +899,20 @@ useEffect(() => {
               initial="hidden"
               animate="visible"
               exit="exit"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="modal-title-copy"
             >
               {isMobile && <div className="bottom-sheet-handle" />}
               <div className="p-6">
-                <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">📋 Copiar Producto</h2>
+                <h2 id="modal-title-copy" className="text-xl font-bold text-slate-900 dark:text-white mb-4">📋 Copiar Producto</h2>
                 <p className="text-sm text-slate-500 dark:text-gray-300 mb-4">
                   Copiarás <strong className="text-slate-700 dark:text-gray-200">{selectedProduct.name}</strong> a otro restaurante.
                 </p>
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">🏢 Restaurante destino</label>
-                    <select value={copyTarget} onChange={(e) => setCopyTarget(e.target.value)} className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition">
+                    <label htmlFor="copy-target" className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">🏢 Restaurante destino</label>
+                    <select id="copy-target" value={copyTarget} onChange={(e) => setCopyTarget(e.target.value)} className="w-full p-3 border border-slate-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 dark:focus:border-orange-400 outline-none transition">
                       <option value="">Seleccionar destino</option>
                       {['POZOBLANCO', 'FUERTEVENTURA', 'GRAN_CAPITAN'].filter(r => r !== currentRestaurant).map(r => (
                         <option key={r} value={r}>{r === 'POZOBLANCO' ? '🍽️ Pozoblanco' : r === 'FUERTEVENTURA' ? '🏖️ Fuerteventura' : '🏛️ Gran Capitán'}</option>
@@ -940,20 +950,23 @@ useEffect(() => {
               initial="hidden"
               animate="visible"
               exit="exit"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="modal-title-delete-all"
             >
               {isMobile && <div className="bottom-sheet-handle" />}
               <div className="p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-full">
-                    <ExclamationTriangleIcon className="h-6 w-6 text-red-600 dark:text-red-400" />
+                    <ExclamationTriangleIcon className="h-6 w-6 text-red-600 dark:text-red-400" aria-hidden="true" />
                   </div>
-                  <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Eliminar productos sin categoría</h2>
+                  <h2 id="modal-title-delete-all" className="text-lg font-semibold text-slate-900 dark:text-white">Eliminar productos sin categoría</h2>
                 </div>
                 <p className="text-sm text-slate-500 dark:text-gray-300 mb-2">Esta acción eliminará permanentemente los {uncategorizedProducts.length} productos sin categoría.</p>
                 <p className="text-sm text-slate-500 dark:text-gray-300 mb-4">Escribe <span className="font-bold text-red-600 dark:text-red-400">ELIMINAR</span> para confirmar.</p>
                 <input type="text" value={deleteConfirmText} onChange={(e) => setDeleteConfirmText(e.target.value)}
                   placeholder="Escribe ELIMINAR para confirmar"
-                  className="w-full px-4 py-2.5 border border-slate-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-red-500/20 focus:border-red-500 dark:focus:border-red-400 outline-none transition mb-4" autoFocus />
+                  className="w-full px-4 py-2.5 border border-slate-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-red-500/20 focus:border-red-500 dark:focus:border-red-400 outline-none transition mb-4" autoFocus aria-label="Escribe ELIMINAR para confirmar" />
                 <div className="flex gap-3">
                   <button onClick={() => { setShowDeleteAllModal(false); setDeleteConfirmText(''); }} className="flex-1 py-2.5 border border-slate-200 dark:border-gray-600 text-slate-600 dark:text-gray-300 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-800 transition">Cancelar</button>
                   <button onClick={handleDeleteAllUncategorized} disabled={deleteConfirmText !== 'ELIMINAR' || isDeletingAll}
