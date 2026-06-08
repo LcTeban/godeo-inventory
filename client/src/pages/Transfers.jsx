@@ -60,6 +60,19 @@ const Transfers = () => {
     }
   };
 
+// Cerrar modales con Escape
+useEffect(() => {
+  const handleKeyDown = (e) => {
+    if (e.key === 'Escape' && showModal) {
+      setShowModal(false);
+    }
+  };
+  if (showModal) {
+    document.addEventListener('keydown', handleKeyDown);
+  }
+  return () => document.removeEventListener('keydown', handleKeyDown);
+}, [showModal]);
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.productId || !formData.quantity || !formData.toRestaurant) {
