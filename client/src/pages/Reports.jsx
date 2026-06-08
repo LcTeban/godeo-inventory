@@ -14,6 +14,7 @@ import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { motion } from 'framer-motion';
+import Skeleton from '../components/Skeleton';
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316'];
 
@@ -205,11 +206,16 @@ const Reports = () => {
 
   if (!isAdmin) return null;
   if (loading) return (
-    <div className="text-center py-20">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
-      <p className="text-slate-500 dark:text-gray-300">Cargando reportes...</p>
+  <div className="space-y-6">
+    <Skeleton className="h-8 rounded-2xl w-1/3" />
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {[1,2,3,4].map(i => (
+        <Skeleton key={i} className="h-24 rounded-2xl" />
+      ))}
     </div>
-  );
+    <Skeleton className="h-64 rounded-2xl" />
+  </div>
+);
 
   return (
     <div className="space-y-6">
